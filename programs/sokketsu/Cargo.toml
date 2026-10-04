@@ -1,0 +1,25 @@
+[package]
+name = "sokketsu"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+rust-version = "1.84"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sokketsu"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+# ローカルテスト用の固定オラクル鍵を使う（devnet デプロイでは付けない）
+localnet-oracle = []
+
+
+[dependencies]
+anchor-lang = "0.31.1"
+

@@ -1,0 +1,11 @@
+node_modules
+target
+test-ledger
+.keys
+.writgate
+.anchor
+.playwright-mcp
+.DS_Store
+*.bak
+.env
+.env.*
