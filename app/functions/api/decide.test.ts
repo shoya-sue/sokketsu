@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onRequestPost } from "./decide";
-import { decisionMessage, fromHex } from "../../server/oracle";
+import { decisionMessage, fromHex, type Proof } from "../../server/oracle";
 
 type Env = { ORACLE_SECRET_KEY?: string };
 const ENV: Env = { ORACLE_SECRET_KEY: "09".repeat(32) };
@@ -48,7 +48,7 @@ describe("/api/decide", () => {
   ] as const)("%s はサーバ側のモック規則で %s、署名つき", async (task, decision, probability, bps) => {
     const res = await call(ENV, input(task));
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = (await res.json()) as { proof: Proof };
     expect(body).toMatchObject({ decision, probability, source: "mock", proof: { bps } });
     expect(await verify(body.proof, await decisionMessage(ESCROW, task, decision, bps))).toBe(true);
   });

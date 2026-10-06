@@ -32,7 +32,7 @@ const jevAnswer = (choice: string, p: number) =>
   );
 
 const ENV: Env = { DEMO_TOKEN: "demo-token", AI_GATEWAY_API_KEY: "  key-123\n", ORACLE_SECRET_KEY: "09".repeat(32) };
-const realSubtle = globalThis.crypto.subtle;
+const realSubtle = crypto.subtle;
 
 beforeEach(() => {
   // Workers の crypto.subtle.timingSafeEqual は Node に無いので、同じ意味の関数で差し替える。
