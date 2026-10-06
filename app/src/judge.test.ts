@@ -49,6 +49,12 @@ describe("mockDecision（企画書第7節の規則）", () => {
     expect(mockDecision("refund: x")).toEqual({ decision: "refund", probability: 0.88, source: "mock" }));
   it("それ以外は release 0.86", () =>
     expect(mockDecision("devnet ping")).toEqual({ decision: "release", probability: 0.86, source: "mock" }));
+  it("release: の接頭辞は特別扱いせず release 0.86（release プリセットの依頼文）", () =>
+    expect(mockDecision("release: delivered the devnet ping report; payer verified and approved #ab12")).toEqual({
+      decision: "release",
+      probability: 0.86,
+      source: "mock",
+    }));
   it("接頭辞は先頭だけを見る", () => expect(mockDecision("x hold: y").decision).toBe("release"));
   it("mockJudge も同じ規則", async () =>
     expect(await mockJudge.evaluate(input("hold: a"))).toEqual(mockDecision("hold: a")));
