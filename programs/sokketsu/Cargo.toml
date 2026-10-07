@@ -18,8 +18,15 @@ no-log-ix-name = []
 idl-build = ["anchor-lang/idl-build"]
 # ローカルテスト用の固定オラクル鍵を使う（devnet デプロイでは付けない）
 localnet-oracle = []
+# Anchor のマクロが参照する feature。宣言しないと unexpected_cfgs 警告になる。
+anchor-debug = []
+custom-heap = []
+custom-panic = []
 
 
 [dependencies]
 anchor-lang = "0.31.1"
 
+[lints.rust]
+# solana の target_os は rustc の既知の値に無いので、明示的に許可する。
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

@@ -1,3 +1,7 @@
+// Anchor 0.31 の #[program] がモジュールの外へ展開するコードが、非推奨の AccountInfo::realloc を呼ぶ。
+// このクレート自身は realloc を使わない（Anchor 側の更新で外す）。
+#![allow(deprecated)]
+
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::ed25519_program;
 use anchor_lang::solana_program::sysvar::instructions as ix_sysvar;
@@ -58,11 +62,18 @@ fn verify_oracle_decision(
     let current = ix_sysvar::load_current_index_checked(instructions)? as usize;
     require!(current > 0, SokketsuError::MissingOracleSignature);
     let ix = ix_sysvar::load_instruction_at_checked(current - 1, instructions)?;
-    require_keys_eq!(ix.program_id, ed25519_program::ID, SokketsuError::MissingOracleSignature);
+    require_keys_eq!(
+        ix.program_id,
+        ed25519_program::ID,
+        SokketsuError::MissingOracleSignature
+    );
 
     // Ed25519 命令のデータ: [署名数 u8][padding u8][offsets 7×u16 ...][データ]
     let data = &ix.data;
-    require!(data.len() >= 16 && data[0] == 1, SokketsuError::BadOracleSignature);
+    require!(
+        data.len() >= 16 && data[0] == 1,
+        SokketsuError::BadOracleSignature
+    );
     let field = |i: usize| u16::from_le_bytes([data[i], data[i + 1]]);
     let (sig_ix, pk_off, pk_ix) = (field(4), field(6) as usize, field(8));
     let (msg_off, msg_len, msg_ix) = (field(10) as usize, field(12) as usize, field(14));
@@ -71,8 +82,13 @@ fn verify_oracle_decision(
         sig_ix == u16::MAX && pk_ix == u16::MAX && msg_ix == u16::MAX,
         SokketsuError::BadOracleSignature
     );
-    let pubkey = data.get(pk_off..pk_off + 32).ok_or(SokketsuError::BadOracleSignature)?;
-    require!(pubkey == ORACLE_PUBKEY.as_ref(), SokketsuError::BadOracleSignature);
+    let pubkey = data
+        .get(pk_off..pk_off + 32)
+        .ok_or(SokketsuError::BadOracleSignature)?;
+    require!(
+        pubkey == ORACLE_PUBKEY.as_ref(),
+        SokketsuError::BadOracleSignature
+    );
     let message = data
         .get(msg_off..msg_off + msg_len)
         .ok_or(SokketsuError::BadOracleSignature)?;
@@ -133,7 +149,10 @@ pub mod sokketsu {
     pub fn settle(ctx: Context<Settle>, decision: u8, probability_bps: u16) -> Result<()> {
         let escrow = &ctx.accounts.escrow;
         require!(escrow.status == STATUS_OPEN, SokketsuError::NotOpen);
-        require!(escrow.decision == DECISION_NONE, SokketsuError::AlreadyDecided);
+        require!(
+            escrow.decision == DECISION_NONE,
+            SokketsuError::AlreadyDecided
+        );
         require!(
             (DECISION_RELEASE..=DECISION_REFUND).contains(&decision),
             SokketsuError::BadDecision
@@ -173,8 +192,8 @@ pub mod sokketsu {
         require!(escrow.status == STATUS_OPEN, SokketsuError::NotOpen);
 
         let deadline_passed = Clock::get()?.slot >= escrow.deadline_slot;
-        let refund_decided = escrow.decision == DECISION_REFUND
-            && escrow.probability_bps >= RELEASE_THRESHOLD_BPS;
+        let refund_decided =
+            escrow.decision == DECISION_REFUND && escrow.probability_bps >= RELEASE_THRESHOLD_BPS;
         require!(
             deadline_passed || refund_decided,
             SokketsuError::RefundNotAllowed
