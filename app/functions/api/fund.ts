@@ -31,7 +31,8 @@ async function rpcCall<T>(url: string, method: string, params: unknown[]): Promi
   return body.result;
 }
 
-const rateKey = (ip: string) => new Request(`https://sokketsu-fund.internal/ip/${encodeURIComponent(ip)}`);
+const rateKey = (kind: "ip" | "address", value: string) =>
+  new Request(`https://sokketsu-fund.internal/${kind}/${encodeURIComponent(value)}`);
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.FAUCET_SECRET_KEY) return json({ error: "faucet unavailable" }, 503);
@@ -45,7 +46,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
-  if (await caches.default.match(rateKey(ip))) return json({ error: "too many requests" }, 429);
+  const keys = [rateKey("ip", ip), rateKey("address", String(address))];
+  const hits = await Promise.all(keys.map((k) => caches.default.match(k)));
+  if (hits.some(Boolean)) return json({ error: "too many requests" }, 429);
+  // RPC を待つ前に予約する。並列に届いたリクエストが残高の反映前にすり抜けないように。
+  // （Cache API は原子的ではないので窓はゼロにならない。devnet SOL なのでここまでに留める）
+  await Promise.all(
+    keys.map((k) =>
+      caches.default.put(k, new Response("1", { headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}` } })),
+    ),
+  );
 
   // 予備 RPC は devnet を指しているときだけ使う（mainnet へ送らない）。
   const rpcUrl =
@@ -59,10 +69,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     ]);
     const tx = await signedTransfer(env.FAUCET_SECRET_KEY, String(address), FUND_LAMPORTS, value.blockhash);
     await rpcCall<string>(rpcUrl, "sendTransaction", [tx.base64, { encoding: "base64" }]);
-    await caches.default.put(
-      rateKey(ip),
-      new Response("1", { headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}` } }),
-    );
     return json({ signature: tx.signature, lamports: FUND_LAMPORTS }, 200);
   } catch (e) {
     console.error("faucet failed", e instanceof Error ? e.message : String(e));

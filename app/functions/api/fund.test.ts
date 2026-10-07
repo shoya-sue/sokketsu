@@ -87,9 +87,35 @@ describe("/api/fund", () => {
     );
     expect((await call(ENV)).status).toBe(200);
     expect((await call(ENV)).status).toBe(429);
-    // 別の IP は通る（残高確認まで進む）
+    // 別の IP・別のアドレスは通る（残高確認まで進む）
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
-    expect((await call(ENV, { address: TARGET }, "203.0.113.2")).status).toBe(409);
+    expect((await call(ENV, { address: FAUCET.publicKey.toBase58() }, "203.0.113.2")).status).toBe(409);
+  });
+
+  it("1 件目の送金が終わる前に届いた同じ IP の 2 件目も 429（送金の前に予約する）", async () => {
+    let release!: (r: Response) => void;
+    const pending = new Promise<Response>((r) => (release = r));
+    const fetchMock = vi.fn().mockReturnValueOnce(pending);
+    vi.stubGlobal("fetch", fetchMock);
+    const first = call(ENV);
+    // 1 件目が RPC（残高確認）を待っている最中に、2 件目が届く
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect((await call(ENV)).status).toBe(429);
+    release(rpc({ value: FUND_SKIP_LAMPORTS }));
+    await first;
+  });
+
+  it("別の IP からでも同じアドレスへの 2 回目は 429", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(rpc({ value: 0 }))
+        .mockResolvedValueOnce(rpc({ value: { blockhash: BLOCKHASH, lastValidBlockHeight: 1 } }))
+        .mockResolvedValueOnce(rpc("sig")),
+    );
+    expect((await call(ENV, { address: TARGET }, "203.0.113.10")).status).toBe(200);
+    expect((await call(ENV, { address: TARGET }, "203.0.113.11")).status).toBe(429);
   });
 
   it("RPC がエラーを返したら 502（鍵の中身は出さない）", async () => {
