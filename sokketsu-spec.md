@@ -75,7 +75,7 @@ AI エージェントへの都度払いは、判断が自由文なのでプロ�
 2. 発注者の秘密鍵（base58 または solana-keygen の JSON 配列）を貼った瞬間に読み込む。読み込みのボタンは置かない。受注者 keypair は同時に、発注者の秘密鍵から決定的に導く（seed = sha256(発注者の秘密鍵 ‖ "sokketsu-payee-v1")）。同じ発注者なら毎回同じ受注者になり、残高が積み上がる。発注者の鍵があれば受注者の鍵も作り直せる。補助として「airdrop で作る」リンクがあり、失敗（429 など）したら理由を出して貼り付けへ誘導する。
 3. 舞台は 発注者 → 金庫 PDA → 受注者 の3ノード。金庫には Jev の判断リング（閾値 70% の目盛り）が付く。
 4. 「▶ デモを流す」を押すと、hold → release を自動で連続実行する。間に6秒のカウントダウンを挟む。各依頼は次の順で進む。
-   1. 依頼文はプリセット（`hold: wait` / `devnet ping for agent task` / `refund: cancel`）の末尾に `#xxxx` を付けたもの。金額は 0.05 SOL 固定。
+   1. 依頼文はプリセット（`hold: wait` / `release: delivered the devnet ping report; payer verified and approved` / `refund: cancel`）の末尾に `#xxxx` を付けたもの。金額は 0.05 SOL 固定。
    2. `deposit`。コインが 発注者 → 金庫 へ流れる。
    3. Jev またはモックが判断する。リングが回って判断中を示し、判断が出ると確率まで満ちる。
    4. 判断に応じて1つの取引を送る。
