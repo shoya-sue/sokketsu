@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sokketsu hook — time-pure prototype</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #07060d;
+      }
+      #stage {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: radial-gradient(circle at 70% 30%, #1d1640 0%, #07060d 60%);
+        color: #f2f0fa;
+        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+      }
+      .layer {
+        position: absolute;
+      }
+      #wait {
+        left: 80px;
+        top: 150px;
+        font-size: 210px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+      #sub {
+        left: 86px;
+        top: 410px;
+        font-size: 34px;
+        color: #9a95b4;
+      }
+      #counter {
+        right: 90px;
+        top: 170px;
+        font-family: "SF Mono", ui-monospace, monospace;
+        font-size: 96px;
+        color: #ffb547;
+      }
+      .race {
+        left: 90px;
+        width: 1100px;
+        height: 30px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .race span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 15px;
+        transform-origin: left;
+      }
+      .race b {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      #tower {
+        top: 300px;
+      }
+      #tower span {
+        width: 100%;
+        background: #5a5570;
+      }
+      #alpen {
+        top: 420px;
+      }
+      #alpen span {
+        width: 7%;
+        background: linear-gradient(90deg, #9945ff, #14f195);
+      }
+      #brand {
+        left: 0;
+        right: 0;
+        top: 250px;
+        text-align: center;
+      }
+      #brand h1 {
+        margin: 0;
+        font-size: 120px;
+        font-weight: 900;
+      }
+      #brand p {
+        margin: 12px 0 0;
+        font-size: 32px;
+        color: #14f195;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="wait" class="layer">WAIT</div>
+      <div id="sub" class="layer">確定まで、待たされていた。</div>
+      <div id="counter" class="layer">0.0 s</div>
+      <div id="tower" class="layer race"><b>Tower BFT · 12.8 s</b><span></span></div>
+      <div id="alpen" class="layer race"><b>Alpenglow · 826 ms</b><span></span></div>
+      <div id="brand" class="layer">
+        <h1>待たない。</h1>
+        <p>Sokketsu — 型付き判断で止めて、即決する</p>
+      </div>
+    </div>
+    <script>
+      // すべての見た目を時刻 t（秒）だけから決める。同じ t なら必ず同じコマになる（乱数・現在時刻を使わない）。
+      const clamp = (x) => Math.max(0, Math.min(1, x));
+      const range = (t, a, b) => clamp((t - a) / (b - a));
+      const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+      const easeIn = (x) => x * x;
+      const back = (x) => 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
+      const $ = (s) => document.querySelector(s);
+      const show = (el, on) => (el.style.display = on ? "block" : "none");
+
+      window.renderAt = (t) => {
+        const hook = t < 3.4;
+        show($("#wait"), hook);
+        show($("#sub"), t >= 0.4 && hook);
+        show($("#counter"), t >= 0.2 && hook);
+        const w = easeOut(range(t, 0, 0.6));
+        $("#wait").style.opacity = w;
+        $("#wait").style.transform = `translateY(${(1 - w) * 60}px)`;
+        $("#wait").style.letterSpacing = `${-0.04 + 0.16 * range(t, 0.6, 3.2)}em`;
+        const s = easeOut(range(t, 0.4, 0.9));
+        $("#sub").style.opacity = s;
+        $("#sub").style.transform = `translateY(${(1 - s) * 20}px)`;
+        $("#counter").textContent = `${(12.8 * easeIn(range(t, 0.2, 3.2))).toFixed(1)} s`;
+
+        const race = t >= 3.4 && t < 6.8;
+        show($("#tower"), race);
+        show($("#alpen"), race);
+        $("#tower span").style.transform = `scaleX(${range(t, 3.5, 6.7)})`;
+        $("#alpen span").style.transform = `scaleX(${easeOut(range(t, 3.9, 4.15))})`;
+
+        show($("#brand"), t >= 6.8);
+        const h = range(t, 6.9, 7.4);
+        $("#brand h1").style.opacity = h;
+        $("#brand h1").style.transform = `scale(${1.3 - 0.3 * back(h)})`;
+        const p = easeOut(range(t, 7.3, 7.8));
+        $("#brand p").style.opacity = p;
+        $("#brand p").style.transform = `translateY(${(1 - p) * 16}px)`;
+      };
+      window.renderAt(0);
+    </script>
+  </body>
+</html>
