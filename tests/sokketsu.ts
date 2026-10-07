@@ -17,14 +17,22 @@ const REFUND = 3;
 const STATUS_OPEN = 0;
 const STATUS_SETTLED = 1;
 const STATUS_REFUNDED = 2;
+const SOURCE_JEV = 1;
+const SOURCE_MOCK = 2;
 const AMOUNT = new anchor.BN(0.05 * LAMPORTS_PER_SOL);
 const DEADLINE_SLOTS = new anchor.BN(400);
 
 // ローカルテスト用のオラクル（feature "localnet-oracle" のプログラムに埋め込まれた公開鍵と対）。
 const ORACLE = Keypair.fromSeed(new Uint8Array(32).fill(9));
-const DECISION_MESSAGE_PREFIX = Buffer.from("sokketsu-decision-v2");
+const DECISION_MESSAGE_PREFIX = Buffer.from("sokketsu-decision-v3");
 
-const decisionMessage = (escrow: PublicKey, stateHash: number[], decision: number, bps: number): Buffer => {
+const decisionMessage = (
+  escrow: PublicKey,
+  stateHash: number[],
+  decision: number,
+  bps: number,
+  source: number,
+): Buffer => {
   const bpsLe = Buffer.alloc(2);
   bpsLe.writeUInt16LE(bps);
   return Buffer.concat([
@@ -33,6 +41,7 @@ const decisionMessage = (escrow: PublicKey, stateHash: number[], decision: numbe
     Buffer.from(stateHash),
     Buffer.from([decision]),
     bpsLe,
+    Buffer.from([source]),
   ]);
 };
 
@@ -41,11 +50,12 @@ const oracleIx = (
   stateHash: number[],
   decision: number,
   bps: number,
+  source: number,
   signer = ORACLE,
 ): TransactionInstruction =>
   Ed25519Program.createInstructionWithPrivateKey({
     privateKey: signer.secretKey,
-    message: decisionMessage(escrow, stateHash, decision, bps),
+    message: decisionMessage(escrow, stateHash, decision, bps, source),
   });
 
 describe("sokketsu", () => {
@@ -64,31 +74,52 @@ describe("sokketsu", () => {
 
   const balance = (key: PublicKey) => provider.connection.getBalance(key);
 
-  const openEscrow = async (task: string) => {
+  type Opened = { payee: PublicKey; stateHash: number[]; escrow: PublicKey; operator: Keypair };
+
+  const openEscrow = async (task: string, deadlineSlots = DEADLINE_SLOTS): Promise<Opened> => {
     const payee = Keypair.generate().publicKey;
+    const operator = Keypair.generate();
     const stateHash = hashOf(task);
     await program.methods
-      .deposit(AMOUNT, stateHash, DEADLINE_SLOTS)
+      .deposit(AMOUNT, stateHash, deadlineSlots, operator.publicKey)
       .accountsPartial({ payer, payee })
       .rpc();
-    return { payee, stateHash, escrow: escrowPda(stateHash) };
+    return { payee, stateHash, escrow: escrowPda(stateHash), operator };
   };
 
-  /** オラクル署名つきで settle する（署名を付けない・別の判断に署名する、も指定できる）。 */
+  type Signed = { decision: number; bps: number; source?: number; signer?: Keypair; escrow?: PublicKey };
+
+  /**
+   * オラクル署名つきで settle する（署名を付けない・別の判断に署名する、も指定できる）。
+   * 既定の出所は Jev、提出者は発注者（provider の wallet）。submitter を渡すとその鍵が署名して出す
+   * （手数料は provider が払うので、submitter は残高 0 の鍵でよい）。
+   */
   const settle = (
-    e: { payee: PublicKey; stateHash: number[]; escrow: PublicKey },
+    e: Opened,
     decision: number,
     bps: number,
-    opts: { signed?: { decision: number; bps: number; signer?: Keypair; escrow?: PublicKey } | null } = {},
+    opts: { source?: number; signed?: Signed | null; submitter?: Keypair } = {},
   ) => {
-    const signed = opts.signed === undefined ? { decision, bps } : opts.signed;
+    const source = opts.source ?? SOURCE_JEV;
+    const signed = opts.signed === undefined ? { decision, bps, source } : opts.signed;
     const pre = signed
-      ? [oracleIx(signed.escrow ?? e.escrow, e.stateHash, signed.decision, signed.bps, signed.signer)]
+      ? [
+          oracleIx(
+            signed.escrow ?? e.escrow,
+            e.stateHash,
+            signed.decision,
+            signed.bps,
+            signed.source ?? source,
+            signed.signer,
+          ),
+        ]
       : [];
-    return program.methods
-      .settle(decision, bps)
-      .accountsPartial({ payer, payee: e.payee, escrow: e.escrow })
+    const submitter = opts.submitter?.publicKey ?? payer;
+    const builder = program.methods
+      .settle(decision, bps, source)
+      .accountsPartial({ submitter, payer, payee: e.payee, escrow: e.escrow })
       .preInstructions(pre);
+    return opts.submitter ? builder.signers([opts.submitter]) : builder;
   };
 
   const expectError = async (p: Promise<unknown>, code: string) => {
@@ -189,5 +220,69 @@ describe("sokketsu", () => {
     expect(await balance(e.payee)).to.equal(0);
     const state = await program.account.escrow.fetch(e.escrow);
     expect(state.decision).to.equal(0);
+  });
+
+  it("Jev の判断は第三者が出しても執行され、出所が escrow に記録される", async () => {
+    const e = await openEscrow("third party jev release");
+    const stranger = Keypair.generate();
+    await settle(e, RELEASE, 9000, { submitter: stranger }).rpc();
+    expect(await balance(e.payee)).to.equal(AMOUNT.toNumber());
+    const state = await program.account.escrow.fetch(e.escrow);
+    expect(state.status).to.equal(STATUS_SETTLED);
+    expect(state.source).to.equal(SOURCE_JEV);
+  });
+
+  it("モックの判断を第三者が出すと UnauthorizedSubmitter", async () => {
+    const e = await openEscrow("third party mock release");
+    const stranger = Keypair.generate();
+    await expectError(
+      settle(e, RELEASE, 9000, { source: SOURCE_MOCK, submitter: stranger }).rpc(),
+      "UnauthorizedSubmitter",
+    );
+    expect(await balance(e.payee)).to.equal(0);
+  });
+
+  it("モックの判断は登録した操作鍵が出せる（発注者の署名は要らない）", async () => {
+    const e = await openEscrow("operator mock release");
+    await settle(e, RELEASE, 8600, { source: SOURCE_MOCK, submitter: e.operator }).rpc();
+    expect(await balance(e.payee)).to.equal(AMOUNT.toNumber());
+    const state = await program.account.escrow.fetch(e.escrow);
+    expect(state.source).to.equal(SOURCE_MOCK);
+    expect(state.operator.toBase58()).to.equal(e.operator.publicKey.toBase58());
+  });
+
+  it("モックと署名された判断を Jev として出すと BadOracleSignature（出所の書き換え）", async () => {
+    const e = await openEscrow("source tamper");
+    const stranger = Keypair.generate();
+    await expectError(
+      settle(e, RELEASE, 9000, {
+        source: SOURCE_JEV,
+        submitter: stranger,
+        signed: { decision: RELEASE, bps: 9000, source: SOURCE_MOCK },
+      }).rpc(),
+      "BadOracleSignature",
+    );
+    expect(await balance(e.payee)).to.equal(0);
+  });
+
+  it("出所が 1・2 以外なら BadSource", async () => {
+    const e = await openEscrow("bad source");
+    await expectError(settle(e, RELEASE, 9000, { source: 3 }).rpc(), "BadSource");
+  });
+
+  it("refund 判断後の refund と close は第三者が出せ、資金とレントは発注者に戻る", async () => {
+    const e = await openEscrow("third party refund");
+    const stranger = Keypair.generate();
+    const payerBefore = await balance(payer);
+    const escrowLamports = await balance(e.escrow);
+    await settle(e, REFUND, 9000, { submitter: stranger })
+      .postInstructions([
+        await program.methods.refund().accountsPartial({ payer, escrow: e.escrow }).instruction(),
+        await program.methods.close().accountsPartial({ payer, escrow: e.escrow }).instruction(),
+      ])
+      .rpc();
+    expect(await provider.connection.getAccountInfo(e.escrow)).to.equal(null);
+    // 手数料（provider が払う）を差し引いても、預かり金とレントは戻っている
+    expect(await balance(payer)).to.be.greaterThan(payerBefore + escrowLamports - 0.001 * LAMPORTS_PER_SOL);
   });
 });

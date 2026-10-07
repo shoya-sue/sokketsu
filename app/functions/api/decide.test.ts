@@ -50,7 +50,9 @@ describe("/api/decide", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as { proof: Proof };
     expect(body).toMatchObject({ decision, probability, source: "mock", proof: { bps } });
-    expect(await verify(body.proof, await decisionMessage(ESCROW, task, decision, bps))).toBe(true);
+    expect(await verify(body.proof, await decisionMessage(ESCROW, task, decision, bps, "mock"))).toBe(true);
+    // Jev の判断としては通らない（出所が署名に入っている）
+    expect(await verify(body.proof, await decisionMessage(ESCROW, task, decision, bps, "jev"))).toBe(false);
   });
 
   it("署名に失敗したら 500（鍵の中身は出さない）", async () => {

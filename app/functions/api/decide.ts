@@ -25,6 +25,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       input.task,
       decided.decision,
       decided.probability,
+      "mock",
     );
     return json({ ...decided, proof }, 200);
   } catch (e) {

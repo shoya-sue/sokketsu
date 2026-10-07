@@ -14,7 +14,7 @@ import {
 import bs58 from "bs58";
 import idl from "./idl/sokketsu.json";
 import type { Sokketsu } from "./idl/sokketsu";
-import type { DecisionName, JudgeOutput } from "./judge";
+import { SOURCE_CODE, type DecisionName, type JudgeOutput, type SourceName } from "./judge";
 import { createFallbackFetch, type RpcRoute } from "./lib/rpcFallback";
 import { KeyedError, msg, type Msg } from "./i18n";
 
@@ -61,6 +61,23 @@ const GENESIS_CERT_TIMEOUT_MS = 5000;
 const SWEEP_GAP_MS = 1500;
 
 export const DECISION_CODE: Record<DecisionName, number> = { release: 1, hold: 2, refund: 3 };
+
+/**
+ * 取引に署名する者。ページ内の Keypair（お試しの捨て鍵・操作鍵）と、接続したウォレットを同じ形で扱う。
+ * ウォレットは承認ダイアログを出すので、署名は非同期。
+ */
+export type TxSigner = {
+  publicKey: PublicKey;
+  signTransaction: (tx: Transaction) => Promise<Transaction>;
+};
+
+export const keypairSigner = (kp: Keypair): TxSigner => ({
+  publicKey: kp.publicKey,
+  signTransaction: async (tx) => {
+    tx.partialSign(kp);
+    return tx;
+  },
+});
 
 // ---- Alpenglow 判定 ----
 
@@ -116,6 +133,24 @@ export function parseSecretKey(text: string): Keypair {
 export async function airdropTo(pubkey: PublicKey): Promise<void> {
   const sig = await connection.requestAirdrop(pubkey, AIRDROP_LAMPORTS);
   const result = await waitForSignature(sig, 30000, 500);
+  if (result.error) throw new Error(result.error);
+  if (result.finalizedMs === null) throw new KeyedError("err.airdropUnconfirmed");
+}
+
+/**
+ * お試し用の faucet（/api/fund）から devnet SOL を受け取り、finalized まで待つ。
+ * 残高がすでに十分なら（409）何もしない。公開 faucet は 429 が多いので、こちらを先に使う。
+ */
+export async function fundAddress(pubkey: PublicKey): Promise<void> {
+  const res = await fetch("/api/fund", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ address: pubkey.toBase58() }),
+  });
+  if (res.status === 409) return;
+  if (!res.ok) throw new KeyedError("err.fundFailed", { status: res.status });
+  const { signature } = (await res.json()) as { signature: string };
+  const result = await waitForSignature(signature, 30000, 500);
   if (result.error) throw new Error(result.error);
   if (result.finalizedMs === null) throw new KeyedError("err.airdropUnconfirmed");
 }
@@ -181,13 +216,15 @@ export async function fetchEscrow(address: PublicKey): Promise<EscrowView | null
 export const getBalance = (key: PublicKey): Promise<number> => connection.getBalance(key);
 export const getSlot = (): Promise<number> => connection.getSlot();
 
+/** 預け入れ。operator は、モックの判断を発注者の代わりに settle してよい鍵（ブラウザ内の操作鍵）。 */
 export async function depositIx(
   payer: PublicKey,
   payee: PublicKey,
   stateHash: number[],
+  operator: PublicKey,
 ): Promise<TransactionInstruction> {
   return readonlyProgram.methods
-    .deposit(new BN(DEPOSIT_LAMPORTS), stateHash, new BN(DEADLINE_SLOTS))
+    .deposit(new BN(DEPOSIT_LAMPORTS), stateHash, new BN(DEADLINE_SLOTS), operator)
     .accountsPartial({
       payer,
       payee,
@@ -197,22 +234,24 @@ export async function depositIx(
     .instruction();
 }
 
-// プログラム（lib.rs の decision_message）と同じ並び: prefix || escrow || state_hash || decision || bps(LE)
-const DECISION_MESSAGE_PREFIX = new TextEncoder().encode("sokketsu-decision-v2");
+// プログラム（lib.rs の decision_message）と同じ並び: prefix || escrow || state_hash || decision || bps(LE) || source
+const DECISION_MESSAGE_PREFIX = new TextEncoder().encode("sokketsu-decision-v3");
 
 export function decisionMessage(
   escrow: PublicKey,
   stateHash: number[],
   decision: DecisionName,
   bps: number,
+  source: SourceName,
 ): Uint8Array {
   const n = DECISION_MESSAGE_PREFIX.length;
-  const message = new Uint8Array(n + 32 + 32 + 1 + 2);
+  const message = new Uint8Array(n + 32 + 32 + 1 + 2 + 1);
   message.set(DECISION_MESSAGE_PREFIX, 0);
   message.set(escrow.toBytes(), n);
   message.set(stateHash, n + 32);
   message[n + 64] = DECISION_CODE[decision];
   new DataView(message.buffer).setUint16(n + 65, bps, true);
+  message[n + 67] = SOURCE_CODE[source];
   return message;
 }
 
@@ -224,9 +263,11 @@ function hexToBytes(hex: string, bytes: number): Uint8Array {
 
 /**
  * settle の命令列: [オラクル署名の Ed25519 検証命令, settle]。
- * プログラムは直前の Ed25519 命令を読み、オラクルの公開鍵と判断が一致しなければ拒否する。
+ * プログラムは直前の Ed25519 命令を読み、オラクルの公開鍵と判断（出所を含む）が一致しなければ拒否する。
+ * submitter は取引に署名して出す鍵。Jev の判断なら誰でもよく、モックなら発注者か操作鍵でなければ拒否される。
  */
 export async function settleIxs(
+  submitter: PublicKey,
   payer: PublicKey,
   payee: PublicKey,
   escrow: PublicKey,
@@ -237,16 +278,17 @@ export async function settleIxs(
   if (!proof) throw new KeyedError("err.decisionUnsigned");
   const verify = Ed25519Program.createInstructionWithPublicKey({
     publicKey: hexToBytes(proof.publicKey, 32),
-    message: decisionMessage(escrow, stateHash, judgement.decision, proof.bps),
+    message: decisionMessage(escrow, stateHash, judgement.decision, proof.bps, judgement.source),
     signature: hexToBytes(proof.signature, 64),
   });
   const settle = await readonlyProgram.methods
-    .settle(DECISION_CODE[judgement.decision], proof.bps)
-    .accountsPartial({ payer, payee, escrow, instructions: SYSVAR_INSTRUCTIONS_PUBKEY })
+    .settle(DECISION_CODE[judgement.decision], proof.bps, SOURCE_CODE[judgement.source])
+    .accountsPartial({ submitter, payer, payee, escrow, instructions: SYSVAR_INSTRUCTIONS_PUBKEY })
     .instruction();
   return [verify, settle];
 }
 
+/** refund / close は誰が出してもよい（戻り先は escrow の payer に固定）。payer は戻り先の指定で、署名は要らない。 */
 export async function refundIx(payer: PublicKey, escrow: PublicKey): Promise<TransactionInstruction> {
   return readonlyProgram.methods.refund().accountsPartial({ payer, escrow }).instruction();
 }
@@ -260,13 +302,16 @@ export type SweepResult = { refunded: number; closed: number; waiting: number; f
 /**
  * この発注者の escrow を回収する。
  * 期限切れの open は refund + close、終わったもの（settled / refunded）は close でレントごと戻す。
- * 期限前の open は触らない（waiting に数える）。
+ * 期限前の open は触らない（waiting に数える）。refund / close は誰が出してもよいので、submitter は
+ * 発注者でなくてよい（操作鍵が手数料を払い、資金とレントは発注者に戻る）。
  */
-export async function sweepEscrows(signer: Keypair): Promise<SweepResult> {
+export async function sweepEscrows(submitter: TxSigner, payer: PublicKey): Promise<SweepResult> {
   const PAYER_OFFSET = 8; // discriminator の直後が payer
   const [accounts, slot] = await Promise.all([
     readonlyProgram.account.escrow.all([
-      { memcmp: { offset: PAYER_OFFSET, bytes: signer.publicKey.toBase58() } },
+      { memcmp: { offset: PAYER_OFFSET, bytes: payer.toBase58() } },
+      // 旧レイアウト（operator / source が無い）の口座は読めないので、今の大きさのものだけを対象にする。
+      { dataSize: readonlyProgram.account.escrow.size },
     ]),
     connection.getSlot(),
   ]);
@@ -283,9 +328,9 @@ export async function sweepEscrows(signer: Keypair): Promise<SweepResult> {
     if (sent++ > 0) await sleep(SWEEP_GAP_MS);
     try {
       const ixs = open
-        ? [await refundIx(signer.publicKey, escrow), await closeIx(signer.publicKey, escrow)]
-        : [await closeIx(signer.publicKey, escrow)];
-      const m = await sendSetup(signer, ixs);
+        ? [await refundIx(payer, escrow), await closeIx(payer, escrow)]
+        : [await closeIx(payer, escrow)];
+      const m = await sendSetup(submitter, ixs);
       if (m.error || m.finalizedMs === null) {
         result.failed += 1;
       } else {
@@ -358,7 +403,7 @@ async function waitForSignature(
  * timeoutMs で打ち切る（finalizedMs が null なら未確定）。
  */
 export async function sendAndMeasure(
-  signer: Keypair,
+  signer: TxSigner,
   instructions: TransactionInstruction[],
   timeoutMs = MEASURE_TIMEOUT_MS,
   onSent?: (t0: number) => void,
@@ -370,9 +415,10 @@ export async function sendAndMeasure(
   const tx = new Transaction({ feePayer: signer.publicKey, recentBlockhash: blockhash }).add(
     ...instructions,
   );
-  tx.sign(signer);
-  const signature = bs58.encode(tx.signature!);
-  const raw = tx.serialize();
+  // ウォレットの承認待ちは計測に含めない（t0 は署名のあと）。
+  const signed = await signer.signTransaction(tx);
+  const signature = bs58.encode(signed.signature!);
+  const raw = signed.serialize();
 
   // 観測した絶対時刻。最初に観測した値だけを残す。
   const seen = {
@@ -446,7 +492,7 @@ export async function sendAndMeasure(
 }
 
 /** 計測を表示しない準備用の取引（deposit / hold の記録）。ポーリングは粗くする。 */
-export const sendSetup = (signer: Keypair, instructions: TransactionInstruction[]) =>
+export const sendSetup = (signer: TxSigner, instructions: TransactionInstruction[]) =>
   sendAndMeasure(signer, instructions, SETUP_TIMEOUT_MS, undefined, SETUP_INTERVAL_MS, true);
 
 /** slot を WebSocket で購読する（ポーリングしない）。解除関数を返す。 */
@@ -456,3 +502,7 @@ export function subscribeSlots(onSlot: (slot: number) => void): () => void {
     measureConnection.removeSlotChangeListener(id).catch(() => undefined);
   };
 }
+
+/** 発注者から操作鍵へ手数料ぶんを送る命令（預け入れと同じ取引に入れ、承認を 1 回で済ませる）。 */
+export const topUpIx = (from: PublicKey, to: PublicKey, lamports: number): TransactionInstruction =>
+  SystemProgram.transfer({ fromPubkey: from, toPubkey: to, lamports });

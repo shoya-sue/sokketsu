@@ -85,7 +85,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "jev failed" }, 502);
     }
     // オンチェーンで検証できるよう、判断にオラクルの署名を付ける。
-    const proof = await signDecision(env.ORACLE_SECRET_KEY, input.escrow, input.task, decision, probability);
+    const proof = await signDecision(env.ORACLE_SECRET_KEY, input.escrow, input.task, decision, probability, "jev");
     return json({ decision, probability, source: "jev", proof }, 200);
   } catch (e) {
     console.error("jev request failed", e);

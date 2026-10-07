@@ -29,7 +29,6 @@ export type Sokketsu = {
         {
           "name": "payer",
           "writable": true,
-          "signer": true,
           "relations": [
             "escrow"
           ]
@@ -135,6 +134,10 @@ export type Sokketsu = {
         {
           "name": "deadlineSlots",
           "type": "u64"
+        },
+        {
+          "name": "operator",
+          "type": "pubkey"
         }
       ]
     },
@@ -154,7 +157,6 @@ export type Sokketsu = {
         {
           "name": "payer",
           "writable": true,
-          "signer": true,
           "relations": [
             "escrow"
           ]
@@ -192,6 +194,11 @@ export type Sokketsu = {
     },
     {
       "name": "settle",
+      "docs": [
+        "オラクルが署名した判断を執行する。",
+        "Jev の判断は誰が出してもよい（発注者が出さなくても受注者が払われる）。",
+        "モックの判断は認証なしで取れるので、発注者か預け入れ時に登録した操作鍵だけが出せる。"
+      ],
       "discriminator": [
         175,
         42,
@@ -204,8 +211,14 @@ export type Sokketsu = {
       ],
       "accounts": [
         {
+          "name": "submitter",
+          "docs": [
+            "判断を提出する鍵。Jev の判断なら誰でもよい。モックなら payer か operator（settle で検査）。"
+          ],
+          "signer": true
+        },
+        {
           "name": "payer",
-          "signer": true,
           "relations": [
             "escrow"
           ]
@@ -258,6 +271,10 @@ export type Sokketsu = {
         {
           "name": "probabilityBps",
           "type": "u16"
+        },
+        {
+          "name": "source",
+          "type": "u8"
         }
       ]
     }
@@ -327,6 +344,16 @@ export type Sokketsu = {
       "code": 6009,
       "name": "badOracleSignature",
       "msg": ""
+    },
+    {
+      "code": 6010,
+      "name": "badSource",
+      "msg": "source は 1（Jev）か 2（モック）のみ"
+    },
+    {
+      "code": 6011,
+      "name": "unauthorizedSubmitter",
+      "msg": ""
     }
   ],
   "types": [
@@ -341,6 +368,13 @@ export type Sokketsu = {
           },
           {
             "name": "payee",
+            "type": "pubkey"
+          },
+          {
+            "name": "operator",
+            "docs": [
+              "モックの判断を settle してよい操作鍵（ブラウザ内の鍵。発注者の承認を 1 回で済ませるため）。"
+            ],
             "type": "pubkey"
           },
           {
@@ -374,6 +408,13 @@ export type Sokketsu = {
           },
           {
             "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "source",
+            "docs": [
+              "settle された判断の出所（SOURCE_*）。"
+            ],
             "type": "u8"
           }
         ]

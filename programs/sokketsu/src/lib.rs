@@ -23,6 +23,11 @@ pub const STATUS_OPEN: u8 = 0;
 pub const STATUS_SETTLED: u8 = 1;
 pub const STATUS_REFUNDED: u8 = 2;
 
+/// 判断の出所。オラクルが署名するメッセージに含めるので、書き換えられない。
+pub const SOURCE_NONE: u8 = 0;
+pub const SOURCE_JEV: u8 = 1;
+pub const SOURCE_MOCK: u8 = 2;
+
 /// 判断に署名するオラクル（Pages Function）の公開鍵。
 /// ローカルテストは公開してよい固定鍵（seed = [9; 32]）、devnet は本番の鍵。
 #[cfg(feature = "localnet-oracle")]
@@ -30,16 +35,18 @@ pub const ORACLE_PUBKEY: Pubkey = pubkey!("J2xccRtuG43drESLYznHhLhQkLTdfepcKYbiQ
 #[cfg(not(feature = "localnet-oracle"))]
 pub const ORACLE_PUBKEY: Pubkey = pubkey!("DBYrETRocKoD4yBaWm2EvqSiqZ4T8SAfw6zDmmHiqHu5");
 
-/// 署名対象: prefix(20) || escrow(32) || state_hash(32) || decision(1) || probability_bps(2, LE)
+/// 署名対象: prefix(20) || escrow(32) || state_hash(32) || decision(1) || probability_bps(2, LE) || source(1)
 /// escrow を含めるので、同じ依頼文でも別の escrow に署名を使い回せない。
-pub const DECISION_MESSAGE_PREFIX: &[u8] = b"sokketsu-decision-v2";
-pub const DECISION_MESSAGE_LEN: usize = 20 + 32 + 32 + 1 + 2;
+/// source を含めるので、モックの判断を Jev の判断として出せない。
+pub const DECISION_MESSAGE_PREFIX: &[u8] = b"sokketsu-decision-v3";
+pub const DECISION_MESSAGE_LEN: usize = 20 + 32 + 32 + 1 + 2 + 1;
 
 pub fn decision_message(
     escrow: &Pubkey,
     state_hash: &[u8; 32],
     decision: u8,
     probability_bps: u16,
+    source: u8,
 ) -> [u8; DECISION_MESSAGE_LEN] {
     let mut message = [0u8; DECISION_MESSAGE_LEN];
     message[..20].copy_from_slice(DECISION_MESSAGE_PREFIX);
@@ -47,6 +54,7 @@ pub fn decision_message(
     message[52..84].copy_from_slice(state_hash);
     message[84] = decision;
     message[85..87].copy_from_slice(&probability_bps.to_le_bytes());
+    message[87] = source;
     message
 }
 
@@ -58,6 +66,7 @@ fn verify_oracle_decision(
     state_hash: &[u8; 32],
     decision: u8,
     probability_bps: u16,
+    source: u8,
 ) -> Result<()> {
     let current = ix_sysvar::load_current_index_checked(instructions)? as usize;
     require!(current > 0, SokketsuError::MissingOracleSignature);
@@ -93,7 +102,8 @@ fn verify_oracle_decision(
         .get(msg_off..msg_off + msg_len)
         .ok_or(SokketsuError::BadOracleSignature)?;
     require!(
-        message == decision_message(escrow, state_hash, decision, probability_bps).as_slice(),
+        message
+            == decision_message(escrow, state_hash, decision, probability_bps, source).as_slice(),
         SokketsuError::BadOracleSignature
     );
     Ok(())
@@ -108,6 +118,7 @@ pub mod sokketsu {
         amount: u64,
         state_hash: [u8; 32],
         deadline_slots: u64,
+        operator: Pubkey,
     ) -> Result<()> {
         require!(amount > 0, SokketsuError::AmountZero);
         require!(
@@ -135,6 +146,7 @@ pub mod sokketsu {
         ctx.accounts.escrow.set_inner(Escrow {
             payer: ctx.accounts.payer.key(),
             payee: ctx.accounts.payee.key(),
+            operator,
             amount,
             deadline_slot,
             state_hash,
@@ -142,11 +154,20 @@ pub mod sokketsu {
             probability_bps: 0,
             bumped: ctx.bumps.escrow,
             status: STATUS_OPEN,
+            source: SOURCE_NONE,
         });
         Ok(())
     }
 
-    pub fn settle(ctx: Context<Settle>, decision: u8, probability_bps: u16) -> Result<()> {
+    /// オラクルが署名した判断を執行する。
+    /// Jev の判断は誰が出してもよい（発注者が出さなくても受注者が払われる）。
+    /// モックの判断は認証なしで取れるので、発注者か預け入れ時に登録した操作鍵だけが出せる。
+    pub fn settle(
+        ctx: Context<Settle>,
+        decision: u8,
+        probability_bps: u16,
+        source: u8,
+    ) -> Result<()> {
         let escrow = &ctx.accounts.escrow;
         require!(escrow.status == STATUS_OPEN, SokketsuError::NotOpen);
         require!(
@@ -161,6 +182,17 @@ pub mod sokketsu {
             probability_bps <= MAX_PROBABILITY_BPS,
             SokketsuError::BadProbability
         );
+        require!(
+            source == SOURCE_JEV || source == SOURCE_MOCK,
+            SokketsuError::BadSource
+        );
+        if source == SOURCE_MOCK {
+            let submitter = ctx.accounts.submitter.key();
+            require!(
+                submitter == escrow.payer || submitter == escrow.operator,
+                SokketsuError::UnauthorizedSubmitter
+            );
+        }
         // 判断はオラクルの署名付きでなければ受け付けない（クライアントによる書き換えを防ぐ）。
         verify_oracle_decision(
             &ctx.accounts.instructions.to_account_info(),
@@ -168,6 +200,7 @@ pub mod sokketsu {
             &escrow.state_hash,
             decision,
             probability_bps,
+            source,
         )?;
 
         let release = decision == DECISION_RELEASE && probability_bps >= RELEASE_THRESHOLD_BPS;
@@ -181,6 +214,7 @@ pub mod sokketsu {
         let escrow = &mut ctx.accounts.escrow;
         escrow.decision = decision;
         escrow.probability_bps = probability_bps;
+        escrow.source = source;
         if release {
             escrow.status = STATUS_SETTLED;
         }
@@ -235,7 +269,10 @@ pub struct Deposit<'info> {
 
 #[derive(Accounts)]
 pub struct Settle<'info> {
-    pub payer: Signer<'info>,
+    /// 判断を提出する鍵。Jev の判断なら誰でもよい。モックなら payer か operator（settle で検査）。
+    pub submitter: Signer<'info>,
+    /// CHECK: escrow の has_one で一致を検査する。署名は求めない。
+    pub payer: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [b"escrow", payer.key().as_ref(), escrow.state_hash.as_ref()],
@@ -251,10 +288,12 @@ pub struct Settle<'info> {
     pub instructions: UncheckedAccount<'info>,
 }
 
+/// 誰が出してもよい。戻り先は escrow の payer に固定（has_one）。
 #[derive(Accounts)]
 pub struct Refund<'info> {
+    /// CHECK: escrow の has_one で一致を検査する。署名は求めない。
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [b"escrow", payer.key().as_ref(), escrow.state_hash.as_ref()],
@@ -264,10 +303,12 @@ pub struct Refund<'info> {
     pub escrow: Account<'info, Escrow>,
 }
 
+/// 誰が出してもよい。レントの戻り先は escrow の payer に固定（has_one）。
 #[derive(Accounts)]
 pub struct Close<'info> {
+    /// CHECK: escrow の has_one で一致を検査する。署名は求めない。
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer: UncheckedAccount<'info>,
     #[account(
         mut,
         seeds = [b"escrow", payer.key().as_ref(), escrow.state_hash.as_ref()],
@@ -283,6 +324,8 @@ pub struct Close<'info> {
 pub struct Escrow {
     pub payer: Pubkey,
     pub payee: Pubkey,
+    /// モックの判断を settle してよい操作鍵（ブラウザ内の鍵。発注者の承認を 1 回で済ませるため）。
+    pub operator: Pubkey,
     pub amount: u64,
     pub deadline_slot: u64,
     pub state_hash: [u8; 32],
@@ -290,6 +333,8 @@ pub struct Escrow {
     pub probability_bps: u16,
     pub bumped: u8,
     pub status: u8,
+    /// settle された判断の出所（SOURCE_*）。
+    pub source: u8,
 }
 
 #[error_code]
@@ -314,4 +359,8 @@ pub enum SokketsuError {
     MissingOracleSignature,
     #[msg("オラクルの署名が判断と一致しない")]
     BadOracleSignature,
+    #[msg("source は 1（Jev）か 2（モック）のみ")]
+    BadSource,
+    #[msg("モックの判断は発注者か操作鍵だけが出せる")]
+    UnauthorizedSubmitter,
 }
