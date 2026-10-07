@@ -11,9 +11,12 @@
 
 | | |
 |---|---|
-| 操作は 2 つだけ | 発注者の鍵を貼る → 「▶ デモを流す」。hold で止まる → release で即決、が自動で流れる |
+| 操作は 2 つだけ | ウォレットを接続（または「お試し」）→「▶ デモを流す」。hold で止まる → release で即決、が自動で流れる |
+| 承認は 1 回 | ウォレットで承認するのは預け入れだけ。settle はページ内の操作鍵が出す。秘密鍵は貼らない（貼る入口は開発者向けに折りたたみ） |
+| お試し | ブラウザ内で捨て鍵を作り、自前の faucet（`/api/fund`）から devnet SOL を受け取る |
 | 型付き判断 | Jev（`typesafe-ai/jev`）が choice + 確率だけを返す。使えないときはサーバ側のモック |
-| オンチェーン署名検証 | オラクル（Pages Function）が判断に署名し、`settle` が Ed25519 検証命令を照合。署名なし・書き換え・別 escrow への使い回しは `MissingOracleSignature` / `BadOracleSignature` で拒否 |
+| オンチェーン署名検証 | オラクル（Pages Function）が判断と**出所（Jev / モック）**に署名し、`settle` が Ed25519 検証命令を照合。署名なし・書き換え・別 escrow への使い回し・出所の書き換えは `MissingOracleSignature` / `BadOracleSignature` で拒否 |
+| 誰が執行できるか | Jev の判断は誰が出しても執行される（発注者が止められない）。モックの判断は発注者か登録した操作鍵だけ（`UnauthorizedSubmitter`）。refund / close は誰でも出せ、戻り先は発注者に固定 |
 | 確定の実測 | WebSocket の `signatureSubscribe` で processed / finalized を受け、Tower BFT（約 12.8 秒）と比べる |
 | ゲームの手触り | レベル・スコア・コンボ・S〜C ランク・実績 7 種・紙吹雪・効果音（ミュート可） |
 | 見せ方 | 発注者 → 金庫 PDA → 受注者 をコインが流れる舞台、直近 5 件と中央値、日本語 / English |
@@ -23,9 +26,10 @@
 
 ```
 ブラウザ ──(依頼文)──▶ /api/judge（Jev）または /api/decide（モック）
-                         └ 判断を ed25519 で署名: "sokketsu-decision-v2" ‖ escrow ‖ sha256(依頼文) ‖ decision ‖ bps
-ブラウザ ──[Ed25519 検証命令, settle]──▶ sokketsu プログラム（devnet）
-                         └ 直前の命令の公開鍵 = ORACLE_PUBKEY、メッセージ = この escrow・state_hash・判断 を照合
+                         └ 判断を ed25519 で署名: "sokketsu-decision-v3" ‖ escrow ‖ sha256(依頼文) ‖ decision ‖ bps ‖ source
+ウォレット ──[deposit（+ 操作鍵へ手数料）]──▶ sokketsu プログラム   ← 承認はここだけ
+操作鍵 ──[Ed25519 検証命令, settle]──▶ sokketsu プログラム（devnet）
+                         └ 直前の命令の公開鍵 = ORACLE_PUBKEY、メッセージ = この escrow・state_hash・判断・出所 を照合
                          └ release かつ 7000 bps 以上のときだけ受注者へ送金
 ```
 
@@ -33,10 +37,10 @@
 
 ```
 programs/sokketsu/src/lib.rs   Anchor プログラム（deposit / settle / refund / close + オラクル署名検証）
-tests/sokketsu.ts              anchor test（8 本）
+tests/sokketsu.ts              anchor test（14 本）
 app/src                        React + Vite のフロント（App / components / lib / i18n）
-app/functions/api              Pages Functions（judge / decide / rpc）
-app/server                     Function 共通（auth / oracle / judgeInput）
+app/functions/api              Pages Functions（judge / decide / rpc / fund）
+app/server                     Function 共通（auth / oracle / judgeInput / ed25519 / transfer）
 ```
 
 ## 開発
@@ -70,6 +74,7 @@ CLOUDFLARE_ACCOUNT_ID=<your-account-id> npm run deploy
 | `DEMO_TOKEN` | `/api/judge`・`/api/rpc` を使うためのトークン（画面の ⚙ に入れる） | ○ |
 | `AI_GATEWAY_API_KEY` | Vercel AI Gateway（`vck_…`）か TypeSafe のキー。Gateway → 拒否されたら TypeSafe 直、の順で試す | 任意 |
 | `HELIUS_RPC_URL` | 公開 RPC の障害時だけ使う予備の devnet RPC | 任意 |
+| `FAUCET_SECRET_KEY` | お試し用 faucet 鍵の ed25519 seed（32 バイト hex）。devnet SOL だけを入れる。1 回 0.12 SOL・残高のあるアドレスには送らない・IP ごとに 10 分 | 任意（無ければお試しは公開 faucet だけ） |
 
 ```bash
 CLOUDFLARE_ACCOUNT_ID=<your-account-id> npx wrangler pages secret put <NAME> --project-name sokketsu
@@ -80,7 +85,7 @@ CLOUDFLARE_ACCOUNT_ID=<your-account-id> npx wrangler pages secret put <NAME> --p
 ## デモ台本
 
 1. 証明書と、動き続ける slot を見せ、「この devnet は Alpenglow」と言う。
-2. 鍵を貼って「▶ デモを流す」。hold で金庫に錠が掛かり、受注者の残高が動かないことを見せる。
+2. ウォレットを接続（または「お試し」）して「▶ デモを流す」。hold で金庫に錠が掛かり、受注者の残高が動かないことを見せる。
 3. カウントダウンのあと release が走り、コインが受注者へ流れて、finalized ミリ秒・倍率・ランクが出る。
 4. 「Tower BFT なら約 12.8 秒。判断も確定もサブ秒。判断はオラクルが署名し、書き換えた取引はプログラムが拒否する」で終える。
 
@@ -89,5 +94,7 @@ CLOUDFLARE_ACCOUNT_ID=<your-account-id> npx wrangler pages secret put <NAME> --p
 - devnet 専用。mainnet には接続しない。
 - オンチェーンで検証するのは自前のオラクルの署名まで。Jev（モデル提供者）自身の署名は検証しない。
 - プログラムは upgrade 可能なまま（ハッカソン中の改修のため）。凍結するなら `solana program set-upgrade-authority Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp --final`（元に戻せない）。
-- 貼る鍵は devnet 専用の捨て鍵にする。受注者の鍵は発注者の鍵から導けるので、価値のある鍵は貼らない。
+- 貼る鍵は devnet 専用の捨て鍵にする。受注者の鍵は発注者の鍵（ウォレット・お試しでは公開鍵）から導けるので、受注者の口座はデモ用の受け皿として扱う。
+- 操作鍵はページのメモリにだけ置く。再読み込みすると、残った手数料（最大 0.002 SOL）はそのまま残る。
+- プログラムを upgrade すると口座のレイアウトが変わることがある。2026-10-07 の upgrade 前に旧い escrow は回収済み。
 - 画面の finalized ミリ秒は、ブラウザ → 公開 RPC の往復を含む値。

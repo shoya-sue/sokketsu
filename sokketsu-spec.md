@@ -61,18 +61,23 @@ AI エージェントへの都度払いは、判断が自由文なのでプロ�
 - mainnet 送金、実在株式、配当、トークン発行、自動売買。
 - Jev（モデル提供者）自身の署名の検証。オンチェーンで検証するのは、自前のオラクル（Pages Function）の署名まで。オラクルが Jev の答えを正しく中継していることは、オラクルを信頼する前提とする。
 - Transaction V1 の 4,096 バイト対応、アドレス照合表、インデクサ、Geyser。
-- ウォレットアダプタ（Phantom 含む）。署名はページ内 keypair だけ。
+- ~~ウォレットアダプタ（Phantom 含む）。署名はページ内 keypair だけ。~~ → 2026-10-07 に方針変更。ウォレット接続（Wallet Standard 対応を自動検出）を主な入口にした（第5節2）。
 - 12.8秒の確認待ち。計測の打ち切りは 3秒。
 
 ## 5. 体験
 
-操作は極限まで減らし、動きを見せることに振る（2026-10-03 改訂）。人がする操作は「鍵を貼る」「▶ を押す」の2つだけ。
+操作は極限まで減らし、動きを見せることに振る（2026-10-03 改訂）。人がする操作は「ウォレットを接続する（またはお試し）」「▶ を押す」の2つだけ（2026-10-07 改訂）。
 
 1. ページを開くと、移行判定と証明書の `block.slot`（移行最初の slot）、現在の slot が出る。現在の slot は WebSocket の `slotSubscribe` で進むたびに更新する。
    - 証明書あり: `Alpenglow`。再生ボタン有効。
    - `null`: 「この RPC では Alpenglow を確認できない」と出し、再生ボタンを無効にする。
    - `-32601` / 通信失敗 / 5秒で応答なし: `不明` と警告を出す。再生ボタンは有効のまま（審査中の RPC 不調でデモを止めない）。
-2. 発注者の秘密鍵（base58 または solana-keygen の JSON 配列）を貼った瞬間に読み込む。読み込みのボタンは置かない。受注者 keypair は同時に、発注者の秘密鍵から決定的に導く（seed = sha256(発注者の秘密鍵 ‖ "sokketsu-payee-v1")）。同じ発注者なら毎回同じ受注者になり、残高が積み上がる。発注者の鍵があれば受注者の鍵も作り直せる。補助として「airdrop で作る」リンクがあり、失敗（429 など）したら理由を出して貼り付けへ誘導する。
+2. （2026-10-07 改訂）発注者の入口は 3 つ。
+   - **ウォレット接続**（主）: 承認は預け入れの 1 回だけ。ページ内で作る操作鍵（operator）を escrow に登録し、settle / refund / 回収は操作鍵が出す。操作鍵の手数料（0.002 SOL まで）は預け入れと同じ取引で送る。受注者は発注者の公開鍵から導く（seed = sha256(公開鍵 ‖ "sokketsu-payee-v2")）。devnet の SOL が無ければ「devnet の SOL を受け取る」で `/api/fund` から受け取る。
+   - **お試し**: ブラウザ内で捨て鍵を作り、`/api/fund`（自前の faucet・0.12 SOL）から SOL を受け取る。公開 faucet は 429 がほとんどなので補助にとどめる。捨て鍵が発注者と操作鍵を兼ねる。
+   - **秘密鍵を貼る**（開発者向け・折りたたみ）: 以下の従来の動作。
+
+   従来: 発注者の秘密鍵（base58 または solana-keygen の JSON 配列）を貼った瞬間に読み込む。読み込みのボタンは置かない。受注者 keypair は同時に、発注者の秘密鍵から決定的に導く（seed = sha256(発注者の秘密鍵 ‖ "sokketsu-payee-v1")）。同じ発注者なら毎回同じ受注者になり、残高が積み上がる。発注者の鍵があれば受注者の鍵も作り直せる。補助として「airdrop で作る」リンクがあり、失敗（429 など）したら理由を出して貼り付けへ誘導する。
 3. 舞台は 発注者 → 金庫 PDA → 受注者 の3ノード。金庫には Jev の判断リング（閾値 70% の目盛り）が付く。
 4. 「▶ デモを流す」を押すと、hold → release を自動で連続実行する。間に6秒のカウントダウンを挟む。各依頼は次の順で進む。
    1. 依頼文はプリセット（`hold: wait` / `release: delivered the devnet ping report; payer verified and approved` / `refund: cancel`）の末尾に `#xxxx` を付けたもの。金額は 0.05 SOL 固定。
@@ -106,6 +111,7 @@ crate 名は `sokketsu`。Anchor は作業環境の `anchor --version` の版を
 | --- | --- | --- |
 | payer | Pubkey | 発注者。deposit の署名者 |
 | payee | Pubkey | 受注者 |
+| operator | Pubkey | モックの判断を settle してよい操作鍵（2026-10-07 追加） |
 | amount | u64 | lamports |
 | deadline_slot | u64 | この slot 以降は refund 可能 |
 | state_hash | [u8; 32] | 依頼文の sha256 |
@@ -113,6 +119,7 @@ crate 名は `sokketsu`。Anchor は作業環境の `anchor --version` の版を
 | probability_bps | u16 | 0〜10000。70% は 7000 |
 | bumped | u8 | PDA bump |
 | status | u8 | 0=open, 1=settled, 2=refunded |
+| source | u8 | settle された判断の出所。0=未判断, 1=Jev, 2=モック（2026-10-07 追加） |
 
 seeds は `["escrow", payer, state_hash]`。同一発注者・同一依頼で1口座。デモでは依頼文を変えて複数回作れるようにする。
 
@@ -125,39 +132,42 @@ Escrow は Anchor の `init` で作るプログラム所有のデータ口座で
 
 ### 命令
 
-`deposit(amount, state_hash, deadline_slots)`
+`deposit(amount, state_hash, deadline_slots, operator)`
 
 - アカウント: payer（signer, mut）、payee（未検査、Pubkey 記録用）、escrow（init, seeds）、system_program。
+- operator を記録する。
 - amount は 0 より大きい。deadline_slots は 1〜1500。既定 400（devnet でデモ中に期限切れしない値。目安 90〜160秒）。
 - `Clock.slot + deadline_slots` を `deadline_slot` にする。unix 時刻は使わない。
 
-`settle(decision, probability_bps)`
+`settle(decision, probability_bps, source)`
 
-- アカウント: payer（signer）、escrow（mut, has_one payer, has_one payee）、payee（mut）、instructions（instructions sysvar、アドレス固定）。
+- アカウント: submitter（signer）、payer（未検査・署名不要、escrow の has_one で一致を検査）、escrow（mut, has_one payer, has_one payee）、payee（mut）、instructions（instructions sysvar、アドレス固定）。
+- source は 1（Jev）か 2（モック）。それ以外は `BadSource`。
+- **Jev の判断（source=1）は誰が出してもよい**（発注者が出さなくても受注者が払われる）。**モックの判断（source=2）は submitter が payer か operator でなければ `UnauthorizedSubmitter`**（`/api/decide` は認証なしで取れるため）。
 - status は open、decision は 0（未判断）であること。1 口座で判断は1回だけ。
 - decision は 1, 2, 3 のみ。probability_bps は 0〜10000。
 - 直前の命令が Ed25519 検証命令で、次をすべて満たすこと。満たさなければ拒否する。
   - 署名は 1 つ。
   - 公開鍵・署名・メッセージは、その命令自身のデータ内にある（instruction index = u16::MAX）。
   - 公開鍵は `ORACLE_PUBKEY`。
-  - メッセージは `"sokketsu-decision-v2" ‖ escrow のアドレス ‖ escrow.state_hash ‖ decision(u8) ‖ probability_bps(u16 LE)` の 87 バイト。escrow を含むので、同じ依頼文でも別の escrow には署名を使い回せない。
+  - メッセージは `"sokketsu-decision-v3" ‖ escrow のアドレス ‖ escrow.state_hash ‖ decision(u8) ‖ probability_bps(u16 LE) ‖ source(u8)` の 88 バイト（2026-10-07 に v2 から変更）。escrow を含むので、同じ依頼文でも別の escrow には署名を使い回せない。source を含むので、モックの判断を Jev の判断として出せない。
 
   署名そのものの正しさは ed25519 ネイティブプログラムが検証する（不正なら取引ごと失敗）。
 - `ORACLE_PUBKEY` は devnet 用の鍵。feature `localnet-oracle` を付けたビルドだけ、テスト用の固定鍵（seed = [9; 32]）に替わる。
-- 値を口座へ記録する。
+- 値（decision・probability_bps・source）を口座へ記録する。
 - decision == 1 かつ probability_bps >= `RELEASE_THRESHOLD_BPS` のときだけ、amount を payee へ送り status = settled。
 - それ以外は送金せず、エラーにもしない。status は open のまま。
 
 `refund()`
 
-- アカウント: payer（signer, mut）、escrow（mut, has_one payer）。
+- アカウント: payer（未検査・署名不要, mut）、escrow（mut, has_one payer）。誰が出してもよい（戻り先は escrow の payer に固定）。
 - status は open。
 - 通る条件はどちらか。`Clock.slot >= deadline_slot`、または decision == 3 かつ probability_bps >= `RELEASE_THRESHOLD_BPS`。
 - amount を payer へ戻し status = refunded。
 
 `close()`
 
-- アカウント: payer（signer, mut）、escrow（mut, has_one payer, close = payer）。
+- アカウント: payer（未検査・署名不要, mut）、escrow（mut, has_one payer, close = payer）。誰が出してもよい（レントは payer へ戻る）。
 - status は settled か refunded。
 
 ### エラー
@@ -173,13 +183,15 @@ Escrow は Anchor の `init` で作るプログラム所有のデータ口座で
 | `RefundNotAllowed` | refund: 期限前かつ refund 判断の閾値を満たさない |
 | `NotFinished` | close: status == open |
 | `MissingOracleSignature` | settle: 直前が Ed25519 検証命令でない |
-| `BadOracleSignature` | settle: オラクル以外の公開鍵、または判断・確率・依頼文がメッセージと一致しない |
+| `BadOracleSignature` | settle: オラクル以外の公開鍵、または判断・確率・依頼文・出所がメッセージと一致しない |
+| `BadSource` | settle: source が 1・2 以外 |
+| `UnauthorizedSubmitter` | settle: モックの判断を payer・operator 以外が出した |
 
 閾値 7000 は定数 `RELEASE_THRESHOLD_BPS`。魔数にしない。
 
 ### テスト
 
-`anchor build -- --features localnet-oracle` のあと、`anchor test --skip-build` をローカル validator で回す。次の 8 本。
+`anchor build -- --features localnet-oracle` のあと、`anchor test --skip-build` をローカル validator で回す。次の 14 本（2026-10-07 に 6 本追加）。
 
 - deposit すると escrow 残高が amount + レント分増える。
 - release / 7000 で payee が amount 増え status が settled。
@@ -189,6 +201,12 @@ Escrow は Anchor の `init` で作るプログラム所有のデータ口座で
 - オラクル以外の鍵で署名した判断は `BadOracleSignature`。
 - 別の escrow 用の署名を使い回すと `BadOracleSignature`（同じ依頼文でも）。
 - hold と署名された判断を release に書き換えると `BadOracleSignature`（確率だけの書き換えも同じ）。
+- Jev の判断は第三者が出しても執行され、出所が escrow に記録される。
+- モックの判断を第三者が出すと `UnauthorizedSubmitter`。
+- モックの判断は登録した操作鍵が出せる（発注者の署名は要らない）。
+- モックと署名された判断を Jev として出すと `BadOracleSignature`。
+- 出所が 1・2 以外なら `BadSource`。
+- refund 判断後の refund と close は第三者が出せ、資金とレントは発注者に戻る。
 
 devnet の確定速度はローカルテストの対象外。フロントの計測で見せる。
 
@@ -340,11 +358,11 @@ README には devnet デプロイ手順、IDL のコピー、`npm run dev` / `np
 ## 10. デモ台本
 
 1. 証明書と、動き続ける slot を見せ、「この devnet は Alpenglow」と言う。
-2. 発注者の鍵を貼り、「▶ デモを流す」を押す。hold で金庫に錠が掛かり、受注者の残高が動かないことを見せる。
+2. ウォレットを接続して（または「お試し」を押して）、「▶ デモを流す」を押す。hold で金庫に錠が掛かり、受注者の残高が動かないことを見せる。
 3. カウントダウンのあと release が自動で走る。コインが受注者へ流れ、finalized ミリ秒と Tower BFT との倍率が出る。
 4. 「Tower BFT なら約 12.8秒。判断も確定もサブ秒。判断はオラクルが署名し、書き換えた取引はプログラムが拒否する」で終える。HUD のレベル・コンボ・ランクで、繰り返すほど積み上がることも見せる。
 
-事前準備: 発注者 keypair に devnet SOL を入れておく（airdrop が当日失敗しても進めるため）。
+事前準備: faucet 鍵（`FAUCET_SECRET_KEY`）に devnet SOL を入れておく。お試し 1 回で 0.12 SOL を使う。
 
 ## 11. 完了条件
 
