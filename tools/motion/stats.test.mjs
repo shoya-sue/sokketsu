@@ -78,6 +78,21 @@ test("同じ時刻の mark は空の区間を作らない", () => {
   assert.deepEqual(seg.map((s) => s.label), ["y"]);
 });
 
+test("確定の瞬間の見え方があれば、表の前に出す", () => {
+  const s = summarize(at([0, 2]));
+  const text = formatTable({
+    url: "u",
+    mode: "play",
+    viewport: "390x844",
+    reducedMotion: false,
+    sentTransactions: 4,
+    visibility: { ".stage": true, ".vault-ms": false, ".x": null },
+    overall: s,
+    segments: [],
+  });
+  assert.match(text, /確定の瞬間に画面内: \.stage ○ · \.vault-ms × · \.x —/);
+});
+
 test("表は全体と区間の行を出す", () => {
   const s = summarize(at([0, 2]));
   const text = formatTable({

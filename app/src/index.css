@@ -2460,19 +2460,6 @@ code {
   letter-spacing: 0.14em;
 }
 
-.replay-tag strong {
-  color: var(--sol-green);
-  letter-spacing: 0;
-  animation: replay-pop 0.5s var(--ease);
-}
-
-@keyframes replay-pop {
-  from {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
 /* ==== #31 確定の瞬間を画面中央に ==== */
 .finality-hit {
   --hit: var(--sol-green);
@@ -2645,5 +2632,111 @@ code {
   from {
     opacity: 0;
     transform: rotate(-14deg) scale(2.4);
+  }
+}
+
+/* ==== #32 プレイ中は図と数字だけ ==== */
+.vault-ms {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--display);
+  font-size: clamp(1.6rem, 1.1rem + 1.6vw, 2.3rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sol-green);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--sol-green) 60%, transparent);
+  animation: vault-ms-in 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.phase-refunded .vault-ms {
+  color: var(--sol-cyan);
+}
+
+.vault-ms small {
+  font-size: 0.42em;
+  color: var(--muted);
+  text-shadow: none;
+}
+
+@keyframes vault-ms-in {
+  from {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+.judge-more {
+  margin-top: 10px;
+}
+
+.judge-more summary {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.judge-more[open] summary {
+  margin-bottom: 10px;
+}
+
+/* スマホでも舞台・判断・確定ミリ秒が 1 画面に収まるように詰める */
+@media (max-width: 720px) {
+  .tagline {
+    display: none;
+  }
+
+  .top {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .hud {
+    grid-template-columns: auto 1fr auto auto;
+    gap: 10px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+
+  .progress-track {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .judge-flow {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .flow-node {
+    padding: 6px 8px;
+  }
+
+  .flow-node small {
+    font-size: 0.6rem;
+  }
+
+  .flow-node span {
+    font-size: 0.72rem;
+  }
+
+  .pill-genesis {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+  }
+
+  .step-label {
+    font-size: 0.62rem;
+    white-space: nowrap;
+  }
+
+  .stage {
+    min-height: 170px;
   }
 }

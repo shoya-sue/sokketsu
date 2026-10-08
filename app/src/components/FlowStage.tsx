@@ -20,6 +20,8 @@ type Props = {
   runKey: number;
   /** 送金しない再生（#30）のときの確定ミリ秒。null なら本物の進行。 */
   replayMs?: number | null;
+  /** 確定したときの確定ミリ秒。金庫の中央に出す（#32）。 */
+  finalizedMs?: number | null;
 };
 
 const EXPLORER = "https://explorer.solana.com";
@@ -73,6 +75,7 @@ export function FlowStage({
   thresholdBps,
   runKey,
   replayMs = null,
+  finalizedMs = null,
 }: Props) {
   const { t } = useLang();
   const threshold = thresholdBps / 10000;
@@ -88,13 +91,14 @@ export function FlowStage({
   // hold は執行しない判断なので、確率が高くても欠片は外さない（外れると「執行された」ように見える）。
   const broken = showRing && judgement?.decision !== "hold" ? ringsBroken(probability) : 0;
   const thresholdShard = thresholdRing(threshold) - 1;
+  const settled = phase === "released" || phase === "refunded";
+  const doneMs = settled ? (replayMs ?? finalizedMs) : null;
 
   return (
     <div className={`stage phase-${phase} ${replayMs !== null ? "is-replay" : ""}`}>
       {replayMs !== null && (
         <span className="replay-tag" aria-hidden="true">
           REPLAY
-          {phase === "released" && <strong key={runKey}>{replayMs} ms</strong>}
         </span>
       )}
 
@@ -171,10 +175,22 @@ export function FlowStage({
           {phase === "stopped" || phase === "holding" ? (
             <span className="vault-lock" aria-hidden="true">🔒</span>
           ) : null}
-          <span className="vault-label">{t("stage.vault")}</span>
-          <span className="vault-amount" key={`v-${vaultLamports ?? "none"}`}>
-            {sol(vaultLamports)}
-          </span>
+          {doneMs !== null ? (
+            <>
+              <span className="vault-label">{t("stage.finalized")}</span>
+              <span className="vault-ms" key={`ms-${runKey}`}>
+                {Math.round(doneMs)}
+                <small>ms</small>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="vault-label">{t("stage.vault")}</span>
+              <span className="vault-amount" key={`v-${vaultLamports ?? "none"}`}>
+                {sol(vaultLamports)}
+              </span>
+            </>
+          )}
           <span className="vault-judge" aria-live="polite">
             {scanning
               ? t("stage.judging")

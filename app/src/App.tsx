@@ -59,6 +59,7 @@ import { useShake } from "./hooks/useShake";
 const GAME_KEY = "sokketsu.game.v1";
 const TOAST_MS = 3800;
 const LEVEL_UP_MS = 1800;
+const BADGE_SHOW_MS = 2900; // BadgeOverlay の表示時間（2.8 秒）+ 余白
 const HIT_MS = 2600; // 確定ミリ秒を画面中央に出しておく時間（#31）
 const ACH_ICON: Record<string, string> = {
   first_finality: "⚡",
@@ -186,12 +187,20 @@ export default function App() {
     const id = Date.now();
     setHit({ id, kind, ms, grade: g });
     setShakeKey((k) => k + 1);
-    setTimeout(() => setHit((h) => (h?.id === id ? null : h)), HIT_MS);
+    later(() => setHit((h) => (h?.id === id ? null : h)), HIT_MS);
   };
 
   const clearBadge = useCallback(() => setBadge(null), []);
-  const showBadge = (b: Badge, delayMs: number) =>
-    delayMs > 0 ? setTimeout(() => setBadge(b), delayMs) : setBadge(b);
+  // 演出の予約（バッジ・レベルアップ・その効果音）。次の再生を始めたら取り消す（前の回の演出が途中に出ないように）。
+  const pending = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const later = (fn: () => void, ms: number) => {
+    pending.current.push(setTimeout(fn, ms));
+  };
+  const cancelPending = () => {
+    pending.current.forEach(clearTimeout);
+    pending.current = [];
+  };
+  const showBadge = (b: Badge, delayMs: number) => (delayMs > 0 ? later(() => setBadge(b), delayMs) : setBadge(b));
 
   const toast = (t0: Omit<Toast, "id">) => {
     const id = ++toastSeq;
@@ -206,23 +215,30 @@ export default function App() {
     setGame(result.next);
     saveGame(result.next);
     if (result.gained > 0) setGain({ amount: result.gained, key: Date.now() });
-    // 実績はバッジで出す（同時に複数解除したら最初の 1 つを大きく、残りはトーストで）。
+    // 中央に出すもの（S ランク・実績）は 1 本の列にして順に出す。実績を同時に複数解除したら 2 つ目からはトースト。
     // 確定した回は、中央の確定ミリ秒（#31）と重ならないよう、それが消えてから出す。
     const badgeDelay = run.kind === "release" || run.kind === "refund" ? HIT_MS : 0;
+    const queue: Badge[] = [];
+    if (result.grade === "S" && run.ms != null) {
+      queue.push({ id: Date.now(), icon: "⚡", kicker: t("game.grade"), title: t("badge.rank"), body: t("badge.rankBody", { ms: Math.round(run.ms) }) });
+    }
     result.unlocked.forEach((id, i) => {
       const view = { icon: ACH_ICON[id] ?? "🏅", title: t(`ach.${id}.title`), body: t(`ach.${id}.body`) };
-      if (i === 0) showBadge({ id: Date.now(), kicker: t("badge.achievement"), ...view }, badgeDelay);
+      if (i === 0) queue.push({ id: Date.now() + 1, kicker: t("badge.achievement"), ...view });
       else toast({ ...view, tone: "gold" });
     });
-    if (result.unlocked.length > 0) setTimeout(() => playSfx("achievement"), badgeDelay + 350);
+    queue.forEach((b, i) => showBadge(b, badgeDelay + i * BADGE_SHOW_MS));
+    if (result.unlocked.length > 0) later(() => playSfx("achievement"), badgeDelay + 350);
     if (result.levelUp) {
       const level = levelFromXp(result.next.xp);
-      setTimeout(() => setLevelUp(level), badgeDelay);
-      setTimeout(() => setLevelUp(null), badgeDelay + LEVEL_UP_MS);
-      setTimeout(() => {
+      // バッジが出る回は、それが全部消えてから（中央で重ならないように）。
+      const levelDelay = badgeDelay + queue.length * BADGE_SHOW_MS;
+      later(() => setLevelUp(level), levelDelay);
+      later(() => setLevelUp(null), levelDelay + LEVEL_UP_MS);
+      later(() => {
         playSfx("levelup");
         starShower();
-      }, badgeDelay + 600);
+      }, levelDelay + 600);
       toast({ icon: "⬆", title: t("game.levelUp"), body: t("game.levelUpBody", { level }), tone: "purple" });
     }
     if (result.next.combo >= 2 && run.kind !== "hold") {
@@ -440,6 +456,8 @@ export default function App() {
     const p = s.signer;
     const operator = keypairSigner(s.operator);
     setRunKey((k) => k + 1);
+    cancelPending();
+    setHit(null); // 前の回の確定の重ね表示を、新しい預け入れ・判断に重ねない
     setGrade(null);
     setJudgement(null);
     setOutcome(null);
@@ -525,15 +543,6 @@ export default function App() {
         const g = scoreRun({ kind: "release", ms: m.finalizedMs });
         setGrade(g);
         showHit("release", m.finalizedMs, g);
-        if (g === "S") {
-          showBadge({
-            id: Date.now(),
-            icon: "⚡",
-            kicker: t("game.grade"),
-            title: t("badge.rank"),
-            body: t("badge.rankBody", { ms: Math.round(m.finalizedMs) }),
-          }, HIT_MS);
-        }
         if (g) burstAt(".node-payee", g);
         push({
           label: msg("tl.sent", { label: "@label.release" }),
@@ -714,6 +723,7 @@ export default function App() {
           thresholdBps={RELEASE_THRESHOLD_BPS}
           runKey={stage.runKey}
           replayMs={attract ? attractMs(history) : null}
+          finalizedMs={outcome?.kind === "sent" ? outcome.measurement.finalizedMs : null}
         />
         <JudgePanel
           task={currentTask}
@@ -853,7 +863,9 @@ function ClusterPill({
       <div>
         <strong>{label}</strong>
         <span className="pill-sub">
-          {status?.kind === "alpenglow" && `${t("pill.genesis", { slot: status.genesisSlot.toLocaleString() })} · `}
+          {status?.kind === "alpenglow" && (
+            <span className="pill-genesis">{`${t("pill.genesis", { slot: status.genesisSlot.toLocaleString() })} · `}</span>
+          )}
           {t("pill.slot")}{" "}
           <span className="slot-now" key={currentSlot ?? "none"}>
             {currentSlot?.toLocaleString() ?? "—"}
