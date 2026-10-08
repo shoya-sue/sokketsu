@@ -1,0 +1,13 @@
+{
+  "name": "sokketsu-motion",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "idle": "node measure.mjs --mode idle --out out",
+    "play": "node measure.mjs --mode play --out out",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.58.0"
+  }
+}

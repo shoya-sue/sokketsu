@@ -591,7 +591,7 @@ export default function App() {
   };
 
   return (
-    <div className="shell">
+    <div className="shell" data-phase={phase}>
       <div className="bg-glow" aria-hidden="true" />
       <header className="top">
         <div className="brand">
