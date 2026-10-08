@@ -1,18 +1,30 @@
-export type Sfx = "deposit" | "judge" | "finalize" | "stamp" | "combo" | "levelup" | "achievement" | "fail";
+import { notesFor, type Note } from "./sfxPlan";
+
+export type Sfx =
+  | "deposit"
+  | "judge"
+  | "verify"
+  | "finalize"
+  | "stamp"
+  | "combo"
+  | "levelup"
+  | "achievement"
+  | "fail";
 
 const MUTE_KEY = "sokketsu.muted";
 
-// 1 音 = [周波数 Hz, 開始秒, 長さ秒, 波形]。合成するだけなので音声ファイルは要らない。
-type Note = [number, number, number, OscillatorType];
-const PATTERNS: Record<Sfx, Note[]> = {
-  deposit: [[520, 0, 0.08, "triangle"], [780, 0.06, 0.1, "triangle"]],
-  judge: [[330, 0, 0.06, "square"], [440, 0.07, 0.06, "square"]],
-  finalize: [[660, 0, 0.09, "triangle"], [880, 0.08, 0.09, "triangle"], [1320, 0.16, 0.22, "triangle"]],
-  stamp: [[110, 0, 0.18, "sawtooth"], [82, 0.03, 0.2, "square"]],
+// 1 件の支払いの流れ（預け入れ → 判断 → 署名検証 → 確定 / 止めた / 失敗）は sfxPlan の音階で 1 本につなぐ。
+// それ以外（コンボ・レベルアップ・実績）はゲーム側の合図として別に持つ。合成するだけなので音声ファイルは要らない。
+export const PATTERNS: Record<Sfx, Note[]> = {
+  deposit: notesFor("deposit"),
+  judge: notesFor("judge"),
+  verify: notesFor("verify"),
+  finalize: notesFor("finalize"),
+  stamp: notesFor("stop"),
+  fail: notesFor("fail"),
   combo: [[990, 0, 0.06, "square"], [1320, 0.05, 0.08, "square"]],
   levelup: [[523, 0, 0.1, "triangle"], [659, 0.1, 0.1, "triangle"], [784, 0.2, 0.1, "triangle"], [1047, 0.3, 0.3, "triangle"]],
   achievement: [[880, 0, 0.08, "sine"], [1175, 0.08, 0.08, "sine"], [1568, 0.16, 0.2, "sine"]],
-  fail: [[220, 0, 0.15, "sawtooth"], [165, 0.12, 0.25, "sawtooth"]],
 };
 
 let context: AudioContext | null = null;
