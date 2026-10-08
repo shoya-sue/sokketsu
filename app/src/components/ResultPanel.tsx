@@ -3,6 +3,7 @@ import type { Measurement } from "../chain";
 import type { JudgeOutput } from "../judge";
 import { useLang } from "../lang";
 import type { Grade } from "../lib/game";
+import { prefersReducedMotion } from "../lib/motion";
 import { MeasureViz } from "./MeasureViz";
 
 export type Outcome =
@@ -34,11 +35,12 @@ function useElapsed(since: number | null): number {
   return since === null ? 0 : elapsed;
 }
 
-/** 0 から target まで数え上げる。 */
+/** 0 から target まで数え上げる。reduced-motion では数え上げず、最終値をそのまま返す。 */
 function useCountUp(target: number | null, durationMs = 900): number {
   const [value, setValue] = useState(0);
+  const reduced = prefersReducedMotion();
   useEffect(() => {
-    if (target === null) return;
+    if (target === null || reduced) return;
     const start = performance.now();
     let frame = 0;
     const tick = () => {
@@ -48,8 +50,8 @@ function useCountUp(target: number | null, durationMs = 900): number {
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [target, durationMs]);
-  return value;
+  }, [target, durationMs, reduced]);
+  return reduced && target !== null ? target : value;
 }
 
 export function ResultPanel({ outcome, measuringSince, slotsLeft, grade }: Props) {
@@ -124,6 +126,10 @@ export function ResultPanel({ outcome, measuringSince, slotsLeft, grade }: Props
   return (
     <div className="result result-win" aria-live="polite">
       <span className="result-kicker">{t("result.finalized", { label })}</span>
+      <svg className="rise" viewBox="0 0 160 48" aria-hidden="true" preserveAspectRatio="none">
+        <path d="M0,46 C40,44 70,40 96,28 S140,8 160,3" pathLength={1} />
+        <circle cx="160" cy="3" r="3" />
+      </svg>
       <div className="result-hero">
         <span className="result-number">{Math.round(counted)}</span>
         <span className="result-unit">ms</span>
