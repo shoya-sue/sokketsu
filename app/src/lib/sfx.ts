@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "./motion";
 import { notesFor, type Note } from "./sfxPlan";
 
 export type Sfx =
@@ -55,7 +56,7 @@ export function play(sfx: Sfx): void {
 }
 
 /** 音の列をそのまま鳴らす（カウントダウンの刻みのように、その場で決まる音）。 */
-export function playNotes(notes: readonly Note[]): void {
+export function playNotes(notes: readonly Note[], volume = 0.12): void {
   if (muted || typeof window === "undefined") return;
   try {
     context ??= new AudioContext();
@@ -68,7 +69,7 @@ export function playNotes(notes: readonly Note[]): void {
       osc.type = wave;
       osc.frequency.setValueAtTime(freq, t0 + start);
       gain.gain.setValueAtTime(0.0001, t0 + start);
-      gain.gain.exponentialRampToValueAtTime(0.12, t0 + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(volume, t0 + start + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, t0 + start + length);
       osc.connect(gain).connect(ctx.destination);
       osc.start(t0 + start);
@@ -76,5 +77,15 @@ export function playNotes(notes: readonly Note[]): void {
     }
   } catch {
     // 音が出せない環境でも画面は動かす
+  }
+}
+
+/** スマホを振動させる（対応端末だけ）。ミュート中と、動きを減らす設定のときは振動させない。 */
+export function vibrate(pattern: readonly number[]): void {
+  if (muted || prefersReducedMotion() || typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+  try {
+    navigator.vibrate([...pattern]);
+  } catch {
+    // 振動できなくても続ける
   }
 }

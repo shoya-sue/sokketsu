@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { levelFromXp, levelProgress, type GameState } from "../lib/game";
+import { fireLevel } from "../lib/thrill";
 import { useLang } from "../lang";
 
 type Props = {
@@ -34,6 +35,7 @@ export function Hud({ game, gain }: Props) {
   const score = useTween(game.xp);
   const level = levelFromXp(game.xp);
   const progress = levelProgress(game.xp);
+  const fire = fireLevel(game.combo);
   return (
     <section className="hud" aria-label={t("hud.label")}>
       <div className="hud-level" key={`lv-${level}`}>
@@ -60,9 +62,14 @@ export function Hud({ game, gain }: Props) {
           <div className="hud-bar-fill" style={{ transform: `scaleX(${progress})` }} />
         </div>
       </div>
-      <div className={`hud-combo ${game.combo >= 2 ? "hot" : ""}`} key={`combo-${game.combo}`}>
+      <div className={`hud-combo ${game.combo >= 2 ? "hot" : ""} fire-${fire}`} key={`combo-${game.combo}`}>
         <span className="hud-combo-label">{t("hud.combo")}</span>
         <span className="hud-combo-num">×{game.combo}</span>
+        {fire > 0 && (
+          <span className="hud-fire" role="img" aria-label={t("hud.fire", { combo: game.combo })}>
+            {"🔥".repeat(fire)}
+          </span>
+        )}
       </div>
       <div className="hud-best">
         <span className="hud-combo-label">{t("hud.best")}</span>
