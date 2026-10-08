@@ -45,6 +45,11 @@ const context = await browser.newContext({
 });
 const page = await context.newPage();
 const t0 = Date.now();
+// 取引の送信（JSON-RPC の sendTransaction）を数える。待機中の再生（#30）で 0 件であることを確かめる。
+let sentTransactions = 0;
+page.on("request", (req) => {
+  if (req.method() === "POST" && (req.postData() ?? "").includes('"sendTransaction"')) sentTransactions += 1;
+});
 const elapsed = () => (Date.now() - t0) / 1000;
 
 // 段階の切り替わりを記録する（アプリが .shell に data-phase を出している）。
@@ -138,6 +143,7 @@ const result = {
   reducedMotion: opt["reduced-motion"],
   measuredAt: new Date().toISOString(),
   marks,
+  sentTransactions,
   overall: summarize(frames.filter((f) => f.t >= (marks.find((m) => m.label === (opt.mode === "idle" ? "idle" : "ready"))?.at ?? 0))),
   segments: bySegment(frames, marks),
 };

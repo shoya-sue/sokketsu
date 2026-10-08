@@ -85,10 +85,11 @@ test("表は全体と区間の行を出す", () => {
     mode: "idle",
     viewport: "1280x900",
     reducedMotion: true,
+    sentTransactions: 0,
     overall: s,
     segments: [{ label: "idle", ...s }],
   });
-  assert.match(text, /^u · idle · 1280x900 · reduced-motion/);
+  assert.match(text, /^u · idle · 1280x900 · reduced-motion · 送信した取引 0 件/);
   assert.match(text, /\| 全体 \| 2 \| 50% \| 1\.00% \| 0\.00 s \| 0 \|/);
   assert.match(text, /\| idle \|/);
 });
