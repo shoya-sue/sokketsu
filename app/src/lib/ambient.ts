@@ -57,3 +57,34 @@ export function liveWaves(slotTimes: readonly number[], now: number, maxRadius: 
 /** 画面の大きさに合わせた粒子の数（面積 1 万 px² あたり約 0.9 個、40〜160 個）。 */
 export const particleCount = (w: number, h: number): number =>
   Math.max(40, Math.min(160, Math.round((w * h) / 11_000)));
+
+/** 確定の瞬間（#31）に中央から弾け飛ぶ火花。life は残りの秒数。 */
+export type Spark = Particle & { life: number };
+
+export const BURST_S = 2.2;
+/** 1 秒ごとに速度がこの割合まで落ちる（空気抵抗）。 */
+export const DRAG_PER_S = 0.2;
+
+/** (cx, cy) から全方向へ n 個の火花を飛ばす。 */
+export function burstSparks(n: number, cx: number, cy: number, rand: () => number): Spark[] {
+  return Array.from({ length: n }, () => {
+    const angle = rand() * 2 * Math.PI;
+    const speed = 260 + rand() * 460;
+    return {
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      r: 1.6 + rand() * 2,
+      life: BURST_S * (0.6 + 0.4 * rand()),
+    };
+  });
+}
+
+/** dt 秒進めた火花（減速し、寿命の尽きたものは消える）。 */
+export function stepSparks(sparks: readonly Spark[], dt: number): Spark[] {
+  const drag = DRAG_PER_S ** dt;
+  return sparks
+    .map((s) => ({ ...s, x: s.x + s.vx * dt, y: s.y + s.vy * dt, vx: s.vx * drag, vy: s.vy * drag, life: s.life - dt }))
+    .filter((s) => s.life > 0);
+}

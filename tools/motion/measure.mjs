@@ -56,7 +56,13 @@ const elapsed = () => (Date.now() - t0) / 1000;
 const marks = [{ label: "load", at: 0 }];
 const watchPhase = async (until) => {
   let last = null;
+  // 確定から 3 秒（#31 の判定区間）の後ろを afterglow として切る。
+  let afterglowAt = Infinity;
   while (elapsed() < until) {
+    if (elapsed() >= afterglowAt) {
+      marks.push({ label: "afterglow", at: afterglowAt });
+      afterglowAt = Infinity;
+    }
     // 次の依頼までのカウントダウンは段階ではないので、表示の有無で区間にする。
     const phase = await page
       .evaluate(() =>
@@ -68,6 +74,7 @@ const watchPhase = async (until) => {
       last = phase;
       if (phase === "released" || phase === "refunded") {
         await page.screenshot({ path: path.join(outDir, `${phase}.png`) });
+        afterglowAt = elapsed() + 3;
       }
     }
     if (marks.some((m) => m.label === "done")) return;

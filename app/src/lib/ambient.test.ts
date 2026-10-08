@@ -10,6 +10,10 @@ import {
   stepParticles,
   waveAt,
   wrap,
+  BURST_S,
+  DRAG_PER_S,
+  burstSparks,
+  stepSparks,
 } from "./ambient";
 
 /** 決まった列を順に返す乱数。 */
@@ -100,5 +104,55 @@ describe("particleCount", () => {
     expect(particleCount(1100, 1000)).toBe(100);
     expect(particleCount(100, 100)).toBe(40);
     expect(particleCount(4000, 3000)).toBe(160);
+  });
+});
+
+describe("burstSparks", () => {
+  it("中心から乱数の向き・速さで飛ばし、寿命は BURST_S の 60〜100%", () => {
+    // angle=0、speed=260+0.5*460、r=1.6+1*2、life=BURST_S*(0.6+0.4*1)
+    const [s] = burstSparks(1, 10, 20, seq(0, 0.5, 1, 1));
+    expect(s.x).toBe(10);
+    expect(s.y).toBe(20);
+    expect(s.vx).toBeCloseTo(490);
+    expect(s.vy).toBeCloseTo(0);
+    expect(s.r).toBeCloseTo(3.6);
+    expect(s.life).toBeCloseTo(BURST_S);
+    const [slow] = burstSparks(1, 0, 0, seq(0.25, 0, 0, 0));
+    expect(slow.vy).toBeCloseTo(260);
+    expect(slow.r).toBeCloseTo(1.6);
+    expect(slow.life).toBeCloseTo(BURST_S * 0.6);
+  });
+
+  it("n 個つくる", () => {
+    expect(burstSparks(5, 0, 0, Math.random)).toHaveLength(5);
+  });
+});
+
+describe("stepSparks", () => {
+  it("進めて減速し、寿命を減らす（元の列は変えない）", () => {
+    const sparks = [{ x: 0, y: 0, vx: 100, vy: -50, r: 2, life: 1.5 }];
+    const [s] = stepSparks(sparks, 1);
+    expect(s.x).toBe(100);
+    expect(s.y).toBe(-50);
+    expect(s.vx).toBeCloseTo(100 * DRAG_PER_S);
+    expect(s.vy).toBeCloseTo(-50 * DRAG_PER_S);
+    expect(s.life).toBeCloseTo(0.5);
+    expect(sparks[0].x).toBe(0);
+  });
+
+  it("進む距離は速度 × 時間", () => {
+    const [s] = stepSparks([{ x: 0, y: 0, vx: 100, vy: 40, r: 2, life: 2 }], 0.5);
+    expect(s.x).toBe(50);
+    expect(s.y).toBe(20);
+    expect(s.vx).toBeCloseTo(100 * Math.sqrt(DRAG_PER_S));
+  });
+
+  it("寿命が尽きたら消える（ちょうど 0 で消える）", () => {
+    const sparks = [
+      { x: 0, y: 0, vx: 0, vy: 0, r: 1, life: 0.5 },
+      { x: 0, y: 0, vx: 0, vy: 0, r: 1, life: 0.6 },
+    ];
+    expect(stepSparks(sparks, 0.5)).toHaveLength(1);
+    expect(stepSparks(sparks, 0.5)[0].life).toBeCloseTo(0.1);
   });
 });

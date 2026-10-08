@@ -40,7 +40,7 @@ node measure.mjs --mode play --url http://localhost:5173 --api https://sokketsu.
 | 最長の静止 | 静止のコマが続いた最長の時間（同じ名前の区間をつないだ箇所では切る） |
 | 1% 超の秒 | 1 秒ごとの平均が 1% を超えた秒の数 |
 
-区間は `.shell` の `data-phase`（depositing / judging / holding / stopped / releasing / released …）と、次の依頼までのカウントダウン（`countdown`）で切る。
+区間は `.shell` の `data-phase`（depositing / judging / holding / stopped / releasing / released …）と、次の依頼までのカウントダウン（`countdown`）で切る。`released` は確定から 3 秒で切り、その後ろは `afterglow`。
 
 ## 基準値（2026-10-08・改修前）
 

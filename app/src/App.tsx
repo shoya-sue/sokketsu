@@ -39,6 +39,7 @@ import { ProgressTrack } from "./components/ProgressTrack";
 import { SlotPulse } from "./components/SlotPulse";
 import { BadgeOverlay, type Badge } from "./components/BadgeOverlay";
 import { Ambient } from "./components/Ambient";
+import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
 import { stepStates } from "./lib/steps";
@@ -53,10 +54,12 @@ import { Toasts, type Toast } from "./components/Toasts";
 import { INITIAL_GAME, applyRun, levelFromXp, parseGame, type GameState, type Grade, type Run } from "./lib/game";
 import { burstAt, sideCannons, starShower } from "./lib/fx";
 import { isMuted, play as playSfx, setMuted } from "./lib/sfx";
+import { useShake } from "./hooks/useShake";
 
 const GAME_KEY = "sokketsu.game.v1";
 const TOAST_MS = 3800;
 const LEVEL_UP_MS = 1800;
+const HIT_MS = 2600; // 確定ミリ秒を画面中央に出しておく時間（#31）
 const ACH_ICON: Record<string, string> = {
   first_finality: "⚡",
   sub_500: "🚀",
@@ -173,9 +176,22 @@ export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
+  const stageCardRef = useRef<HTMLElement>(null);
+  useShake(stageCardRef, shakeKey);
   const [muted, setMutedState] = useState(isMuted);
+  const [hit, setHit] = useState<Hit | null>(null);
+
+  /** 確定の瞬間を画面中央に出し、舞台を揺らす（#31）。 */
+  const showHit = (kind: Hit["kind"], ms: number, g: Grade | null) => {
+    const id = Date.now();
+    setHit({ id, kind, ms, grade: g });
+    setShakeKey((k) => k + 1);
+    setTimeout(() => setHit((h) => (h?.id === id ? null : h)), HIT_MS);
+  };
 
   const clearBadge = useCallback(() => setBadge(null), []);
+  const showBadge = (b: Badge, delayMs: number) =>
+    delayMs > 0 ? setTimeout(() => setBadge(b), delayMs) : setBadge(b);
 
   const toast = (t0: Omit<Toast, "id">) => {
     const id = ++toastSeq;
@@ -191,20 +207,22 @@ export default function App() {
     saveGame(result.next);
     if (result.gained > 0) setGain({ amount: result.gained, key: Date.now() });
     // 実績はバッジで出す（同時に複数解除したら最初の 1 つを大きく、残りはトーストで）。
+    // 確定した回は、中央の確定ミリ秒（#31）と重ならないよう、それが消えてから出す。
+    const badgeDelay = run.kind === "release" || run.kind === "refund" ? HIT_MS : 0;
     result.unlocked.forEach((id, i) => {
       const view = { icon: ACH_ICON[id] ?? "🏅", title: t(`ach.${id}.title`), body: t(`ach.${id}.body`) };
-      if (i === 0) setBadge({ id: Date.now(), kicker: t("badge.achievement"), ...view });
+      if (i === 0) showBadge({ id: Date.now(), kicker: t("badge.achievement"), ...view }, badgeDelay);
       else toast({ ...view, tone: "gold" });
     });
-    if (result.unlocked.length > 0) setTimeout(() => playSfx("achievement"), 350);
+    if (result.unlocked.length > 0) setTimeout(() => playSfx("achievement"), badgeDelay + 350);
     if (result.levelUp) {
       const level = levelFromXp(result.next.xp);
-      setLevelUp(level);
-      setTimeout(() => setLevelUp(null), LEVEL_UP_MS);
+      setTimeout(() => setLevelUp(level), badgeDelay);
+      setTimeout(() => setLevelUp(null), badgeDelay + LEVEL_UP_MS);
       setTimeout(() => {
         playSfx("levelup");
         starShower();
-      }, 600);
+      }, badgeDelay + 600);
       toast({ icon: "⬆", title: t("game.levelUp"), body: t("game.levelUpBody", { level }), tone: "purple" });
     }
     if (result.next.combo >= 2 && run.kind !== "hold") {
@@ -506,14 +524,15 @@ export default function App() {
         playSfx("finalize");
         const g = scoreRun({ kind: "release", ms: m.finalizedMs });
         setGrade(g);
+        showHit("release", m.finalizedMs, g);
         if (g === "S") {
-          setBadge({
+          showBadge({
             id: Date.now(),
             icon: "⚡",
             kicker: t("game.grade"),
             title: t("badge.rank"),
             body: t("badge.rankBody", { ms: Math.round(m.finalizedMs) }),
-          });
+          }, HIT_MS);
         }
         if (g) burstAt(".node-payee", g);
         push({
@@ -538,6 +557,7 @@ export default function App() {
         playSfx("finalize");
         const g = scoreRun({ kind: "refund", ms: m.finalizedMs });
         setGrade(g);
+        showHit("refund", m.finalizedMs, g);
         if (g) burstAt(".node-payer", g);
         push({
           label: msg("tl.sent", { label: "@label.refund" }),
@@ -607,7 +627,7 @@ export default function App() {
   return (
     <div className="shell" data-phase={phase}>
       <div className="bg-glow" aria-hidden="true" />
-      <Ambient slotTimes={slotTimes} />
+      <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} />
       <header className="top">
         <div className="brand">
           <span className="brand-mark">即決</span>
@@ -676,7 +696,7 @@ export default function App() {
 
       <Hud game={game} gain={gain} />
 
-      <section className="card stage-card shake-host" key={`shake-${shakeKey}`} data-shake={shakeKey > 0}>
+      <section className="card stage-card" ref={stageCardRef}>
         {levelUp !== null && (
           <div className="levelup" aria-live="assertive">
             <span>{t("game.levelUp")}</span>
@@ -803,6 +823,7 @@ export default function App() {
 
       <footer className="foot">{t("app.footer")}</footer>
       <Toasts toasts={toasts} />
+      <FinalityHit hit={hit} />
       <BadgeOverlay badge={badge} onDone={clearBadge} />
     </div>
   );
