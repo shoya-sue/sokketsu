@@ -54,7 +54,9 @@ import { Hud } from "./components/Hud";
 import { Toasts, type Toast } from "./components/Toasts";
 import { INITIAL_GAME, applyRun, levelFromXp, parseGame, type GameState, type Grade, type Run } from "./lib/game";
 import { burstAt, sideCannons, starShower } from "./lib/fx";
-import { isMuted, play as playSfx, setMuted } from "./lib/sfx";
+import { isMuted, play as playSfx, playNotes, setMuted } from "./lib/sfx";
+import { countdownNotes } from "./lib/sfxPlan";
+import { CountdownHit } from "./components/CountdownHit";
 import { useShake } from "./hooks/useShake";
 
 const GAME_KEY = "sokketsu.game.v1";
@@ -628,6 +630,7 @@ export default function App() {
         if (i > 0) {
           for (let s = PAUSE_BETWEEN_SECONDS; s > 0; s--) {
             setCountdown({ next: preset.label, seconds: s });
+            playNotes(countdownNotes(s));
             await sleep(1000);
           }
           setCountdown(null);
@@ -843,6 +846,8 @@ export default function App() {
       <footer className="foot">{t("app.footer")}</footer>
       <Toasts toasts={toasts} />
       <FinalityHit hit={hit} />
+      <CountdownHit countdown={countdown} />
+      <div className="dim-veil" aria-hidden="true" />
       <BadgeOverlay badge={badge} onDone={clearBadge} />
     </div>
   );

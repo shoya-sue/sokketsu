@@ -159,6 +159,8 @@ const video = path.join(outDir, "recording.webm");
 renameSync(await page.video().path(), video);
 
 const frames = await diffFrames(video);
+const startAt = marks.find((m) => m.label === (opt.mode === "idle" ? "idle" : "ready"))?.at ?? 0;
+const endAt = marks.find((m) => m.label === "end")?.at ?? Infinity;
 const result = {
   url: opt.url,
   mode: opt.mode,
@@ -168,7 +170,8 @@ const result = {
   marks,
   sentTransactions,
   visibility,
-  overall: summarize(frames.filter((f) => f.t >= (marks.find((m) => m.label === (opt.mode === "idle" ? "idle" : "ready"))?.at ?? 0))),
+  // 全体は測り始め（idle / ready）から end の印まで。録画の末尾（ブラウザを閉じるまで）は含めない。
+  overall: summarize(frames.filter((f) => f.t >= startAt && f.t < endAt)),
   segments: bySegment(frames, marks),
   transitions: opt.mode === "play" ? aroundMarks(frames, marks) : [],
 };

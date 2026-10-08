@@ -51,13 +51,18 @@ export function setMuted(value: boolean): void {
 
 /** 効果音を鳴らす。ブラウザの自動再生制限があるので、最初のクリック以降に鳴る。 */
 export function play(sfx: Sfx): void {
+  playNotes(PATTERNS[sfx]);
+}
+
+/** 音の列をそのまま鳴らす（カウントダウンの刻みのように、その場で決まる音）。 */
+export function playNotes(notes: readonly Note[]): void {
   if (muted || typeof window === "undefined") return;
   try {
     context ??= new AudioContext();
     if (context.state === "suspended") void context.resume();
     const ctx = context;
     const t0 = ctx.currentTime;
-    for (const [freq, start, length, wave] of PATTERNS[sfx]) {
+    for (const [freq, start, length, wave] of notes) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = wave;
