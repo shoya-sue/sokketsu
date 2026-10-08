@@ -34,6 +34,8 @@ import { FlowStage, type Phase } from "./components/FlowStage";
 import { ResultPanel, type Outcome } from "./components/ResultPanel";
 import { Timeline, type TimelineEntry } from "./components/Timeline";
 import { History } from "./components/History";
+import { ProgressTrack } from "./components/ProgressTrack";
+import { stepStates } from "./lib/steps";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
 import { derivePayee, derivePayeeAddress } from "./lib/payee";
 import { operatorTopUp, type PayerSession } from "./lib/session";
@@ -135,6 +137,9 @@ export default function App() {
   });
   const [vaultLamports, setVaultLamports] = useState<number | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
+  // 失敗したとき、どの段で止まったかを段階表示に出すため、直前の段階を覚えておく。
+  const prevPhase = useRef<Phase>("idle");
+  const [beforeError, setBeforeError] = useState<Phase | undefined>(undefined);
   const [judgement, setJudgement] = useState<JudgeOutput | null>(null);
   const [fallbackReason, setFallbackReason] = useState<Msg | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -233,6 +238,11 @@ export default function App() {
       setCurrentSlot(slot);
     });
   }, []);
+
+  useEffect(() => {
+    if (phase === "error") setBeforeError(prevPhase.current);
+    prevPhase.current = phase;
+  }, [phase]);
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
   const ready = session !== null && payee !== null;
@@ -391,6 +401,7 @@ export default function App() {
     setSlotsLeft(null);
     setFallbackReason(null);
     const task = withRunId(preset.task);
+    setBeforeError(undefined);
     push({ label: msg("tl.request", { preset: preset.label }), detail: task, tone: "info" });
     try {
       // 1. 預け入れ
@@ -632,6 +643,7 @@ export default function App() {
             <strong>LV {levelUp}</strong>
           </div>
         )}
+        {ready && <ProgressTrack phase={phase} beforeError={beforeError} />}
         <FlowStage
           phase={phase}
           payer={{ address: payerKey, balance: balances.payer }}
@@ -697,7 +709,11 @@ export default function App() {
                     {countdown.seconds}
                   </span>
                 ) : running ? (
-                  ""
+                  <span className="play-steps">
+                    {stepStates(phase, beforeError).map((state, i) => (
+                      <i key={i} className={`play-step play-step-${state}`} />
+                    ))}
+                  </span>
                 ) : (
                   "▶"
                 )}
