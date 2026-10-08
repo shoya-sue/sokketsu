@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { summarize, bySegment, formatTable } from "./stats.mjs";
+import { aroundMarks, summarize, bySegment, formatTable } from "./stats.mjs";
 
 const { values: opt } = parseArgs({
   options: {
@@ -170,6 +170,7 @@ const result = {
   visibility,
   overall: summarize(frames.filter((f) => f.t >= (marks.find((m) => m.label === (opt.mode === "idle" ? "idle" : "ready"))?.at ?? 0))),
   segments: bySegment(frames, marks),
+  transitions: opt.mode === "play" ? aroundMarks(frames, marks) : [],
 };
 writeFileSync(path.join(outDir, "result.json"), JSON.stringify(result, null, 2));
 console.log(opt.json ? JSON.stringify(result, null, 2) : formatTable(result));

@@ -16,7 +16,11 @@ type Props = {
   slotTimes: readonly number[];
   /** 変わるたびに、金庫から火花と強い波紋を出す（確定の瞬間 #31）。 */
   burstId?: number | null;
+  /** 色調の 2 色（RGB の数字）。波紋とグリッドの光がこの色になる（#33）。 */
+  tone?: readonly [string, string];
 };
+
+const DEFAULT_TONE: readonly [string, string] = ["153, 69, 255", "20, 241, 149"];
 
 const BURST_COUNT = 260;
 const BURST_WAVES_MS = [0, 140, 300];
@@ -35,14 +39,14 @@ function waveCenter(w: number, h: number): { x: number; y: number } {
 }
 
 /** グリッドを 1 枚の canvas に描いておく（波紋が通ったところだけ明るく重ねる）。 */
-function gridLayer(w: number, h: number, dpr: number, alpha: number): HTMLCanvasElement {
+function gridLayer(w: number, h: number, dpr: number, rgb: string, alpha: number): HTMLCanvasElement {
   const c = document.createElement("canvas");
   c.width = w * dpr;
   c.height = h * dpr;
   const g = c.getContext("2d");
   if (!g) return c;
   g.scale(dpr, dpr);
-  g.strokeStyle = `rgba(160, 140, 255, ${alpha})`;
+  g.strokeStyle = `rgba(${rgb}, ${alpha})`;
   g.lineWidth = 1;
   g.beginPath();
   for (let x = 0.5; x < w; x += GRID) {
@@ -61,11 +65,15 @@ function gridLayer(w: number, h: number, dpr: number, alpha: number): HTMLCanvas
  * 背景で動き続ける粒子と、slot を受け取るたびに金庫から広がる波紋（#30）。
  * 波紋が通ったところだけグリッドが明るくなる。reduced-motion では止まった 1 コマだけを描く。
  */
-export function Ambient({ slotTimes, burstId = null }: Props) {
+export function Ambient({ slotTimes, burstId = null, tone = DEFAULT_TONE }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const slotsRef = useRef(slotTimes);
   const sparksRef = useRef<Spark[]>([]);
   const burstWavesRef = useRef<number[]>([]);
+  const toneRef = useRef(tone);
+  useEffect(() => {
+    toneRef.current = tone;
+  }, [tone]);
 
   useEffect(() => {
     if (burstId === null || prefersReducedMotion()) return;
@@ -90,6 +98,7 @@ export function Ambient({ slotTimes, burstId = null }: Props) {
     let particles: Particle[] = [];
     let faint: HTMLCanvasElement | null = null;
     let bright: HTMLCanvasElement | null = null;
+    let brightTone = "";
     let center = { x: 0, y: 0 };
     let centerAt = -Infinity;
     const recenter = () => {
@@ -103,8 +112,8 @@ export function Ambient({ slotTimes, burstId = null }: Props) {
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       particles = seedParticles(particleCount(w, h), w, h, Math.random);
-      faint = gridLayer(w, h, dpr, 0.05);
-      bright = gridLayer(w, h, dpr, 0.55);
+      faint = gridLayer(w, h, dpr, "160, 140, 255", 0.05);
+      bright = null;
     };
 
     const draw = (now: number) => {
@@ -112,6 +121,13 @@ export function Ambient({ slotTimes, burstId = null }: Props) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (faint) ctx.drawImage(faint, 0, 0);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // 明るいグリッドは色調が変わったときだけ描き直す。
+      const [main, sub] = toneRef.current;
+      if (!bright || brightTone !== main) {
+        bright = gridLayer(w, h, dpr, main, 0.6);
+        brightTone = main;
+      }
 
       // 波紋：輪の帯の中だけ明るいグリッドを見せ、縁に光る線を引く。
       // 金庫の位置は毎フレーム読まない（レイアウトの読み出しを減らす）。大きさ・スクロールの変化と 0.5 秒ごとに読み直す。
@@ -134,7 +150,7 @@ export function Ambient({ slotTimes, burstId = null }: Props) {
         ctx.restore();
         ctx.beginPath();
         ctx.arc(cx, cy, wave.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(20, 241, 149, ${0.35 * wave.alpha})`;
+        ctx.strokeStyle = `rgba(${sub}, ${0.4 * wave.alpha})`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -142,7 +158,7 @@ export function Ambient({ slotTimes, burstId = null }: Props) {
       for (const sp of sparksRef.current) {
         ctx.beginPath();
         ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(20, 241, 149, ${Math.min(1, sp.life / BURST_S + 0.2)})`;
+        ctx.fillStyle = `rgba(${main}, ${Math.min(1, sp.life / BURST_S + 0.2)})`;
         ctx.fill();
       }
 

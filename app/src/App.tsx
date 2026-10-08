@@ -42,6 +42,7 @@ import { Ambient } from "./components/Ambient";
 import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
+import { TONE_RGB, toneOf } from "./lib/tone";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -304,6 +305,13 @@ export default function App() {
         runKey: -1 - attract.cycle,
       }
     : { phase, judgement, vaultLamports, runKey };
+
+  // 画面全体の色調は舞台に見えている段階に従う（再生中も色が巡る）（#33）。
+  const tone = toneOf(stage.phase);
+  const toneStyle = {
+    ["--tone-a" as string]: `rgb(${TONE_RGB[tone][0]})`,
+    ["--tone-b" as string]: `rgb(${TONE_RGB[tone][1]})`,
+  };
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
   const ready = session !== null && payee !== null;
@@ -634,9 +642,10 @@ export default function App() {
   };
 
   return (
-    <div className="shell" data-phase={phase}>
+    <div className="shell" data-phase={phase} data-tone={tone} style={toneStyle}>
       <div className="bg-glow" aria-hidden="true" />
-      <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} />
+      <div className="tone-wash" key={`wash-${tone}`} aria-hidden="true" />
+      <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} tone={TONE_RGB[tone]} />
       <header className="top">
         <div className="brand">
           <span className="brand-mark">即決</span>

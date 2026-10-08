@@ -65,6 +65,18 @@ export function bySegment(frames, marks) {
   return [...groups.entries()].map(([label, fs]) => ({ label, ...summarize(fs) }));
 }
 
+/** 段階が切り替わった時刻の前後 half 秒の平均差分面積（#33）。段階ではない印（load・ready・idle・end・afterglow・done）は数えない。 */
+export function aroundMarks(frames, marks, half = 1) {
+  const skip = new Set(["load", "ready", "idle", "end", "afterglow", "done"]);
+  return marks
+    .filter((m) => !skip.has(m.label))
+    .map((m) => {
+      const inWindow = frames.filter((f) => f.t >= m.at - half && f.t <= m.at + half);
+      const meanPct = inWindow.length ? inWindow.reduce((sum, f) => sum + f.pct, 0) / inWindow.length : 0;
+      return { label: m.label, at: m.at, meanPct };
+    });
+}
+
 const pct = (x) => `${(x * 100).toFixed(0)}%`;
 
 /** 結果を Markdown の表にする。 */
@@ -86,5 +98,8 @@ export function formatTable(result) {
     head,
     row("全体", result.overall),
     ...result.segments.map((s) => row(s.label, s)),
+    ...(result.transitions?.length
+      ? ["", `切り替わりの前後 1 秒の平均: ${result.transitions.map((x) => `${x.label} ${x.meanPct.toFixed(1)}%`).join(" · ")}`]
+      : []),
   ].join("\n");
 }
