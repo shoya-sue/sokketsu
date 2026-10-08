@@ -60,4 +60,14 @@ describe("/api/decide", () => {
     expect(res.status).toBe(500);
     expect(await res.text()).not.toContain("abcd");
   });
+
+  it("拒否の理由を本文で返す", async () => {
+    const body = async (res: Response) => ({ status: res.status, body: await res.json() });
+    expect(await body(await call({}, input("x")))).toEqual({ status: 503, body: { error: "oracle unavailable" } });
+    expect(await body(await call(ENV, { task: "" }))).toEqual({ status: 400, body: { error: "bad request" } });
+    expect(await body(await call({ ORACLE_SECRET_KEY: "abcd" }, input("x")))).toEqual({
+      status: 500,
+      body: { error: "oracle failed" },
+    });
+  });
 });

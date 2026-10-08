@@ -44,3 +44,10 @@ describe("derivePayeeAddress（ウォレット・お試し用。公開鍵から�
     expect((await derivePayeeAddress(a)).toBase58()).not.toBe(a.toBase58());
   });
 });
+
+describe("derivePayeeAddress の導出規則", () => {
+  it("既知の発注者から既知の受注者（sha256(公開鍵 || \"sokketsu-payee-v2\")。規則を変えるとここが変わる）", async () => {
+    const payer = Keypair.fromSeed(new Uint8Array(32).fill(7)).publicKey;
+    expect((await derivePayeeAddress(payer)).toBase58()).toMatchInlineSnapshot(`"9REPGWid6DVGUM57WeWyMwW6WNexFGkSp983TtCw6yUx"`);
+  });
+});

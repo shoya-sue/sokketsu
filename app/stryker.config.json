@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "vitest-runner は vitest 5 で mutant を有効化できず全件 survived になった（2026-10-07 実測）。mutant ごとに vitest を丸ごと実行する command runner を使う。",
+  "testRunner": "command",
+  "commandRunner": { "command": "npx vitest run --reporter=dot" },
+  "coverageAnalysis": "off",
+  "mutate": [
+    "src/lib/**/*.ts",
+    "src/judge.ts",
+    "server/**/*.ts",
+    "functions/**/*.ts",
+    "!**/*.test.ts",
+    "!src/lib/fx.ts",
+    "!src/lib/sfx.ts"
+  ],
+  "reporters": ["clear-text", "progress", "json"],
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "thresholds": { "high": 90, "low": 80, "break": null },
+  "tempDirName": ".stryker-tmp",
+  "concurrency": 6
+}

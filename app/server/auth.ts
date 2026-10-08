@@ -12,6 +12,7 @@ function tokenMatches(given: string, expected: string): boolean {
   const b = enc.encode(expected);
   if (a.byteLength !== b.byteLength) {
     // 長さ違いでも同じだけ比較してから false を返し、時間差を小さくする。
+    // Stryker disable next-line CallExpression: 時間差をならすためだけの呼び出しで、戻り値は使わない（テストで観測できない）
     crypto.subtle.timingSafeEqual(b, b);
     return false;
   }
@@ -20,7 +21,10 @@ function tokenMatches(given: string, expected: string): boolean {
 
 /** Authorization: Bearer <token> が DEMO_TOKEN と一致するか。DEMO_TOKEN 未設定なら常に false。 */
 export function isAuthorized(request: Request, demoToken: string | undefined): boolean {
+  // Stryker disable next-line StringLiteral: ヘッダが無いときの既定値。どの文字列でも Bearer で始まらなければ同じ結果
   const auth = request.headers.get("Authorization") ?? "";
-  const token = auth.startsWith("Bearer ") ? auth.slice("Bearer ".length) : "";
-  return Boolean(demoToken && token && tokenMatches(token, demoToken));
+  if (!demoToken || !auth.startsWith("Bearer ")) return false;
+  const token = auth.slice("Bearer ".length);
+  // 空のトークンは長さが合わないので tokenMatches が false を返す。
+  return tokenMatches(token, demoToken);
 }

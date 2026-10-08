@@ -140,3 +140,67 @@ describe("createJudge", () => {
     expect(out.proof).toBeUndefined();
   });
 });
+
+describe("署名つき判断の検査（mutation テストで見つけた抜け）", () => {
+  // /api/judge の応答が読めなければ、理由 badResponse を出して /api/decide の署名つきモックへ落ちる。
+  const rejected = async (judgeBody: unknown) => {
+    routeFetch({
+      "/api/judge": async () => json(200, judgeBody),
+      "/api/decide": async () => json(200, signedMock("ping")),
+    });
+    const { out, reasons } = await run("tok", "ping");
+    expect(out).toEqual(signedMock("ping"));
+    expect(reasons).toEqual([{ k: "fallback.badResponse" }]);
+  };
+  const p = proof(9300);
+
+  it("本文が null", () => rejected(null));
+  it("proof が無い", () => rejected({ ...signedJev, proof: undefined }));
+  it("proof が null", () => rejected({ ...signedJev, proof: null }));
+  it("本文が文字列・数値", async () => {
+    await rejected("release");
+    await rejected(1);
+  });
+  it("署名が 63 バイト", () => rejected({ ...signedJev, proof: { ...p, signature: "ab".repeat(63) } }));
+  it("署名の先頭・末尾に 16 進以外の文字（長さは合っている）", async () => {
+    await rejected({ ...signedJev, proof: { ...p, signature: "zz" + "ab".repeat(63) } });
+    await rejected({ ...signedJev, proof: { ...p, signature: "ab".repeat(63) + "zz" } });
+  });
+  it("公開鍵の長さが違う", () => rejected({ ...signedJev, proof: { ...p, publicKey: "cd".repeat(31) } }));
+  it("確率が数値でない（文字列の数字も）", () => rejected({ ...signedJev, probability: "0.93" }));
+  it("確率が 0〜1 の外", async () => {
+    await rejected({ ...signedJev, probability: -0.01, proof: proof(-100) });
+    await rejected({ ...signedJev, probability: 1.01, proof: proof(10100) });
+  });
+  it("bps が確率と一致しない（文字列の bps も）", async () => {
+    await rejected({ ...signedJev, proof: proof(9301) });
+    await rejected({ ...signedJev, proof: { ...p, bps: "9300" } });
+  });
+  it("出所が呼んだ口と違う", () => rejected({ ...signedJev, source: "mock" }));
+
+  it("確率はちょうど 0 と 1 も受け付け、refund も受け付ける", async () => {
+    for (const body of [
+      { decision: "hold", probability: 0, source: "jev", proof: proof(0) },
+      { decision: "release", probability: 1, source: "jev", proof: proof(10000) },
+      { decision: "refund", probability: 0.9, source: "jev", proof: proof(9000) },
+    ]) {
+      routeFetch({ "/api/judge": async () => json(200, body) });
+      expect((await run("tok", "ping")).out).toEqual(body);
+    }
+  });
+
+  it("/api/decide が失敗の状態コードなら、本文が正しい形でも使わず、署名なしのモックにする", async () => {
+    routeFetch({ "/api/decide": async () => json(500, signedMock("hold: a")) });
+    const { out } = await run("", "hold: a");
+    expect(out).toEqual(mockDecision("hold: a"));
+    expect(out.proof).toBeUndefined();
+  });
+
+  it("API へは POST・JSON で依頼を送る", async () => {
+    const calls = routeFetch({ "/api/decide": async () => json(200, signedMock("x")) });
+    await run("", "x");
+    expect(calls[0].init.method).toBe("POST");
+    expect((calls[0].init.headers as Record<string, string>)["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual(input("x"));
+  });
+});

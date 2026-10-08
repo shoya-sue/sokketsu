@@ -122,15 +122,16 @@ export function applyRun(state: GameState, run: Run): RunResult {
 
 /** localStorage の値を検証して戻す。壊れていれば初期状態。 */
 export function parseGame(raw: string | null): GameState {
-  if (!raw) return INITIAL_GAME;
+  // null・空文字・壊れた JSON は、どれも JSON.parse か項目の読み出しで例外になり、catch で初期状態に戻る。
   try {
-    const d = JSON.parse(raw) as Partial<GameState>;
-    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0);
+    const d = JSON.parse(raw ?? "") as Partial<GameState>;
+    // Number.isFinite は型変換しないので、数値以外（文字列の "5" など）は弾かれる。
+    const num = (v: unknown) => (Number.isFinite(v) ? Math.max(0, v as number) : 0);
     return {
       xp: num(d.xp),
       combo: num(d.combo),
       bestCombo: num(d.bestCombo),
-      bestMs: typeof d.bestMs === "number" && Number.isFinite(d.bestMs) ? d.bestMs : null,
+      bestMs: Number.isFinite(d.bestMs) ? (d.bestMs as number) : null,
       runs: num(d.runs),
       seen: {
         release: d.seen?.release === true,
