@@ -2082,6 +2082,141 @@ code {
   white-space: nowrap;
 }
 
+/* ==== #17 確定までの内訳と slot の鼓動 ==== */
+.measure {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.measure-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.measure-head small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.measure-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.measure-log {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.74rem;
+}
+
+.measure-log li {
+  display: flex;
+  gap: 10px;
+  animation: typed-in 0.4s var(--ease) both;
+  animation-delay: calc(var(--i) * 160ms);
+}
+
+.measure-log code {
+  white-space: pre;
+  color: var(--sol-cyan);
+}
+
+.log-finalized code {
+  color: var(--sol-green);
+}
+
+.measure-chart {
+  width: 100%;
+  height: 48px;
+  overflow: visible;
+}
+
+.stair {
+  fill: none;
+  stroke: var(--sol-green);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  vector-effect: non-scaling-stroke;
+  animation: draw 0.9s var(--ease) 0.2s forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.measure-bar {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--surface-hi);
+}
+
+.seg {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: var(--from);
+  width: calc(var(--to) - var(--from));
+  border-radius: 4px;
+  transform-origin: left;
+  animation: seg-in 0.6s var(--ease) both;
+}
+
+.seg-processed {
+  background: var(--sol-cyan);
+}
+
+.seg-finalized {
+  background: var(--sol-green);
+  animation-delay: 0.3s;
+}
+
+@keyframes seg-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.tick {
+  position: absolute;
+  bottom: -5px;
+  width: 1px;
+  height: 4px;
+  background: var(--line);
+}
+
+.tick.major {
+  height: 7px;
+  background: var(--muted);
+}
+
+.slot-pulse {
+  width: 120px;
+  height: 22px;
+}
+
+.slot-pulse path {
+  fill: none;
+  stroke: var(--sol-green);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 720px) {
   .progress-track {
     flex-direction: column;
@@ -2101,4 +2236,7 @@ code {
     grid-template-columns: 1fr;
   }
 
+  .slot-pulse {
+    display: none;
+  }
 }

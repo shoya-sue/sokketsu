@@ -36,7 +36,9 @@ import { Timeline, type TimelineEntry } from "./components/Timeline";
 import { History } from "./components/History";
 import { JudgePanel } from "./components/JudgePanel";
 import { ProgressTrack } from "./components/ProgressTrack";
+import { SlotPulse } from "./components/SlotPulse";
 import { stepStates } from "./lib/steps";
+import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
 import { derivePayee, derivePayeeAddress } from "./lib/payee";
 import { operatorTopUp, type PayerSession } from "./lib/session";
@@ -142,6 +144,7 @@ export default function App() {
   const prevPhase = useRef<Phase>("idle");
   const [beforeError, setBeforeError] = useState<Phase | undefined>(undefined);
   const [currentTask, setCurrentTask] = useState<string | null>(null);
+  const [slotTimes, setSlotTimes] = useState<number[]>([]);
   const [judgement, setJudgement] = useState<JudgeOutput | null>(null);
   const [fallbackReason, setFallbackReason] = useState<Msg | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -235,6 +238,7 @@ export default function App() {
     getSlot().then(setCurrentSlot).catch(() => undefined);
     return subscribeSlots((slot) => {
       const now = performance.now();
+      setSlotTimes((times) => pushSlotTime(times, now));
       if (now - last < SLOT_UI_THROTTLE_MS) return;
       last = now;
       setCurrentSlot(slot);
@@ -582,6 +586,7 @@ export default function App() {
         </div>
         <div className="top-right">
           <ClusterPill status={alpenglow} currentSlot={currentSlot} fallbackRpc={usingFallbackRpc} />
+          {alpenglow?.kind === "alpenglow" && <SlotPulse slotTimes={slotTimes} />}
           <button
             className="icon-btn"
             onClick={toggleMute}
