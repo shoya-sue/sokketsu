@@ -1,6 +1,6 @@
 # 発表動画（#21）
 
-`sokketsu-pitch.mp4`（1920×1080・30fps・66.6 秒・音声つき）。本番の画面を実際に操作して撮った素材と、時刻からコマを決める場面（`docs/video/tooling.md` の B 方式）を組み合わせて書き出す。
+`sokketsu-pitch.mp4`（1920×1080・30fps・70.6 秒・音声つき）。本番の画面を実際に操作して撮った素材と、時刻からコマを決める場面（`docs/video/tooling.md` の B 方式）を組み合わせて書き出す。
 
 ## 構成
 
@@ -9,22 +9,22 @@
 | 掴み | 8 秒 | 確定まで 12.8 秒待たされていた → Tower BFT と Alpenglow（実測）の比較 → 「待たない。」 |
 | 課題 | 9 秒 | LLM の長文の判断では止められない → 型付きの答え（decision・probability） |
 | 仕組み | 11 秒 | 預け入れ → Jev が判断 → 署名を検証 → 確定、閾値 70% |
-| 実演 | 撮影の長さ（今回 23 秒） | 本番の画面の録画（お試し → hold で止める → release で確定）と字幕 |
+| 実演 | 撮影の長さ（今回 26.6 秒） | 本番の画面の録画（初回の案内ポップアップ → お試し → hold で止める → release で確定）と字幕 |
 | 数値 | 9 秒 | 確定ミリ秒・Tower BFT との比・送信 → processed → finalized の内訳・slot・取引 ID |
 | 締め | 7 秒 | ロゴ・devnet で動いている・sokketsu.pages.dev |
 
-## 画面に出る数値と取引（撮影 2026-10-09 08:28 UTC・本番 Pages `55d47f6f`）
+## 画面に出る数値と取引（撮影 2026-10-09 09:08 UTC・本番 Pages `84135adf`・main `521a370`）
 
 `capture/out/run.json` がそのまま動画の数値になる（作った数字は使わない）。判断はデモトークンを入れて Jev が返したもの（`source: jev · ✓ 署名済み`）。
 
 | 出来事 | 値 | 取引 |
 |---|---|---|
-| hold の預け入れ | 787 ms | [2RfqJ1QA…kALEGGYa](https://explorer.solana.com/tx/2RfqJ1QAQ3Ndyv1oE9HZ5NBhAgMCRpcN2q5tfGL5p8boHRehahKREumhKCGSUNmKgm141pNYFncYnjo3kALEGGYa?cluster=devnet) |
-| hold で止めた（送金なし） | — | [4ZWcBBCS…qPhseuwJ](https://explorer.solana.com/tx/4ZWcBBCSds3iuxtkacK3TWHLC2qbE5Haf42fgDEZ2dT7sDThR4HwTdi6vdsF21ro6NHCe7BYChpaxTD6qPhseuwJ?cluster=devnet) |
-| release の預け入れ | 838 ms | [5n7vVZ9K…qtkCRcA7](https://explorer.solana.com/tx/5n7vVZ9KuZRk4Mz8sCtG5UWsh8ffFjN56KxGs3PfWfwoqjQfYLgWsB1tuU2HaejSKLH7u3VSfzZuMXUdqtkCRcA7?cluster=devnet) |
-| Jev の判断 | release 96% | （オラクルの署名はプログラムが検証） |
-| 受注者へ解放 finalized | **731 ms**（送信 0 → processed 458 → finalized 731） | [36pfdAng…aQabELEvZ2J](https://explorer.solana.com/tx/36pfdAngiAHpnFtWLYb3cumecfYbvJ82w3g9dUSuYDhoMDPuv5TUwRvBKbGZhz12PRvBBDizE5eVaaQabELEvZ2J?cluster=devnet) |
-| slot（確定の瞬間） | 509,118,556 | |
+| hold の預け入れ | 932 ms | [3n4sZvk7…nLmbz22wi](https://explorer.solana.com/tx/3n4sZvk71tNQPq9G9SRgFo2S2tLS4WAHmXfgKztGP3dCzX7vJjcQu2zSGByJr5apJBsd7HKhpcwgFr5nLmbz22wi?cluster=devnet) |
+| hold で止めた（送金なし） | — | [Df7J3fKf…E8tpfgt6](https://explorer.solana.com/tx/Df7J3fKfafECaYyVqWmC4zSxuc6Dicc1uRKqHWMWqGRjaTTmr2yu7CQ8yiWtqFeCH3vqyKPTsPgFGurE8tpfgt6?cluster=devnet) |
+| release の預け入れ | 939 ms | [fdJ9aAWS…AwmFa1Vk](https://explorer.solana.com/tx/fdJ9aAWS4vbbhB3oGy6WV1fUCUXhjxzGxzGQrXEaARJ9ro5mL15VzMLVBDMGV1pZd7sehWC48XvNPuhAwmFa1Vk?cluster=devnet) |
+| Jev の判断 | release 94% | （オラクルの署名はプログラムが検証） |
+| 受注者へ解放 finalized | **809 ms**（送信 0 → processed 276 → finalized 809） | [2DYdKdWG…UetRJaeLD](https://explorer.solana.com/tx/2DYdKdWGdWqz1Ugg8R42z8cT51mnyef8MQxC9h73aqRgDdPD1rogbbjyTmHjuhWjgWgDPhDvYXQnaqxUetRJaeLD?cluster=devnet) |
+| slot（確定の瞬間） | 509,128,572 | |
 
 実演の冒頭に映る「REPLAY 797 ms」は、待機中に流れる送金しない再生（#30）で、2026-10-08 の本番で測った確定ミリ秒。今回の撮影の値ではない。
 
