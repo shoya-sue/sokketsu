@@ -2777,19 +2777,27 @@ code {
   opacity: 0.3;
 }
 
-/* 切り替わりの瞬間、輪郭のはっきりした色の輪が金庫のあたりから画面の外まで広がる */
+/* 切り替わりの瞬間、輪郭のはっきりした色の輪が画面の中央から外まで 2 重に広がる（舞台の位置に関係なく画面に映る） */
+.tone-wash::before,
 .tone-wash::after {
   content: "";
   position: absolute;
-  top: 40%;
+  top: 50%;
   left: 50%;
   width: 160px;
   height: 160px;
   margin: -80px 0 0 -80px;
-  border: 40px solid color-mix(in srgb, var(--tone-a) 55%, transparent);
+  border: 56px solid color-mix(in srgb, var(--tone-a) 55%, transparent);
   border-radius: 50%;
   opacity: 0;
-  animation: tone-ring 0.9s cubic-bezier(0.3, 0.6, 0.4, 1);
+  animation: tone-ring 1s cubic-bezier(0.3, 0.6, 0.4, 1);
+}
+
+.tone-wash::before {
+  border-width: 28px;
+  border-color: color-mix(in srgb, var(--tone-b) 60%, transparent);
+  animation-delay: 0.22s;
+  animation-fill-mode: backwards;
 }
 
 @keyframes tone-ring {
