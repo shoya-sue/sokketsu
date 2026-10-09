@@ -92,7 +92,8 @@ type Preset = { key: "hold" | "release" | "refund"; label: string; task: string 
 
 const PRESETS: Preset[] = [
   { key: "hold", label: "hold", task: "hold: wait" },
-  { key: "release", label: "release", task: "devnet ping for agent task" },
+  // Jev は納品の根拠が無い依頼文を hold（約 60%）と判断するため、完了と承認を明記する（2026-10-06 実測: release 91〜95%）。
+  { key: "release", label: "release", task: "release: delivered the devnet ping report; payer verified and approved" },
   { key: "refund", label: "refund", task: "refund: cancel" },
 ];
 // デモ台本の順（hold で止まる → release で即決）。

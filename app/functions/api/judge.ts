@@ -60,12 +60,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     let res = await callJev(EVALUATE_URL, MODEL_ID, key, input);
     let route = "vercel-ai-gateway";
     if (res.status === 401) {
-      // キーの中身は出さず、種類の切り分けに要る形だけを残す。
-      console.warn("jev gateway rejected the key; retrying TypeSafe API directly", {
-        length: key.length,
-        trimmed: key.length !== env.AI_GATEWAY_API_KEY.length,
-        vercelPrefix: key.startsWith("vck_"),
-      });
       res = await callJev(TYPESAFE_URL, TYPESAFE_MODEL_ID, key, input);
       route = "typesafe-direct";
     }
