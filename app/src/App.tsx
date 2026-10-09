@@ -38,6 +38,9 @@ import { JudgePanel } from "./components/JudgePanel";
 import { ProgressTrack } from "./components/ProgressTrack";
 import { SlotPulse } from "./components/SlotPulse";
 import { BadgeOverlay, type Badge } from "./components/BadgeOverlay";
+import { Ambient } from "./components/Ambient";
+import { useAttract } from "./hooks/useAttract";
+import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -256,6 +259,17 @@ export default function App() {
     if (phase === "error") setBeforeError(prevPhase.current);
     prevPhase.current = phase;
   }, [phase]);
+
+  // まだ 1 回も流していない待機中は、舞台で送金しない再生を流し続ける（#30）。
+  const attract = useAttract(phase === "idle" && !running);
+  const stage = attract
+    ? {
+        phase: attract.phase,
+        judgement: attract.judged ? { decision: "release" as const, probability: ATTRACT_PROBABILITY, source: "jev" as const } : null,
+        vaultLamports: attract.phase === "depositing" || attract.phase === "judging" ? DEPOSIT_LAMPORTS : 0,
+        runKey: -1 - attract.cycle,
+      }
+    : { phase, judgement, vaultLamports, runKey };
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
   const ready = session !== null && payee !== null;
@@ -593,6 +607,7 @@ export default function App() {
   return (
     <div className="shell" data-phase={phase}>
       <div className="bg-glow" aria-hidden="true" />
+      <Ambient slotTimes={slotTimes} />
       <header className="top">
         <div className="brand">
           <span className="brand-mark">即決</span>
@@ -670,14 +685,15 @@ export default function App() {
         )}
         {ready && <ProgressTrack phase={phase} beforeError={beforeError} />}
         <FlowStage
-          phase={phase}
+          phase={stage.phase}
           payer={{ address: payerKey, balance: balances.payer }}
           payee={{ address: payee, balance: balances.payee }}
-          vaultLamports={vaultLamports}
-          judgement={judgement}
+          vaultLamports={stage.vaultLamports}
+          judgement={stage.judgement}
           fallbackReason={fallbackReason ? tm(fallbackReason) : null}
           thresholdBps={RELEASE_THRESHOLD_BPS}
-          runKey={runKey}
+          runKey={stage.runKey}
+          replayMs={attract ? attractMs(history) : null}
         />
         <JudgePanel
           task={currentTask}

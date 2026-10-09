@@ -73,7 +73,7 @@ export function formatTable(result) {
   const row = (label, s) =>
     `| ${label} | ${s.frames} | ${pct(s.staticRatio)} | ${s.meanPct.toFixed(2)}% | ${s.longestStaticS.toFixed(2)} s | ${s.secondsOver1} |`;
   return [
-    `${result.url} · ${result.mode} · ${result.viewport}${result.reducedMotion ? " · reduced-motion" : ""}`,
+    `${result.url} · ${result.mode} · ${result.viewport}${result.reducedMotion ? " · reduced-motion" : ""} · 送信した取引 ${result.sentTransactions ?? "—"} 件`,
     "",
     head,
     row("全体", result.overall),

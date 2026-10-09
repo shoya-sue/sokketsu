@@ -18,6 +18,8 @@ type Props = {
   fallbackReason: string | null;
   thresholdBps: number;
   runKey: number;
+  /** 送金しない再生（#30）のときの確定ミリ秒。null なら本物の進行。 */
+  replayMs?: number | null;
 };
 
 const EXPLORER = "https://explorer.solana.com";
@@ -70,6 +72,7 @@ export function FlowStage({
   fallbackReason,
   thresholdBps,
   runKey,
+  replayMs = null,
 }: Props) {
   const { t } = useLang();
   const threshold = thresholdBps / 10000;
@@ -87,7 +90,13 @@ export function FlowStage({
   const thresholdShard = thresholdRing(threshold) - 1;
 
   return (
-    <div className={`stage phase-${phase}`}>
+    <div className={`stage phase-${phase} ${replayMs !== null ? "is-replay" : ""}`}>
+      {replayMs !== null && (
+        <span className="replay-tag" aria-hidden="true">
+          REPLAY
+          {phase === "released" && <strong key={runKey}>{replayMs} ms</strong>}
+        </span>
+      )}
 
       <div className={`rail rail-left ${leftActive ? "active" : ""} ${phase === "refunding" ? "reverse" : ""}`} aria-hidden="true" />
       <div className={`rail rail-right ${rightActive ? "active" : ""}`} aria-hidden="true" />
@@ -174,7 +183,7 @@ export function FlowStage({
                 : t("stage.threshold")}
           </span>
         </div>
-        {judgement && (
+        {judgement && replayMs === null && (
           <span className={`source source-${judgement.source}`}>
             source: {judgement.source}
             {judgement.proof ? ` · ✓ ${t("stage.signed")}` : ""}
