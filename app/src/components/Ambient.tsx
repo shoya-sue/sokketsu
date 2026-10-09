@@ -1,8 +1,25 @@
 import { useEffect, useRef } from "react";
 import { prefersReducedMotion } from "../lib/motion";
-import { liveWaves, particleCount, seedParticles, stepParticles, type Particle } from "../lib/ambient";
+import {
+  BURST_S,
+  burstSparks,
+  liveWaves,
+  particleCount,
+  seedParticles,
+  stepParticles,
+  stepSparks,
+  type Particle,
+  type Spark,
+} from "../lib/ambient";
 
-type Props = { slotTimes: readonly number[] };
+type Props = {
+  slotTimes: readonly number[];
+  /** 変わるたびに、金庫から火花と強い波紋を出す（確定の瞬間 #31）。 */
+  burstId?: number | null;
+};
+
+const BURST_COUNT = 260;
+const BURST_WAVES_MS = [0, 140, 300];
 
 const GRID = 44;
 const COLORS = ["153, 69, 255", "20, 241, 149", "0, 209, 255"];
@@ -44,9 +61,19 @@ function gridLayer(w: number, h: number, dpr: number, alpha: number): HTMLCanvas
  * 背景で動き続ける粒子と、slot を受け取るたびに金庫から広がる波紋（#30）。
  * 波紋が通ったところだけグリッドが明るくなる。reduced-motion では止まった 1 コマだけを描く。
  */
-export function Ambient({ slotTimes }: Props) {
+export function Ambient({ slotTimes, burstId = null }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const slotsRef = useRef(slotTimes);
+  const sparksRef = useRef<Spark[]>([]);
+  const burstWavesRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (burstId === null || prefersReducedMotion()) return;
+    const { x, y } = waveCenter(window.innerWidth, window.innerHeight);
+    const now = performance.now();
+    sparksRef.current = [...sparksRef.current, ...burstSparks(BURST_COUNT, x, y, Math.random)];
+    burstWavesRef.current = BURST_WAVES_MS.map((d) => now + d);
+  }, [burstId]);
   // 描画ループは 1 回だけ作るので、最新の slot の列は ref 経由で読む。
   useEffect(() => {
     slotsRef.current = slotTimes;
@@ -94,7 +121,8 @@ export function Ambient({ slotTimes }: Props) {
       }
       const { x: cx, y: cy } = center;
       const maxR = Math.hypot(Math.max(cx, w - cx), Math.max(cy, h - cy));
-      for (const wave of reduced ? [] : liveWaves(slotsRef.current, now, maxR)) {
+      const burst = liveWaves(burstWavesRef.current, now, maxR).map((wv) => ({ ...wv, alpha: Math.min(1, wv.alpha * 1.6) }));
+      for (const wave of reduced ? [] : [...liveWaves(slotsRef.current, now, maxR), ...burst]) {
         const band = 36;
         ctx.save();
         ctx.beginPath();
@@ -109,6 +137,13 @@ export function Ambient({ slotTimes }: Props) {
         ctx.strokeStyle = `rgba(20, 241, 149, ${0.35 * wave.alpha})`;
         ctx.lineWidth = 2;
         ctx.stroke();
+      }
+
+      for (const sp of sparksRef.current) {
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(20, 241, 149, ${Math.min(1, sp.life / BURST_S + 0.2)})`;
+        ctx.fill();
       }
 
       particles.forEach((p, i) => {
@@ -142,6 +177,7 @@ export function Ambient({ slotTimes }: Props) {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       particles = stepParticles(particles, dt, w, h);
+      if (sparksRef.current.length > 0) sparksRef.current = stepSparks(sparksRef.current, dt);
       draw(now);
       raf = requestAnimationFrame(frame);
     };
