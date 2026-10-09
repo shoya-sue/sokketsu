@@ -2960,3 +2960,139 @@ code {
   font-size: 0.9rem;
   letter-spacing: 0.08em;
 }
+
+/* ==== #35 もう 1 回押したくなる仕掛け ==== */
+/* スロットの回転中は数字がぶれ、止まった瞬間に締まる */
+.hit-ms.rolling {
+  filter: blur(1.2px) drop-shadow(0 0 18px color-mix(in srgb, var(--hit) 50%, transparent));
+  opacity: 0.85;
+}
+
+.hit-ms.locked {
+  animation:
+    hit-lock 0.32s cubic-bezier(0.2, 1.8, 0.4, 1),
+    hit-glow 0.9s ease-in-out 0.45s infinite alternate;
+}
+
+@keyframes hit-lock {
+  from {
+    transform: scale(1.18);
+  }
+}
+
+/* ランクの格：S は金、A は紫、B は水色、C は控えめ */
+.finality-hit.tier-legendary {
+  --hit: #ffd166;
+}
+
+.finality-hit.tier-epic {
+  --hit: #c38bff;
+}
+
+.finality-hit.tier-rare {
+  --hit: var(--sol-cyan);
+}
+
+.finality-hit.tier-common .hit-rings i:nth-child(n + 3) {
+  display: none;
+}
+
+.finality-hit.tier-legendary .hit-ms {
+  font-size: clamp(5.6rem, 3.4rem + 11vw, 11.5rem);
+}
+
+/* 大当たり：金の光線が回り、帯が叩きつけられる */
+.hit-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1600px;
+  height: 1600px;
+  margin: -800px 0 0 -800px;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 209, 102, 0.22) 0 6deg, transparent 6deg 18deg);
+  mask: radial-gradient(closest-side, #000 10%, transparent 70%);
+  animation: rays-spin 6s linear infinite;
+}
+
+@keyframes rays-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hit-jackpot {
+  padding: 3px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd166, #ff5ea8);
+  color: #1a0f00;
+  font-family: var(--display);
+  font-size: clamp(0.95rem, 0.8rem + 0.6vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: hit-grade 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) 0.65s both;
+}
+
+/* 惜しさ：あと N ms で上のランク。差が小さいほど強く脈打つ */
+.hit-near {
+  margin-top: 6px;
+  color: var(--muted);
+  font-family: var(--display);
+  font-size: clamp(0.9rem, 0.75rem + 0.6vw, 1.15rem);
+  font-weight: 700;
+  animation: near-in 0.35s var(--ease) both;
+}
+
+.hit-near.close {
+  color: var(--amber);
+  animation:
+    near-in 0.35s var(--ease) both,
+    near-pulse 0.5s ease-in-out 0.35s infinite alternate;
+}
+
+@keyframes near-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes near-pulse {
+  to {
+    transform: scale(1.08);
+    text-shadow: 0 0 16px var(--amber);
+  }
+}
+
+/* コンボの炎 */
+.hud-combo {
+  position: relative;
+}
+
+.hud-fire {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  font-size: 1rem;
+  filter: drop-shadow(0 0 8px rgba(255, 120, 40, 0.9));
+  transform-origin: 50% 100%;
+  animation: fire-flicker 0.28s ease-in-out infinite alternate;
+}
+
+.fire-2 .hud-fire {
+  font-size: 1.2rem;
+}
+
+.fire-3 .hud-fire {
+  font-size: 1.4rem;
+  animation-duration: 0.18s;
+}
+
+@keyframes fire-flicker {
+  from {
+    transform: scale(1, 1) rotate(-4deg);
+  }
+  to {
+    transform: scale(1.08, 1.18) rotate(4deg);
+  }
+}

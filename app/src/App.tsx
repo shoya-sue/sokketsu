@@ -54,7 +54,9 @@ import { Hud } from "./components/Hud";
 import { Toasts, type Toast } from "./components/Toasts";
 import { INITIAL_GAME, applyRun, levelFromXp, parseGame, type GameState, type Grade, type Run } from "./lib/game";
 import { burstAt, sideCannons, starShower } from "./lib/fx";
-import { isMuted, play as playSfx, playNotes, setMuted } from "./lib/sfx";
+import { isMuted, play as playSfx, playNotes, setMuted, vibrate } from "./lib/sfx";
+import { TIER_OF, VIBRATE, jackpotFor, nearMiss } from "./lib/thrill";
+import { useBgm } from "./hooks/useBgm";
 import { countdownNotes } from "./lib/sfxPlan";
 import { CountdownHit } from "./components/CountdownHit";
 import { useShake } from "./hooks/useShake";
@@ -185,15 +187,19 @@ export default function App() {
   const [muted, setMutedState] = useState(isMuted);
   const [hit, setHit] = useState<Hit | null>(null);
 
-  /** 確定の瞬間を画面中央に出し、舞台を揺らす（#31）。 */
-  const showHit = (kind: Hit["kind"], ms: number, g: Grade | null) => {
+  /** 確定の瞬間を画面中央に出し、舞台を揺らす（#31）。格・惜しさ・大当たりも出す（#35）。 */
+  const showHit = (kind: Hit["kind"], ms: number, g: Grade | null, prevBest: number | null) => {
     const id = Date.now();
-    setHit({ id, kind, ms, grade: g });
+    const tier = g ? TIER_OF[g] : null;
+    setHit({ id, kind, ms, grade: g, near: nearMiss(ms), tier, jackpot: g ? jackpotFor(prevBest, ms, g) : null });
     setShakeKey((k) => k + 1);
+    if (tier) vibrate(VIBRATE[tier]);
     later(() => setHit((h) => (h?.id === id ? null : h)), HIT_MS);
   };
 
   const clearBadge = useCallback(() => setBadge(null), []);
+  // 再生中は小さな BGM を流す（コンボ中は音を重ねる）（#35）。
+  useBgm(running !== null && running !== "sweep", game.combo);
   // 演出の予約（バッジ・レベルアップ・その効果音）。次の再生を始めたら取り消す（前の回の演出が途中に出ないように）。
   const pending = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = (fn: () => void, ms: number) => {
@@ -550,9 +556,10 @@ export default function App() {
         recordSample(m.finalizedMs, "release");
         setPhase("released");
         playSfx("finalize");
+        const prevBest = gameRef.current.bestMs;
         const g = scoreRun({ kind: "release", ms: m.finalizedMs });
         setGrade(g);
-        showHit("release", m.finalizedMs, g);
+        showHit("release", m.finalizedMs, g, prevBest);
         if (g) burstAt(".node-payee", g);
         push({
           label: msg("tl.sent", { label: "@label.release" }),
@@ -574,9 +581,10 @@ export default function App() {
         recordSample(m.finalizedMs, "refund");
         setPhase("refunded");
         playSfx("finalize");
+        const prevBest = gameRef.current.bestMs;
         const g = scoreRun({ kind: "refund", ms: m.finalizedMs });
         setGrade(g);
-        showHit("refund", m.finalizedMs, g);
+        showHit("refund", m.finalizedMs, g, prevBest);
         if (g) burstAt(".node-payer", g);
         push({
           label: msg("tl.sent", { label: "@label.refund" }),
