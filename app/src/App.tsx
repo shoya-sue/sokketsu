@@ -203,7 +203,7 @@ export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
-  const stageCardRef = useRef<HTMLElement>(null);
+  const stageCardRef = useRef<HTMLDivElement>(null);
   useShake(stageCardRef, shakeKey);
   const [muted, setMutedState] = useState(isMuted);
   const [hit, setHit] = useState<Hit | null>(null);
@@ -749,9 +749,18 @@ export default function App() {
         </section>
       )}
 
-      <Hud game={game} gain={gain} />
+      {/* 箱で区切らない（#56）。中央の舞台と、左右に浮かぶ計器だけで 1 枚の画面にする */}
+      <div className="cockpit">
+      <aside className="dock dock-left">
+        <Hud game={game} gain={gain} />
+        <div className="gauge gauge-result">
+          <span className="gauge-tag">{t("card.result")}</span>
+          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsLeft} grade={grade} />
+          <History history={history} />
+        </div>
+      </aside>
 
-      <section className="card stage-card" ref={stageCardRef}>
+      <div className="arena" ref={stageCardRef}>
         {levelUp !== null && (
           <div className="levelup" aria-live="assertive">
             <span>{t("game.levelUp")}</span>
@@ -771,14 +780,6 @@ export default function App() {
           replayMs={attract ? attractMs(history) : null}
           finalizedMs={outcome?.kind === "sent" ? outcome.measurement.finalizedMs : null}
         />
-        <JudgePanel
-          task={currentTask}
-          judging={phase === "judging"}
-          judgement={judgement}
-          thresholdBps={RELEASE_THRESHOLD_BPS}
-          runKey={runKey}
-        />
-
         {!ready ? (
           <div className="setup">
             <p className="setup-title">{t("setup.title")}</p>
@@ -863,19 +864,27 @@ export default function App() {
             </div>
           </div>
         )}
-      </section>
+      </div>
 
-      <main className="bottom">
-        <section className="card card-result">
-          <h2>{t("card.result")}</h2>
-          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsLeft} grade={grade} />
-          <History history={history} />
-        </section>
-        <section className="card">
-          <h2>{t("card.timeline")}</h2>
+      <aside className="dock dock-right">
+        {currentTask && (
+          <div className="gauge gauge-judge">
+            <span className="gauge-tag">{t("judge.title")}</span>
+            <JudgePanel
+              task={currentTask}
+              judging={phase === "judging"}
+              judgement={judgement}
+              thresholdBps={RELEASE_THRESHOLD_BPS}
+              runKey={runKey}
+            />
+          </div>
+        )}
+        <div className="gauge gauge-timeline">
+          <span className="gauge-tag">{t("card.timeline")}</span>
           <Timeline entries={timeline} />
-        </section>
-      </main>
+        </div>
+      </aside>
+      </div>
 
       <Ticker items={ticker} reverse />
       <footer className="foot">

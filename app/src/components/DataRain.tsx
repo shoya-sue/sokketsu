@@ -12,8 +12,8 @@ type Props = {
 const MAX_DPR = 2;
 const FONT_PX = 14;
 const REGLYPH_MS = 900;
-/** 描くのは 30 コマ/秒まで（GPU の無い環境で重くしない）。 */
-const DRAW_MS = 1000 / 30;
+/** 描くのは 20 コマ/秒まで（GPU の無い環境・録画で重くしない）。 */
+const DRAW_MS = 1000 / 20;
 /** 広い画面では中央（カードの裏）を描かず、左右の余白の列だけにする。 */
 const SIDE_ONLY_MIN_W = 760;
 const SIDE_RATIO = 0.22;

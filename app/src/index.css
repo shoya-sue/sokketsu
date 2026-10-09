@@ -3675,18 +3675,13 @@ h2,
 /* 1. Solana のグラデーションの回転光（3 色の光だまりが画面の中心を回る） */
 .od-aurora {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  margin: -75vmax 0 0 -75vmax;
+  inset: 0;
   background:
     radial-gradient(28% 28% at 30% 30%, color-mix(in srgb, var(--sol-purple) 85%, transparent), transparent 70%),
     radial-gradient(26% 26% at 72% 38%, color-mix(in srgb, var(--sol-green) 70%, transparent), transparent 70%),
     radial-gradient(24% 24% at 46% 74%, color-mix(in srgb, var(--sol-cyan) 60%, transparent), transparent 70%),
     radial-gradient(30% 30% at 50% 50%, color-mix(in srgb, var(--tone-a) 50%, transparent), transparent 70%);
-  opacity: calc(0.22 + 0.3 * var(--od-energy));
-  animation: od-spin 36s linear infinite;
+  opacity: calc(0.4 + 0.35 * var(--od-energy));
 }
 
 @keyframes od-spin {
@@ -3698,18 +3693,13 @@ h2,
 /* 2. 六角形の格子（中央ほど濃く、ゆっくり流れる） */
 .od-hex {
   position: absolute;
-  inset: -120px;
+  inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0 56 16.2v32.3L28 64.7 0 48.5V16.2zM28 64.7v32.3M0 97V80.8M56 97V80.8' fill='none' stroke='%23b8a4ff' stroke-width='1'/%3E%3C/svg%3E");
   background-size: 56px 97px;
-  opacity: calc(0.04 + 0.08 * var(--od-energy));
-  animation: od-hex-drift 24s linear infinite;
+  opacity: calc(0.12 + 0.12 * var(--od-energy));
 }
 
-@keyframes od-hex-drift {
-  to {
-    transform: translate3d(56px, 97px, 0);
-  }
-}
+
 
 /* 3. Sokketsu マークの透かし（3 枚・逆回転）と、点線の軌道 */
 .od-marks {
@@ -3719,7 +3709,7 @@ h2,
 
 .od-mark {
   position: absolute;
-  opacity: calc(0.08 + 0.12 * var(--od-energy));
+  opacity: calc(0.16 + 0.16 * var(--od-energy));
 }
 
 .od-mark-1 {
@@ -3728,7 +3718,6 @@ h2,
   width: 92vmin;
   height: 92vmin;
   margin: -46vmin 0 0 -46vmin;
-  animation: od-spin 60s linear infinite;
 }
 
 .od-mark-2 {
@@ -3736,7 +3725,7 @@ h2,
   bottom: -18vmin;
   width: 54vmin;
   height: 54vmin;
-  animation: od-spin 40s linear infinite reverse;
+  transform: rotate(-18deg);
 }
 
 .od-mark-3 {
@@ -3744,7 +3733,7 @@ h2,
   left: -12vmin;
   width: 40vmin;
   height: 40vmin;
-  animation: od-spin 28s linear infinite;
+  transform: rotate(14deg);
 }
 
 .od-orbit {
@@ -3753,14 +3742,13 @@ h2,
   left: 50%;
   border-radius: 50%;
   border: 2px dashed color-mix(in srgb, var(--tone-b) 55%, transparent);
-  opacity: calc(0.1 + 0.25 * var(--od-energy));
+  opacity: calc(0.25 + 0.3 * var(--od-energy));
 }
 
 .od-orbit-1 {
   width: 120vmin;
   height: 120vmin;
   margin: -60vmin 0 0 -60vmin;
-  animation: od-spin 48s linear infinite reverse;
 }
 
 .od-orbit-2 {
@@ -3769,7 +3757,6 @@ h2,
   margin: -37vmin 0 0 -37vmin;
   border-style: dotted;
   border-color: color-mix(in srgb, var(--tone-a) 70%, transparent);
-  animation: od-spin 20s linear infinite;
 }
 
 /* 4. 斜めに流れる巨大な文字の帯（縁取りだけの文字） */
@@ -3789,8 +3776,7 @@ h2,
   line-height: 1;
   color: transparent;
   -webkit-text-stroke: 2px color-mix(in srgb, var(--tone-a) 85%, transparent);
-  opacity: calc(0.16 + 0.22 * var(--od-energy));
-  animation: od-marquee 70s linear infinite;
+  opacity: calc(0.26 + 0.26 * var(--od-energy));
 }
 
 .od-band-a {
@@ -3800,8 +3786,7 @@ h2,
 .od-band-b {
   top: 58%;
   -webkit-text-stroke-color: color-mix(in srgb, var(--tone-b) 70%, transparent);
-  animation-direction: reverse;
-  animation-duration: 90s;
+  translate: -18% 0;
 }
 
 .od-band span {
@@ -3820,7 +3805,7 @@ h2,
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: calc(0.12 + 0.22 * var(--od-energy));
+  opacity: calc(0.3 + 0.3 * var(--od-energy));
 }
 
 /* 6. 確定の瞬間：全画面を Solana のグラデーションと放射の筋が一度に走る */
@@ -4075,64 +4060,6 @@ h2,
   margin: 0 18px;
   color: var(--tone-b);
   text-shadow: 0 0 8px var(--tone-b);
-}
-
-/* パネル：流れるグラデーションの縁取り */
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1.5px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from 210deg,
-    var(--tone-a),
-    transparent 22%,
-    var(--tone-b) 50%,
-    transparent 72%,
-    var(--tone-a)
-  );
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-  opacity: calc(0.35 + 0.6 * var(--od-energy));
-  pointer-events: none;
-  animation: od-border 2.4s ease-in-out infinite;
-}
-
-/* 縁取りは一度だけ描き、不透明度だけを脈打たせる（GPU の無い環境でも毎フレーム描き直さない） */
-@keyframes od-border {
-  50% {
-    opacity: calc(0.15 + 0.35 * var(--od-energy));
-  }
-}
-
-/* 判断中：舞台の上下に警告テープが流れる */
-.stage-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  background:
-    repeating-linear-gradient(-45deg, var(--tone-a) 0 12px, #07060d 12px 24px) top / 200% 8px no-repeat,
-    repeating-linear-gradient(-45deg, var(--tone-b) 0 12px, #07060d 12px 24px) bottom / 200% 8px no-repeat;
-  transition: opacity 0.3s;
-}
-
-.shell[data-stage="judging"] .stage-card::after,
-.shell[data-stage="holding"] .stage-card::after {
-  opacity: 0.85;
-  animation: od-tape 1.2s linear infinite;
-}
-
-@keyframes od-tape {
-  to {
-    background-position:
-      -34px 0,
-      34px 100%;
-  }
 }
 
 /* フッター：Solana の公式ロゴは無地の余白の中に 1 か所だけ。手前の層より上に置き、何も重ねない */
@@ -4632,16 +4559,6 @@ h2,
   }
 }
 
-/* ハローは舞台の外へはみ出すので、舞台のカードの中の入口・操作はその手前に出し、ボタンの面は透かさない */
-.stage-card > .setup,
-.stage-card > .controls,
-.stage-card > .judge-flow,
-.stage-card > .judge-more,
-.stage-card > .judge-compare {
-  position: relative;
-  z-index: 3;
-}
-
 .setup-actions .trial-btn {
   background: #120f22;
 }
@@ -4658,13 +4575,6 @@ h2,
   height: 80vmax;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--tone-b) 40%, transparent), transparent);
   opacity: calc(0.18 + 0.25 * var(--od-energy));
-  animation: od-leak 9s ease-in-out infinite alternate;
-}
-
-@keyframes od-leak {
-  to {
-    transform: translate3d(14vmax, 8vmax, 0) scale(1.15);
-  }
 }
 
 .od-beams {
@@ -4680,29 +4590,18 @@ h2,
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone-a) 22%, transparent), transparent);
   transform: skewX(-18deg);
   opacity: calc(0.25 + 0.5 * var(--od-energy));
-  animation: od-beam 7s linear infinite;
+  left: 12vw;
 }
 
 .od-beams i:nth-child(2) {
   width: 6vw;
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tone-b) 30%, transparent), transparent);
-  animation-duration: 5s;
-  animation-delay: -2s;
+  left: 58vw;
 }
 
 .od-beams i:nth-child(3) {
   width: 22vw;
-  animation-duration: 11s;
-  animation-delay: -6s;
-}
-
-@keyframes od-beam {
-  from {
-    left: -30vw;
-  }
-  to {
-    left: 110vw;
-  }
+  left: 76vw;
 }
 
 .od-seal {
@@ -4712,8 +4611,7 @@ h2,
   width: 140vmin;
   height: 140vmin;
   margin: -70vmin 0 0 -70vmin;
-  opacity: calc(0.1 + 0.18 * var(--od-energy));
-  animation: od-spin 90s linear infinite reverse;
+  opacity: calc(0.2 + 0.22 * var(--od-energy));
 }
 
 .od-seal svg {
