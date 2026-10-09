@@ -476,6 +476,7 @@ export default function App() {
       // 3. 執行
       // 執行は操作鍵が出す（Jev の判断は誰が出してもよく、モックは操作鍵なら通る）。発注者の承認は要らない。
       const settle = await settleIxs(s.operator.publicKey, p.publicKey, q, escrow, hash, decision);
+      playSfx("verify");
       if (decision.decision === "release" && meets) {
         const m = await sendAndMeasure(operator, settle, undefined, (at) => {
           setMeasuringSince(at);
