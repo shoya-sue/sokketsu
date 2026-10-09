@@ -34,6 +34,7 @@ import { FlowStage, type Phase } from "./components/FlowStage";
 import { ResultPanel, type Outcome } from "./components/ResultPanel";
 import { Timeline, type TimelineEntry } from "./components/Timeline";
 import { History } from "./components/History";
+import { JudgePanel } from "./components/JudgePanel";
 import { ProgressTrack } from "./components/ProgressTrack";
 import { stepStates } from "./lib/steps";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -140,6 +141,7 @@ export default function App() {
   // 失敗したとき、どの段で止まったかを段階表示に出すため、直前の段階を覚えておく。
   const prevPhase = useRef<Phase>("idle");
   const [beforeError, setBeforeError] = useState<Phase | undefined>(undefined);
+  const [currentTask, setCurrentTask] = useState<string | null>(null);
   const [judgement, setJudgement] = useState<JudgeOutput | null>(null);
   const [fallbackReason, setFallbackReason] = useState<Msg | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -401,6 +403,7 @@ export default function App() {
     setSlotsLeft(null);
     setFallbackReason(null);
     const task = withRunId(preset.task);
+    setCurrentTask(task);
     setBeforeError(undefined);
     push({ label: msg("tl.request", { preset: preset.label }), detail: task, tone: "info" });
     try {
@@ -651,6 +654,13 @@ export default function App() {
           vaultLamports={vaultLamports}
           judgement={judgement}
           fallbackReason={fallbackReason ? tm(fallbackReason) : null}
+          thresholdBps={RELEASE_THRESHOLD_BPS}
+          runKey={runKey}
+        />
+        <JudgePanel
+          task={currentTask}
+          judging={phase === "judging"}
+          judgement={judgement}
           thresholdBps={RELEASE_THRESHOLD_BPS}
           runKey={runKey}
         />
