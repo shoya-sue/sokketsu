@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { STATIC_PCT, bySegment, formatTable, summarize } from "./stats.mjs";
+import { STATIC_PCT, aroundMarks, bySegment, formatTable, summarize } from "./stats.mjs";
 
 const at = (pcts, step = 0.05) => pcts.map((pct, i) => ({ t: i * step, pct }));
 
@@ -107,4 +107,40 @@ test("表は全体と区間の行を出す", () => {
   assert.match(text, /^u · idle · 1280x900 · reduced-motion · 送信した取引 0 件/);
   assert.match(text, /\| 全体 \| 2 \| 50% \| 1\.00% \| 0\.00 s \| 0 \|/);
   assert.match(text, /\| idle \|/);
+});
+
+test("切り替わりの前後の平均は、その時刻の ±half 秒（両端を含む）のコマ", () => {
+  const frames = at([0, 2, 4, 6, 8], 1); // t = 0..4
+  const result = aroundMarks(
+    frames,
+    [
+      { label: "load", at: 0 },
+      { label: "ready", at: 0.5 },
+      { label: "judging", at: 2 },
+      { label: "released", at: 4 },
+      { label: "afterglow", at: 4 },
+      { label: "done", at: 4 },
+      { label: "end", at: 4 },
+    ],
+    1,
+  );
+  assert.deepEqual(result, [
+    { label: "judging", at: 2, meanPct: 4 }, // t=1,2,3
+    { label: "released", at: 4, meanPct: 7 }, // t=3,4
+  ]);
+  assert.deepEqual(aroundMarks([], [{ label: "x", at: 1 }]), [{ label: "x", at: 1, meanPct: 0 }]);
+});
+
+test("切り替わりがあれば表の後ろに出す", () => {
+  const s = summarize(at([0, 2]));
+  const text = formatTable({
+    url: "u",
+    mode: "play",
+    viewport: "1x1",
+    reducedMotion: false,
+    overall: s,
+    segments: [],
+    transitions: [{ label: "judging", at: 1, meanPct: 5.25 }],
+  });
+  assert.match(text, /切り替わりの前後 1 秒の平均: judging 5\.3%$/);
 });
