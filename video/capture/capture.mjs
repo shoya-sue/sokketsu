@@ -50,7 +50,14 @@ let audioStartedAt = null;
 
 await page.goto(opt.url, { waitUntil: "domcontentloaded" });
 await page.locator(".shell").waitFor();
-await page.waitForTimeout(3000); // 待機中の動き（背景・REPLAY）を少し撮る
+// 初回の案内ポップアップ（#53）が開くところと、「はじめる」で閉じるところを撮る
+const onboard = page.locator(".onboard-cta");
+if (await onboard.isVisible().catch(() => false)) {
+  marks.push({ label: "onboard", at: elapsed() });
+  await page.waitForTimeout(2800);
+  await onboard.click({ force: true }); // ボタンは脈打ち続けるので、止まるのを待たずに押す
+}
+await page.waitForTimeout(2000); // 待機中の動き（背景・REPLAY）を少し撮る
 marks.push({ label: "start", at: elapsed() });
 
 if (opt.keypair) {

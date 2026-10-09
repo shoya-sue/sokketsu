@@ -90,8 +90,23 @@ test("字幕は撮影の段階に合わせる（確定は実測の ms を出す�
   assert.equal(captionAt(tl, u(27)), "確定 812 ms");
 });
 
-test("字幕に無い印（start・end）は飛ばす", () => {
+test("字幕に無い印（end）は飛ばす", () => {
   const tl = buildTimeline(RUN);
   assert.equal(captionAt(tl, u(30.9)), "確定 812 ms"); // end（31 秒）の直前
   assert.equal(captionAt(tl, u(31)), "確定 812 ms"); // end 以降も確定のまま
+});
+
+test("初回の案内を撮っていれば、実演はそこから映し、字幕も案内から始まる", () => {
+  const tl = buildTimeline(
+    run([
+      { label: "onboard", at: 2 },
+      { label: "start", at: 7 },
+      { label: "ready", at: 10 },
+      { label: "end", at: 30 },
+    ]),
+  );
+  assert.equal(tl.demo.from, 2);
+  assert.equal(tl.scenes[3].length, 28);
+  assert.equal(captionAt(tl, 0), "初めて来た人には、3 枚で仕組みを案内");
+  assert.equal(captionAt(tl, 5), "お試しで始める（devnet SOL を自動で用意）"); // start（7 秒）
 });

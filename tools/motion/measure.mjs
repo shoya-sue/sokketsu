@@ -44,6 +44,8 @@ const context = await browser.newContext({
   recordVideo: { dir: outDir, size: { width, height } },
 });
 const page = await context.newPage();
+// 初回の案内ポップアップ（#53）は閉じた状態で測る（見終わった印を先に入れる）。
+await page.addInitScript(() => localStorage.setItem("sokketsu.onboarded.v1", "1"));
 const t0 = Date.now();
 // 取引の送信（JSON-RPC の sendTransaction）を数える。待機中の再生（#30）で 0 件であることを確かめる。
 let sentTransactions = 0;

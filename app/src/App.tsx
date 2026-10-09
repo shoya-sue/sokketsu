@@ -40,6 +40,8 @@ import { SlotPulse } from "./components/SlotPulse";
 import { BadgeOverlay, type Badge } from "./components/BadgeOverlay";
 import { Ambient } from "./components/Ambient";
 import { Logo } from "./components/Logo";
+import { Onboarding } from "./components/Onboarding";
+import { ONBOARDED, ONBOARDING_KEY, shouldShowOnboarding } from "./lib/onboarding";
 import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
@@ -82,6 +84,22 @@ function loadGame(): GameState {
     return parseGame(localStorage.getItem(GAME_KEY));
   } catch {
     return INITIAL_GAME;
+  }
+}
+
+function loadOnboarding(): boolean {
+  try {
+    return shouldShowOnboarding(localStorage.getItem(ONBOARDING_KEY));
+  } catch {
+    return true;
+  }
+}
+
+function saveOnboarded(): void {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, ONBOARDED);
+  } catch {
+    // 覚えられなくても閉じられる（次に来たときにもう一度出るだけ）
   }
 }
 
@@ -187,6 +205,7 @@ export default function App() {
   useShake(stageCardRef, shakeKey);
   const [muted, setMutedState] = useState(isMuted);
   const [hit, setHit] = useState<Hit | null>(null);
+  const [onboarding, setOnboarding] = useState(loadOnboarding);
 
   /** 確定の瞬間を画面中央に出し、舞台を揺らす（#31）。格・惜しさ・大当たりも出す（#35）。 */
   const showHit = (kind: Hit["kind"], ms: number, g: Grade | null, prevBest: number | null) => {
@@ -661,7 +680,6 @@ export default function App() {
       <header className="top">
         <div className="brand">
           <Logo hitKey={hit?.id ?? null} />
-          <p className="tagline">{t("app.tagline")}</p>
         </div>
         <div className="top-right">
           <ClusterPill status={alpenglow} currentSlot={currentSlot} fallbackRpc={usingFallbackRpc} />
@@ -673,6 +691,9 @@ export default function App() {
             aria-label={muted ? t("sfx.unmute") : t("sfx.mute")}
           >
             {muted ? "🔇" : "🔊"}
+          </button>
+          <button className="icon-btn help-btn" onClick={() => setOnboarding(true)} aria-label={t("onboard.help")}>
+            ?
           </button>
           <button className="lang-btn" onClick={toggle} aria-label={t("lang.switchLabel")}>
             {t("lang.switch")}
@@ -851,6 +872,17 @@ export default function App() {
 
       <footer className="foot">{t("app.footer")}</footer>
       <Toasts toasts={toasts} />
+      <Onboarding
+        open={onboarding}
+        onStart={() => {
+          playSfx("levelup");
+          starShower();
+        }}
+        onClose={() => {
+          setOnboarding(false);
+          saveOnboarded();
+        }}
+      />
       <FinalityHit hit={hit} />
       <CountdownHit countdown={countdown} />
       <div className="dim-veil" aria-hidden="true" />
