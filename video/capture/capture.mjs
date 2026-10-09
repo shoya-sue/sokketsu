@@ -17,6 +17,8 @@ const { values: opt } = parseArgs({
     "token-file": { type: "string" },
     // 動画で文字が読めるよう、ページを拡大して撮る（1920×1080 の画面に 1280×720 相当のレイアウト）
     zoom: { type: "string", default: "1.5" },
+    // 画面の言語（en / ja）。提出用の動画は英語で撮る
+    lang: { type: "string", default: "en" },
   },
 });
 
@@ -32,13 +34,15 @@ const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gestur
 const context = await browser.newContext({
   viewport: { width: WIDTH, height: HEIGHT },
   deviceScaleFactor: 1,
-  locale: "ja-JP",
+  locale: opt.lang === "en" ? "en-US" : "ja-JP",
   recordVideo: { dir: out, size: { width: WIDTH, height: HEIGHT } },
 });
 const page = await context.newPage();
 const t0 = Date.now();
 const elapsed = () => (Date.now() - t0) / 1000;
 await page.addInitScript({ path: path.join(here, "audio-hook.js") });
+// アプリの言語は localStorage（sokketsu.lang）から読まれるので、読み込みの前に入れておく
+await page.addInitScript((lang) => localStorage.setItem("sokketsu.lang", lang), opt.lang);
 await page.addInitScript((zoom) => {
   document.addEventListener("DOMContentLoaded", () => {
     document.documentElement.style.zoom = zoom;
@@ -138,6 +142,7 @@ const run = {
   capturedAt: new Date(t0).toISOString(),
   entry: opt.keypair ? "pasted-devnet-key" : "trial",
   judge: opt["token-file"] ? "jev (demo token)" : "mock",
+  lang: opt.lang,
   // 音の録音が始まった時刻（画面の録画の先頭からの秒）。動画で音を合わせるのに使う
   audioOffsetS: audioStartedAt ? (audioStartedAt - t0) / 1000 : null,
   marks,

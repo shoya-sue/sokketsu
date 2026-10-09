@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Sokketsu — 発表動画</title>
+    <title>Sokketsu — pitch video</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=RocknRoll+One&family=Unbounded:wght@700;900&family=Chakra+Petch:wght@600&family=M+PLUS+1p:wght@400;700&family=Share+Tech+Mono&display=swap"
       rel="stylesheet"
@@ -153,13 +153,14 @@
       }
       #prose p {
         margin: 0;
-        font-size: 34px;
+        font-size: 29px;
         line-height: 1.6;
       }
+      /* 長文のカード全体に斜めの打ち消し線（左下 → 右上） */
       #prose-strike {
-        left: 100px;
-        top: 500px;
-        width: 840px;
+        left: 110px;
+        top: 785px;
+        width: 960px;
         height: 10px;
         background: #ff5d6c;
         transform-origin: left;
@@ -250,11 +251,11 @@
         font-style: normal;
       }
       #gauge em::after {
-        content: "閾値 70%";
+        content: "threshold 70%";
         position: absolute;
         top: 72px;
-        left: -60px;
-        width: 140px;
+        left: -110px;
+        width: 220px;
         font-size: 26px;
         color: #ffb547;
         text-align: center;
@@ -324,7 +325,45 @@
         line-height: 1.8;
       }
 
-      /* 6. 締め */
+      /* 6. なぜ Solana */
+      .why {
+        top: 270px;
+        width: 520px;
+        height: 500px;
+        padding: 48px 44px;
+        box-sizing: border-box;
+        border-radius: 32px;
+        border: 2px solid rgba(20, 241, 149, 0.45);
+        background: rgba(20, 18, 34, 0.9);
+      }
+      .why small {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 26px;
+        letter-spacing: 0.2em;
+        color: #9a95b4;
+      }
+      .why b {
+        display: block;
+        margin: 26px 0 22px;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        font-size: 50px;
+        line-height: 1.2;
+      }
+      .why p {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.55;
+        color: #c9c5dc;
+      }
+      .why .big {
+        margin-top: 26px;
+        font-size: 64px;
+        color: #14f195;
+      }
+
+      /* 7. 締め */
       #close {
         left: 0;
         right: 0;
@@ -350,50 +389,55 @@
         font-size: 56px;
         color: #14f195;
       }
+      #close .repo {
+        margin-top: 14px;
+        font-size: 34px;
+        color: #9a95b4;
+      }
     </style>
   </head>
   <body>
     <div id="stage">
       <section class="scene" id="s-hook">
         <div class="abs kicker">SOKKETSU</div>
-        <div class="abs num" id="hook-count">0.0 秒</div>
-        <div class="abs pop" id="hook-sub">確定まで、待たされていた。</div>
-        <div class="abs race" id="race-tower"><b>Tower BFT · 12.8 秒</b><span></span></div>
+        <div class="abs num" id="hook-count">0.0 s</div>
+        <div class="abs pop" id="hook-sub">Payments used to wait for finality.</div>
+        <div class="abs race" id="race-tower"><b>Tower BFT · 12.8 s</b><span></span></div>
         <div class="abs race" id="race-alpen"><b id="race-alpen-label">Alpenglow</b><span></span></div>
         <div class="abs" id="hook-brand">
-          <h1 class="grad brandfont">待たない。</h1>
-          <p>エージェントの払いを、文章ではなく型付き判断で止める</p>
+          <h1 class="grad brandfont">Don't wait.</h1>
+          <p>Stop agent payments with typed decisions, not generated text</p>
         </div>
       </section>
 
       <section class="scene" id="s-problem">
         <div class="abs kicker">PROBLEM</div>
         <div class="abs card" id="prose">
-          <h3>LLM に聞くと（長文）</h3>
+          <h3>Ask an LLM (prose)</h3>
           <p id="prose-text"></p>
         </div>
         <div class="abs" id="prose-strike"></div>
         <div class="abs card" id="typed">
-          <h3>Jev の答え（型付き）</h3>
+          <h3>Jev's answer (typed)</h3>
           <pre class="mono"><span class="k">decision</span>: <span class="v" id="typed-decision"></span>
 <span class="k">probability</span>: <span class="v" id="typed-prob"></span></pre>
         </div>
-        <div class="abs caption" id="problem-caption">長文では、払いを止められない。</div>
+        <div class="abs caption" id="problem-caption">Prose can't stop a payment.</div>
       </section>
 
       <section class="scene" id="s-flow">
         <div class="abs kicker">HOW IT WORKS</div>
-        <div class="abs node" id="n0" style="left: 120px"><small>01</small><b>預け入れ</b><i>escrow PDA</i></div>
+        <div class="abs node" id="n0" style="left: 120px"><small>01</small><b>Deposit</b><i>escrow vault PDA</i></div>
         <div class="abs link" id="l0" style="left: 480px; width: 100px"></div>
-        <div class="abs node" id="n1" style="left: 580px"><small>02</small><b>Jev が判断</b><i>選択肢 + 確率</i></div>
+        <div class="abs node" id="n1" style="left: 580px"><small>02</small><b>Jev decides</b><i>choice + probability</i></div>
         <div class="abs link" id="l1" style="left: 940px; width: 100px"></div>
-        <div class="abs node" id="n2" style="left: 1040px"><small>03</small><b>署名を検証</b><i>Ed25519 · on-chain</i></div>
+        <div class="abs node" id="n2" style="left: 1040px"><small>03</small><b>Verify</b><i>Ed25519 · on-chain</i></div>
         <div class="abs link" id="l2" style="left: 1400px; width: 100px"></div>
-        <div class="abs node" id="n3" style="left: 1500px"><small>04</small><b>確定</b><i>Alpenglow</i></div>
+        <div class="abs node" id="n3" style="left: 1500px"><small>04</small><b>Finalize</b><i>Alpenglow</i></div>
         <div class="abs" id="coin"></div>
-        <div class="abs" id="gauge-label">確率が閾値を超えたときだけ、プログラムが払う</div>
+        <div class="abs" id="gauge-label">The program pays only when a signed release clears the threshold</div>
         <div class="abs" id="gauge"><span></span><em></em></div>
-        <div class="abs caption" id="flow-caption">判断の出所と確率は、オンチェーンで確かめる。</div>
+        <div class="abs caption" id="flow-caption">Who decided, and how sure — checked on-chain.</div>
       </section>
 
       <section class="scene" id="s-demo">
@@ -410,12 +454,28 @@
         <div class="abs mono" id="num-detail"></div>
       </section>
 
+      <section class="scene" id="s-solana">
+        <div class="abs kicker">WHY SOLANA</div>
+        <div class="abs why" id="w0" style="left: 120px">
+          <small>01 · ALPENGLOW</small><b>Sub-second finality</b><p>The decision and the payment settle together.</p>
+          <div class="big num" id="why-ms"></div>
+        </div>
+        <div class="abs why" id="w1" style="left: 700px">
+          <small>02 · ED25519</small><b>Verified on-chain</b><p>Native Ed25519 verification lets the program trust a signed judgment cheaply.</p>
+        </div>
+        <div class="abs why" id="w2" style="left: 1280px">
+          <small>03 · FEES</small><b>A fraction of a cent</b><p>5,000 lamports per signature — cheap enough for every agent payment.</p>
+        </div>
+        <div class="abs caption" id="solana-caption">Agent payments need a chain that settles as fast as the agent decides.</div>
+      </section>
+
       <section class="scene" id="s-close">
         <div class="abs" id="close">
           <img class="mark" src="/app/public/logo-mark.svg" alt="" />
           <h1 class="brandfont grad">Sokketsu</h1>
-          <p>devnet で動いています。ウォレットをつなげば、承認は 1 回だけ。</p>
+          <p>Live on devnet. Connect a wallet — approve once.</p>
           <div class="url mono">sokketsu.pages.dev</div>
+          <div class="repo mono">github.com/shoya-sue/sokketsu</div>
         </div>
       </section>
     </div>
@@ -434,18 +494,20 @@
       };
 
       const PROSE =
-        "この依頼を確認しました。報告書は提出されているようで、発注者も承認したと読めます。ただし承認の範囲が明確ではなく、品質について追加の確認を行う余地もあります。総合的に判断すると、解放してもおおむね問題はないと考えられますが、念のため……";
+        "I reviewed this request. The report appears to have been delivered and the payer seems to have approved it. That said, the scope of the approval is not fully clear, and there may be room for further checks on quality. Taken together, releasing the funds is probably fine, but to be safe…";
 
       let tl = null;
       let run = null;
 
-      window.setup = async (data, videoSrc) => {
+      // voice: 場面ごとのナレーションの秒（render.mjs が say で作って測る）。場面の長さがこれで決まる
+      window.setup = async (data, videoSrc, voice = {}) => {
         run = data;
-        tl = buildTimeline(run);
+        tl = buildTimeline(run, voice);
         const video = $("#demo-frame");
         video.src = videoSrc;
         await new Promise((r) => (video.readyState >= 1 ? r() : video.addEventListener("loadedmetadata", r, { once: true })));
-        $("#race-alpen-label").textContent = `Alpenglow · ${Math.round(run.result.finalizedMs)} ms（実測）`;
+        $("#race-alpen-label").textContent = `Alpenglow · ${Math.round(run.result.finalizedMs)} ms (measured)`;
+        $("#why-ms").textContent = `${Math.round(run.result.finalizedMs)} ms`;
         const [decision, pct] = (run.finality.decision ?? "release 0%").split(" ");
         $("#typed-decision").textContent = `"${decision}"`;
         $("#typed-prob").textContent = (parseInt(pct, 10) / 100).toFixed(2);
@@ -462,15 +524,15 @@
 
       window.renderAt = async (t) => {
         const f = frameAt(tl, t);
-        for (const s of ["hook", "problem", "flow", "demo", "numbers", "close"]) {
+        for (const s of ["hook", "problem", "flow", "demo", "numbers", "solana", "close"]) {
           $(`#s-${s}`).style.display = f.scene === s ? "block" : "none";
         }
-        const u = f.local; // 場面の中の秒
+        const u = f.paced; // 場面の中の秒（ナレーションで伸ばした場面は、元の長さの台本に縮めた時間）
         const ms = Math.round(run.result.finalizedMs);
 
         if (f.scene === "hook") {
           const count = 12.8 * easeOut(range(u, 0.3, 4));
-          $("#hook-count").textContent = `${count.toFixed(1)} 秒`;
+          $("#hook-count").textContent = `${count.toFixed(1)} s`;
           const hookOn = u < 5.2;
           fade($("#hook-count"), hookOn ? range(u, 0, 0.3) : 1 - range(u, 5.2, 5.6));
           fade($("#hook-sub"), hookOn ? range(u, 0.6, 1.2) : 1 - range(u, 5.2, 5.6), 20 * (1 - range(u, 0.6, 1.2)));
@@ -489,11 +551,11 @@
           const chars = Math.floor(PROSE.length * range(u, 0.3, 3.6));
           $("#prose-text").textContent = PROSE.slice(0, chars);
           fade($("#prose"), range(u, 0, 0.4), 30 * (1 - range(u, 0, 0.4)));
-          $("#prose-strike").style.transform = `scaleX(${easeOut(range(u, 4, 4.5))})`;
+          $("#prose-strike").style.transform = `rotate(-33deg) scaleX(${easeOut(range(u, 4, 4.5))})`;
           $("#prose-strike").style.opacity = u >= 4 ? 1 : 0;
           const ty = range(u, 4.8, 5.3);
           fade($("#typed"), ty, 0, 0.7 + 0.3 * back(ty));
-          $("#problem-caption").textContent = u < 4.8 ? "長文では、払いを止められない。" : "型付きなら、プログラムがそのまま読める。";
+          $("#problem-caption").textContent = u < 4.8 ? "Prose can't stop a payment." : "Typed output is something a program can act on.";
           fade($("#problem-caption"), range(u, 1, 1.4));
         }
 
@@ -527,16 +589,24 @@
           const c = Math.round(ms * easeOut(range(u, 0.2, 1.4)));
           $("#num-ms").innerHTML = `${c}<small> ms</small>`;
           fade($("#num-ms"), range(u, 0, 0.3), 0, 0.9 + 0.1 * back(range(u, 0, 0.5)));
-          $("#num-sub").textContent = `送信から finalized まで（Tower BFT の約 ${run.result.speedup} 倍速い）`;
+          $("#num-sub").textContent = `send → finalized · about ${run.result.speedup}× faster than Tower BFT`;
           fade($("#num-sub"), range(u, 1.4, 1.8), 20 * (1 - range(u, 1.4, 1.8)));
           const tx = run.timeline.filter((e) => e.tx).at(-1)?.tx ?? "";
           const sig = (tx.match(/tx\/([^?]+)/) ?? [])[1] ?? "";
           $("#num-detail").innerHTML = [
-            run.result.breakdown.join("  →  "),
+            run.result.breakdown.map((b) => b.replace(/^(\d+ ms)\s*/, "$1 ")).join("  →  "),
             `${run.finality.source ?? ""}`,
             `slot ${run.finality.slot ?? "—"} · tx ${sig.slice(0, 10)}…${sig.slice(-6)}`,
           ].join("<br>");
           fade($("#num-detail"), range(u, 2.2, 2.6));
+        }
+
+        if (f.scene === "solana") {
+          for (let i = 0; i < 3; i++) {
+            const k = range(u, 0.5 + i * 3.6, 1 + i * 3.6);
+            fade($(`#w${i}`), k, 40 * (1 - k), 0.85 + 0.15 * back(k));
+          }
+          fade($("#solana-caption"), range(u, 10.6, 11));
         }
 
         if (f.scene === "close") {
