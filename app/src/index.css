@@ -1590,3 +1590,63 @@ code {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- 発注者の入口（ウォレット / お試し / 鍵を貼る） ---- */
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.setup-actions .wallet-adapter-button,
+.trial-btn {
+  height: 48px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.setup-actions .wallet-adapter-button {
+  background: var(--grad);
+  color: #07060d;
+}
+
+.trial-btn {
+  border: 1px solid var(--line);
+  background: var(--surface-hi);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.trial-btn:disabled {
+  color: var(--muted);
+  cursor: progress;
+}
+
+.paste-key {
+  margin-top: 8px;
+  text-align: left;
+}
+
+.paste-key summary {
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.paste-key input {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.fund-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}

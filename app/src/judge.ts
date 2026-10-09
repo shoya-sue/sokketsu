@@ -19,10 +19,15 @@ export type Proof = {
   publicKey: string; // 32 バイト（hex）
 };
 
+/** 判断の出所。オラクルの署名に含まれ、プログラムが escrow に記録する。 */
+export type SourceName = "jev" | "mock";
+/** lib.rs の SOURCE_JEV / SOURCE_MOCK と同じ値。 */
+export const SOURCE_CODE: Record<SourceName, number> = { jev: 1, mock: 2 };
+
 export type JudgeOutput = {
   decision: DecisionName;
   probability: number; // 0..1。選ばれた選択肢の確率
-  source: "jev" | "mock";
+  source: SourceName;
   proof?: Proof; // 署名が無ければ、オンチェーンで拒否される
 };
 

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { onRequestPost } from "./judge";
+import { decisionMessage, fromHex } from "../../server/oracle";
 
 type Env = { AI_GATEWAY_API_KEY?: string; DEMO_TOKEN?: string; ORACLE_SECRET_KEY?: string };
 
@@ -109,6 +110,21 @@ describe("Jev の呼び出し", () => {
     expect(url).toBe("https://ai-gateway.vercel.sh/v1/evaluate");
     expect(init.headers.Authorization).toBe("Bearer key-123");
     expect(JSON.parse(init.body).model).toBe("typesafe-ai/jev");
+  });
+
+  it("判断は出所 jev として署名され、mock としては検証に通らない", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("release", 0.93)));
+    const body = (await (await call(ENV, { token: "demo-token" })).json()) as {
+      proof: { signature: string; publicKey: string };
+    };
+    const key = await realSubtle.importKey("raw", fromHex(body.proof.publicKey), { name: "Ed25519" }, false, [
+      "verify",
+    ]);
+    const sig = fromHex(body.proof.signature);
+    const message = (source: "jev" | "mock") =>
+      decisionMessage(VALID_INPUT.escrow, VALID_INPUT.task, "release", 9300, source);
+    expect(await realSubtle.verify("Ed25519", key, sig, await message("jev"))).toBe(true);
+    expect(await realSubtle.verify("Ed25519", key, sig, await message("mock"))).toBe(false);
   });
 
   it("Gateway が 401 なら同じキーで TypeSafe へ直接送り直す", async () => {

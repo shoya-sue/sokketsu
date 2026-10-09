@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import {
   DEPOSIT_LAMPORTS,
   RELEASE_THRESHOLD_BPS,
@@ -8,7 +10,9 @@ import {
   escrowAddress,
   fetchAlpenglowStatus,
   fetchEscrow,
+  fundAddress,
   getBalance,
+  keypairSigner,
   getSlot,
   parseSecretKey,
   refundIx,
@@ -18,6 +22,7 @@ import {
   stateHashOf,
   subscribeSlots,
   sweepEscrows,
+  topUpIx,
   onRpcRoute,
   setRpcFallbackToken,
   type AlpenglowStatus,
@@ -30,7 +35,8 @@ import { ResultPanel, type Outcome } from "./components/ResultPanel";
 import { Timeline, type TimelineEntry } from "./components/Timeline";
 import { History } from "./components/History";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
-import { derivePayee } from "./lib/payee";
+import { derivePayee, derivePayeeAddress } from "./lib/payee";
+import { operatorTopUp, type PayerSession } from "./lib/session";
 import { KeyedError, describeError, msg, type Msg } from "./i18n";
 import { useLang } from "./lang";
 import { Hud } from "./components/Hud";
@@ -116,7 +122,8 @@ export default function App() {
   const { lang, toggle, t, tm } = useLang();
   const [alpenglow, setAlpenglow] = useState<AlpenglowStatus | null>(null);
   const [currentSlot, setCurrentSlot] = useState<number | null>(null);
-  const [payer, setPayer] = useState<Keypair | null>(null);
+  const [session, setSession] = useState<PayerSession | null>(null);
+  const wallet = useWallet();
   const [payee, setPayee] = useState<PublicKey | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState<Msg | null>(null);
@@ -137,7 +144,8 @@ export default function App() {
   const [running, setRunning] = useState<string | null>(null);
   const [runKey, setRunKey] = useState(0);
   const [failCount, setFailCount] = useState(0);
-  const [airdropping, setAirdropping] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [funding, setFunding] = useState(false);
   const [countdown, setCountdown] = useState<{ next: string; seconds: number } | null>(null);
   const [sweepNote, setSweepNote] = useState<SweepNote | null>(null);
   const [history, setHistory] = useState<Sample[]>(loadHistory);
@@ -227,47 +235,105 @@ export default function App() {
   }, []);
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
-  const ready = payer !== null && payee !== null;
+  const ready = session !== null && payee !== null;
+  const payerKey = session?.signer.publicKey ?? null;
+  const lowBalance = balances.payer !== null && balances.payer < DEPOSIT_LAMPORTS + MIN_EXTRA_LAMPORTS;
 
-  const refreshBalances = async (p: Keypair, q: PublicKey) => {
-    const [pb, qb] = await Promise.all([getBalance(p.publicKey), getBalance(q)]);
+  const refreshBalances = async (p: PublicKey, q: PublicKey) => {
+    const [pb, qb] = await Promise.all([getBalance(p), getBalance(q)]);
     setBalances({ payer: pb, payee: qb });
   };
 
-  const adoptPayer = async (kp: Keypair) => {
-    // 受注者は発注者から決定的に導く（毎回同じ受注者になり、残高が積み上がる）。
-    const receiver = (await derivePayee(kp)).publicKey;
-    setPayer(kp);
+  // 受注者は発注者から決定的に導く（毎回同じ受注者になり、残高が積み上がる）。
+  const adoptSession = async (next: PayerSession, receiver: PublicKey) => {
+    setSession(next);
     setPayee(receiver);
     setKeyInput("");
     setKeyError(null);
-    await refreshBalances(kp, receiver);
+    await refreshBalances(next.signer.publicKey, receiver);
   };
+
+  // 貼った鍵（開発者向け）: 発注者の鍵がそのまま操作鍵。受注者は秘密鍵から導く（従来と同じ受注者）。
+  const adoptPastedKey = async (kp: Keypair) =>
+    adoptSession({ kind: "pasted", signer: keypairSigner(kp), operator: kp }, (await derivePayee(kp)).publicKey);
 
   // 貼り付けた瞬間に読み込む。ボタンは置かない。
   const onKeyInput = (text: string) => {
     setKeyInput(text);
     if (!text.trim()) return setKeyError(null);
     try {
-      void adoptPayer(parseSecretKey(text));
+      void adoptPastedKey(parseSecretKey(text));
     } catch (e) {
       setKeyError(e instanceof KeyedError ? e.msg : msg("err.keyFormat"));
     }
   };
 
-  const airdrop = async () => {
-    setAirdropping(true);
+  /** devnet SOL を受け取る。自前の faucet を先に使い、だめなら公開 faucet の airdrop を試す。 */
+  const receiveSol = async (pubkey: PublicKey) => {
+    try {
+      await fundAddress(pubkey);
+    } catch (fundError) {
+      try {
+        await airdropTo(pubkey);
+      } catch {
+        throw fundError;
+      }
+    }
+  };
+
+  // お試し: ブラウザ内で捨て鍵を作り、SOL を入れて、そのまま発注者にする（秘密鍵を貼らない）。
+  const startTrial = async () => {
+    setPreparing(true);
     setKeyError(null);
     try {
       const kp = Keypair.generate();
-      await airdropTo(kp.publicKey);
-      await adoptPayer(kp);
+      await receiveSol(kp.publicKey);
+      await adoptSession(
+        { kind: "trial", signer: keypairSigner(kp), operator: kp },
+        await derivePayeeAddress(kp.publicKey),
+      );
     } catch (e) {
-      setKeyError(msg("setup.airdropFailed", { error: describeError(lang, e) }));
+      setKeyError(msg("setup.trialFailed", { error: describeError(lang, e) }));
     } finally {
-      setAirdropping(false);
+      setPreparing(false);
     }
   };
+
+  // ウォレットで始めたが devnet の SOL が無いとき。
+  const fundWallet = async () => {
+    if (!session || !payee) return;
+    setFunding(true);
+    setKeyError(null);
+    try {
+      await receiveSol(session.signer.publicKey);
+      await refreshBalances(session.signer.publicKey, payee);
+    } catch (e) {
+      setKeyError(msg("setup.fundFailed", { error: describeError(lang, e) }));
+    } finally {
+      setFunding(false);
+    }
+  };
+
+  // ウォレットを接続したら発注者にする。操作鍵はページ内で作り、預け入れのときに手数料ぶんだけ送る。
+  const walletKey = wallet.publicKey?.toBase58() ?? null;
+  useEffect(() => {
+    const { publicKey, signTransaction } = wallet;
+    if (!publicKey) {
+      setSession((s) => (s?.kind === "wallet" ? null : s));
+      return;
+    }
+    if (!signTransaction) {
+      setKeyError(msg("err.walletNoSign"));
+      return;
+    }
+    void (async () =>
+      adoptSession(
+        { kind: "wallet", signer: { publicKey, signTransaction }, operator: Keypair.generate() },
+        await derivePayeeAddress(publicKey),
+      ))();
+    // 接続先のアドレスが変わったときだけ作り直す（wallet オブジェクトは描画ごとに変わる）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletKey]);
 
   const push = (entry: Omit<TimelineEntry, "id">) =>
     setTimeline((list) => [...list, { ...entry, id: ++entrySeq }]);
@@ -289,13 +355,14 @@ export default function App() {
   };
 
   const sweep = async () => {
-    if (!payer || running) return;
+    if (!session || running) return;
     setRunning("sweep");
     setSweepNote({ kind: "busy" });
     try {
-      const result = await sweepEscrows(payer);
+      // refund / close は誰が出してもよいので、承認の要らない操作鍵が出す（資金とレントは発注者へ戻る）。
+      const result = await sweepEscrows(keypairSigner(session.operator), session.signer.publicKey);
       setSweepNote({ kind: "done", result });
-      if (payee) await refreshBalances(payer, payee);
+      if (payee) await refreshBalances(session.signer.publicKey, payee);
     } catch (error) {
       setSweepNote({ kind: "error", error });
     } finally {
@@ -314,7 +381,9 @@ export default function App() {
   };
 
   /** 1 件の支払いを 預け入れ → 判断 → 執行 まで自動で流す。成功なら true。 */
-  const runScenario = async (preset: Preset, p: Keypair, q: PublicKey): Promise<boolean> => {
+  const runScenario = async (preset: Preset, s: PayerSession, q: PublicKey): Promise<boolean> => {
+    const p = s.signer;
+    const operator = keypairSigner(s.operator);
     setRunKey((k) => k + 1);
     setGrade(null);
     setJudgement(null);
@@ -335,13 +404,20 @@ export default function App() {
           need: ((DEPOSIT_LAMPORTS + MIN_EXTRA_LAMPORTS - have) / 1e9).toFixed(4),
         });
       }
-      const dep = await sendSetup(p, [await depositIx(p.publicKey, q, hash)]);
+      // ウォレットのときは操作鍵の手数料を同じ取引で送り、承認を 1 回に保つ。
+      const topUp =
+        s.kind === "wallet" ? operatorTopUp(await getBalance(s.operator.publicKey)) : 0;
+      const depositIxs = [
+        ...(topUp > 0 ? [topUpIx(p.publicKey, s.operator.publicKey, topUp)] : []),
+        await depositIx(p.publicKey, q, hash, s.operator.publicKey),
+      ];
+      const dep = await sendSetup(p, depositIxs);
       if (dep.error) throw new KeyedError("err.depositTx", { error: dep.error });
       if (dep.finalizedMs === null) throw new KeyedError("err.depositUnconfirmed");
       setVaultLamports(DEPOSIT_LAMPORTS);
       push({ label: msg("tl.deposit"), ms: dep.finalizedMs, signature: dep.signature, tone: "ok" });
       playSfx("deposit");
-      await refreshBalances(p, q);
+      await refreshBalances(p.publicKey, q);
 
       // 2. 判断
       setPhase("judging");
@@ -373,9 +449,10 @@ export default function App() {
       });
 
       // 3. 執行
-      const settle = await settleIxs(p.publicKey, q, escrow, hash, decision);
+      // 執行は操作鍵が出す（Jev の判断は誰が出してもよく、モックは操作鍵なら通る）。発注者の承認は要らない。
+      const settle = await settleIxs(s.operator.publicKey, p.publicKey, q, escrow, hash, decision);
       if (decision.decision === "release" && meets) {
-        const m = await sendAndMeasure(p, settle, undefined, (at) => {
+        const m = await sendAndMeasure(operator, settle, undefined, (at) => {
           setMeasuringSince(at);
           setPhase("releasing");
         });
@@ -398,7 +475,7 @@ export default function App() {
           tone: "ok",
         });
       } else if (decision.decision === "refund" && meets) {
-        const m = await sendAndMeasure(p, [...settle, await refundIx(p.publicKey, escrow)], undefined, (at) => {
+        const m = await sendAndMeasure(operator, [...settle, await refundIx(p.publicKey, escrow)], undefined, (at) => {
           setMeasuringSince(at);
           setPhase("refunding");
         });
@@ -422,7 +499,7 @@ export default function App() {
         });
       } else {
         setPhase("holding");
-        const m = await sendSetup(p, settle);
+        const m = await sendSetup(operator, settle);
         if (m.error) throw new KeyedError("err.holdTx", { error: m.error });
         if (m.finalizedMs === null) throw new KeyedError("err.holdUnconfirmed");
         setOutcome({ kind: "stopped", judge: decision });
@@ -439,7 +516,7 @@ export default function App() {
         const [view, slot] = await Promise.all([fetchEscrow(escrow), getSlot()]);
         if (view) setSlotsLeft(Math.max(0, view.deadlineSlot - slot));
       }
-      await refreshBalances(p, q);
+      await refreshBalances(p.publicKey, q);
       return true;
     } catch (e) {
       setMeasuringSince(null);
@@ -457,7 +534,7 @@ export default function App() {
   };
 
   const play = async (sequence: Preset[], label: string) => {
-    if (!payer || !payee || running) return;
+    if (!session || !payee || running) return;
     setRunning(label);
     setTimeline([]); // 1 回の再生の中では hold → release を続けて残す
     try {
@@ -469,7 +546,7 @@ export default function App() {
           }
           setCountdown(null);
         }
-        const ok = await runScenario(preset, payer, payee);
+        const ok = await runScenario(preset, session, payee);
         if (!ok) break;
       }
     } finally {
@@ -533,7 +610,8 @@ export default function App() {
             <button
               className="link-btn"
               onClick={() => {
-                setPayer(null);
+                if (session?.kind === "wallet") void wallet.disconnect();
+                setSession(null);
                 setPayee(null);
                 setShowSettings(false);
               }}
@@ -556,7 +634,7 @@ export default function App() {
         )}
         <FlowStage
           phase={phase}
-          payer={{ address: payer?.publicKey ?? null, balance: balances.payer }}
+          payer={{ address: payerKey, balance: balances.payer }}
           payee={{ address: payee, balance: balances.payee }}
           vaultLamports={vaultLamports}
           judgement={judgement}
@@ -568,27 +646,46 @@ export default function App() {
         {!ready ? (
           <div className="setup">
             <p className="setup-title">{t("setup.title")}</p>
-            <input
-              type="password"
-              placeholder={t("setup.placeholder")}
-              value={keyInput}
-              onChange={(e) => onKeyInput(e.target.value)}
-              autoComplete="off"
-              aria-label={t("setup.keyLabel")}
-              autoFocus
-            />
-            <p className="hint key-warning">{t("setup.warning")}</p>
+            <div className="setup-actions">
+              <WalletMultiButton />
+              <button className="trial-btn" onClick={startTrial} disabled={preparing}>
+                {preparing ? t("setup.trialing") : t("setup.trial")}
+              </button>
+            </div>
+            <p className="hint">{t("setup.trialHint")}</p>
             {keyError && (
               <p className="error" role="alert">
                 {tm(keyError)}
               </p>
             )}
-            <button className="link-btn" onClick={airdrop} disabled={airdropping}>
-              {airdropping ? t("setup.airdropping") : t("setup.airdrop")}
-            </button>
+            <details className="paste-key">
+              <summary>{t("setup.pasteToggle")}</summary>
+              <input
+                type="password"
+                placeholder={t("setup.placeholder")}
+                value={keyInput}
+                onChange={(e) => onKeyInput(e.target.value)}
+                autoComplete="off"
+                aria-label={t("setup.keyLabel")}
+              />
+              <p className="hint key-warning">{t("setup.warning")}</p>
+            </details>
           </div>
         ) : (
           <div className="controls">
+            {lowBalance && (
+              <div className="fund-row">
+                <span className="hint">{t("setup.lowBalance")}</span>
+                <button className="link-btn" onClick={fundWallet} disabled={funding || !!running}>
+                  {funding ? t("setup.funding") : t("setup.fundWallet")}
+                </button>
+              </div>
+            )}
+            {keyError && (
+              <p className="error" role="alert">
+                {tm(keyError)}
+              </p>
+            )}
             <button
               className={`play ${running && !countdown ? "is-running" : ""}`}
               onClick={() => play(DEMO_SEQUENCE, "demo")}
