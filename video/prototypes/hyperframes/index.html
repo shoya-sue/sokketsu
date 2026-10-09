@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sokketsu hook — HyperFrames prototype</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #07060d;
+      }
+      #stage {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: radial-gradient(circle at 70% 30%, #1d1640 0%, #07060d 60%);
+        color: #f2f0fa;
+        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+      }
+      .clip {
+        position: absolute;
+      }
+      #wait {
+        left: 80px;
+        top: 150px;
+        font-size: 210px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+      #sub {
+        left: 86px;
+        top: 410px;
+        font-size: 34px;
+        color: #9a95b4;
+      }
+      #counter {
+        right: 90px;
+        top: 170px;
+        font-family: "SF Mono", ui-monospace, monospace;
+        font-size: 96px;
+        color: #ffb547;
+      }
+      .race {
+        left: 90px;
+        width: 1100px;
+        height: 30px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .race span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 15px;
+      }
+      .race b {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      #tower {
+        top: 300px;
+      }
+      #tower span {
+        width: 100%;
+        background: #5a5570;
+        transform-origin: left;
+      }
+      #alpen {
+        top: 420px;
+      }
+      #alpen span {
+        width: 7%;
+        background: linear-gradient(90deg, #9945ff, #14f195);
+        transform-origin: left;
+      }
+      #brand {
+        left: 0;
+        right: 0;
+        top: 250px;
+        text-align: center;
+      }
+      #brand h1 {
+        margin: 0;
+        font-size: 120px;
+        font-weight: 900;
+      }
+      #brand p {
+        margin: 12px 0 0;
+        font-size: 32px;
+        color: #14f195;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 10 秒・1280×720。シーン: 確定を 12.8 秒待たされていた → Alpenglow は 826 ms → 待たない。 -->
+    <div id="stage" data-composition-id="hook" data-start="0" data-duration="10" data-width="1280" data-height="720" data-fps="30">
+      <div id="wait" class="clip" data-start="0" data-duration="3.4" data-track-index="0">WAIT</div>
+      <div id="sub" class="clip" data-start="0.4" data-duration="3" data-track-index="1">確定まで、待たされていた。</div>
+      <div id="counter" class="clip" data-start="0.2" data-duration="3.2" data-track-index="2">0.0 s</div>
+
+      <div id="tower" class="clip race" data-start="3.4" data-duration="3.4" data-track-index="3"><b>Tower BFT · 12.8 s</b><span></span></div>
+      <div id="alpen" class="clip race" data-start="3.4" data-duration="3.4" data-track-index="4"><b>Alpenglow · 826 ms</b><span></span></div>
+
+      <div id="brand" class="clip" data-start="6.8" data-duration="3.2" data-track-index="5">
+        <h1>待たない。</h1>
+        <p>Sokketsu — 型付き判断で止めて、即決する</p>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.from("#wait", { opacity: 0, y: 60, duration: 0.6, ease: "power3.out" }, 0);
+        tl.to("#wait", { letterSpacing: "0.12em", duration: 2.6, ease: "none" }, 0.6);
+        tl.from("#sub", { opacity: 0, y: 20, duration: 0.5 }, 0.4);
+        // 0.0 s → 12.8 s を数え上げる（3 秒で）
+        const count = { v: 0 };
+        tl.to(count, {
+          v: 12.8,
+          duration: 3,
+          ease: "power1.in",
+          onUpdate: () => (document.querySelector("#counter").textContent = `${count.v.toFixed(1)} s`),
+        }, 0.2);
+        // Tower BFT はゆっくり、Alpenglow は一瞬で満ちる
+        tl.from("#tower span", { scaleX: 0, duration: 3.2, ease: "none" }, 3.5);
+        tl.from("#alpen span", { scaleX: 0, duration: 0.25, ease: "power4.out" }, 3.9);
+        tl.from("#brand h1", { opacity: 0, scale: 1.3, duration: 0.5, ease: "back.out(2)" }, 6.9);
+        tl.from("#brand p", { opacity: 0, y: 16, duration: 0.5 }, 7.3);
+        window.__timelines = window.__timelines || {};
+        window.__timelines.hook = tl;
+      </script>
+    </div>
+  </body>
+</html>

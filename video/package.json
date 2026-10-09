@@ -1,0 +1,12 @@
+{
+  "name": "sokketsu-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render:playwright": "node prototypes/playwright/render.mjs",
+    "render:hyperframes": "npx --yes hyperframes@0.8.139 render prototypes/hyperframes -o prototypes/hyperframes/hook-hyperframes.mp4 --quiet"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.58.0"
+  }
+}
