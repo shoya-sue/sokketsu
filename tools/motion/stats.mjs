@@ -75,6 +75,14 @@ export function formatTable(result) {
   return [
     `${result.url} · ${result.mode} · ${result.viewport}${result.reducedMotion ? " · reduced-motion" : ""} · 送信した取引 ${result.sentTransactions ?? "—"} 件`,
     "",
+    ...(result.visibility
+      ? [
+          `確定の瞬間に画面内: ${Object.entries(result.visibility)
+            .map(([sel, ok]) => `${sel} ${ok === null ? "—" : ok ? "○" : "×"}`)
+            .join(" · ")}`,
+          "",
+        ]
+      : []),
     head,
     row("全体", result.overall),
     ...result.segments.map((s) => row(s.label, s)),

@@ -52,6 +52,10 @@ page.on("request", (req) => {
 });
 const elapsed = () => (Date.now() - t0) / 1000;
 
+// 確定の瞬間にスクロールなしで見えているべき要素（#31・#32）。true = 画面内に収まっている、null = 無い。
+const VISIBLE_AT_FINALITY = [".stage", ".judge-flow", ".vault-ms", ".finality-hit .hit-ms"];
+let visibility = null;
+
 // 段階の切り替わりを記録する（アプリが .shell に data-phase を出している）。
 const marks = [{ label: "load", at: 0 }];
 const watchPhase = async (until) => {
@@ -74,6 +78,18 @@ const watchPhase = async (until) => {
       last = phase;
       if (phase === "released" || phase === "refunded") {
         await page.screenshot({ path: path.join(outDir, `${phase}.png`) });
+        visibility = await page.evaluate((selectors) => {
+          const inView = (el) => {
+            const r = el.getBoundingClientRect();
+            return r.width > 0 && r.top >= 0 && r.left >= 0 && r.bottom <= innerHeight && r.right <= innerWidth;
+          };
+          return Object.fromEntries(
+            selectors.map((sel) => {
+              const el = document.querySelector(sel);
+              return [sel, el ? inView(el) : null];
+            }),
+          );
+        }, VISIBLE_AT_FINALITY);
         afterglowAt = elapsed() + 3;
       }
     }
@@ -151,6 +167,7 @@ const result = {
   measuredAt: new Date().toISOString(),
   marks,
   sentTransactions,
+  visibility,
   overall: summarize(frames.filter((f) => f.t >= (marks.find((m) => m.label === (opt.mode === "idle" ? "idle" : "ready"))?.at ?? 0))),
   segments: bySegment(frames, marks),
 };

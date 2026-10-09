@@ -47,6 +47,9 @@ export function JudgePanel({ task, judging, judgement, thresholdBps, runKey }: P
         </li>
       </ol>
 
+      {/* プレイ中は図と数字だけにする（#32）。比較の説明は開いたときだけ */}
+      <details className="judge-more">
+        <summary>{t("judge.more")}</summary>
       <div className="judge-compare">
         <div className="compare-card compare-llm">
           <span className="compare-label">{t("judge.llmLabel")}</span>
@@ -81,6 +84,7 @@ export function JudgePanel({ task, judging, judgement, thresholdBps, runKey }: P
           <span className="meter-value">{judgement ? `${Math.round(probability * 100)}%` : "—"}</span>
         </div>
       </div>
+      </details>
     </section>
   );
 }
