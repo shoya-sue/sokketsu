@@ -170,10 +170,11 @@ describe("FinalityHit", () => {
     expect(container.querySelector(".finality-hit")?.className).not.toContain("tier-");
   });
 
-  it("大当たりでなければ光線も帯も出さない", () => {
+  it("大当たりでなければ帯は出さない（光の筋は毎回回す）", () => {
     setReducedMotion(true);
     const { container } = render(<FinalityHit hit={hit({ jackpot: null, near: null })} />);
-    expect(container.querySelector(".hit-rays")).toBeNull();
+    expect(container.querySelector(".hit-rays")).not.toBeNull();
+    expect(container.querySelector(".finality-hit")?.className).not.toContain("is-jackpot");
     expect(container.querySelector(".hit-jackpot")).toBeNull();
     expect(container.querySelector(".hit-near")).toBeNull();
   });

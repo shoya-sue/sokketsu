@@ -3009,9 +3009,15 @@ code {
   width: 1600px;
   height: 1600px;
   margin: -800px 0 0 -800px;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 209, 102, 0.22) 0 6deg, transparent 6deg 18deg);
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--hit) 20%, transparent) 0 6deg, transparent 6deg 18deg);
   mask: radial-gradient(closest-side, #000 10%, transparent 70%);
-  animation: rays-spin 6s linear infinite;
+  animation:
+    rays-spin 6s linear infinite,
+    hit-out 0.4s ease-in 2.2s forwards;
+}
+
+.finality-hit.is-jackpot .hit-rays {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 209, 102, 0.26) 0 6deg, transparent 6deg 18deg);
 }
 
 @keyframes rays-spin {
