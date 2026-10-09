@@ -923,7 +923,9 @@
 }
 
 /* ==== 1 点から計器が開く導入（読み込み時に 1 回だけ） ==== */
-.top,
+/* Solana の公式ロゴは対象にしない（変形・ぼかしをかけない）。ヘッダーはロゴ以外の部品だけを動かす */
+.top .brand,
+.top-right > :not(.solana-logo-zone),
 .dock > *,
 .flow,
 .arena .setup,
@@ -931,7 +933,8 @@
   animation: intro-open 0.8s var(--ease) both;
 }
 
-.top {
+.top .brand,
+.top-right > :not(.solana-logo-zone) {
   animation-delay: 0.05s;
 }
 
@@ -1003,5 +1006,23 @@
   .od-dotmark {
     right: -24vmin;
     bottom: -10vmin;
+  }
+}
+
+/* reduced-motion：導入の展開はしない。全体の規則は長さだけを 0 にするので、開始の遅れも 0 にする
+   （遅れの間は opacity 0 のまま残り、ボタンが読めなくなるため） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-delay: 0s !important;
+  }
+  .top .brand,
+  .top-right > *,
+  .dock > *,
+  .flow,
+  .arena .setup,
+  .arena .controls {
+    animation: none !important;
   }
 }
