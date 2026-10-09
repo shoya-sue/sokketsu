@@ -796,3 +796,212 @@
   overflow: visible;
   text-overflow: clip;
 }
+
+/* ==== 判断のリール（金庫の中央）。判断中は回り続け、判断が出たらその選択肢で跳ねて止まる ==== */
+.vault-reel {
+  --cell: 26px;
+  display: block;
+  height: var(--cell);
+  overflow: hidden;
+  margin: 2px auto;
+  mask-image: linear-gradient(180deg, transparent, #000 25%, #000 75%, transparent);
+}
+
+.vault-reel-strip {
+  display: grid;
+  animation: reel-spin 0.36s linear infinite;
+}
+
+.vault-reel-cell {
+  height: var(--cell);
+  line-height: var(--cell);
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: white;
+  text-shadow:
+    -2px 0 color-mix(in srgb, var(--sol-purple) 80%, transparent),
+    2px 0 color-mix(in srgb, var(--sol-green) 80%, transparent);
+}
+
+.reel-release {
+  color: var(--sol-green);
+}
+
+.reel-hold {
+  color: #ffb547;
+}
+
+.reel-refund {
+  color: var(--sol-cyan);
+}
+
+@keyframes reel-spin {
+  to {
+    transform: translateY(calc(var(--cell) * -3));
+  }
+}
+
+.vault-reel.is-landed .vault-reel-strip {
+  animation: reel-land 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+
+@keyframes reel-land {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(var(--cell) * var(--land) * -1));
+  }
+}
+
+/* リールが出ている間は、同じ内容の小さい文字（読み上げ用）を見た目から外す */
+.vault-core:has(.vault-reel) .vault-judge {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ==== 点の格子のマーク（背景）。工程が進むと真上から時計回りに灯る ==== */
+.od-dotmark {
+  position: absolute;
+  left: -8vmin;
+  top: 26%;
+  width: 58vmin;
+  height: 58vmin;
+}
+
+.od-dotmark circle {
+  fill: rgba(255, 255, 255, 0.14);
+  transition:
+    fill 0.3s,
+    r 0.3s;
+  transition-delay: var(--d);
+}
+
+.od-dotmark circle.on {
+  fill: var(--tone-b);
+  r: 2.2;
+  filter: drop-shadow(0 0 1.5px var(--tone-b));
+}
+
+/* ==== 照準が絞られる：判断中、金庫の四隅の括弧が外から内へ締まる ==== */
+.halo-judging .halo-cross b {
+  animation: halo-lock 0.9s var(--ease) both;
+  border-color: var(--halo-b);
+  border-width: 3px;
+}
+
+.halo-judging .halo-cross .tl {
+  --from: -40px, -40px;
+}
+
+.halo-judging .halo-cross .tr {
+  --from: 40px, -40px;
+}
+
+.halo-judging .halo-cross .bl {
+  --from: -40px, 40px;
+}
+
+.halo-judging .halo-cross .br {
+  --from: 40px, 40px;
+}
+
+@keyframes halo-lock {
+  from {
+    transform: translate(var(--from)) scale(1.6);
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+
+/* ==== 1 点から計器が開く導入（読み込み時に 1 回だけ） ==== */
+.top,
+.dock > *,
+.flow,
+.arena .setup,
+.arena .controls {
+  animation: intro-open 0.8s var(--ease) both;
+}
+
+.top {
+  animation-delay: 0.05s;
+}
+
+.dock-left > :nth-child(1) {
+  animation-delay: 0.25s;
+}
+
+.dock-left > :nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.dock-right > :nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.dock-right > :nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+.flow {
+  animation-delay: 0.55s;
+}
+
+.arena .setup,
+.arena .controls {
+  animation-delay: 0.65s;
+}
+
+@keyframes intro-open {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: blur(6px) brightness(2);
+  }
+}
+
+.dock-left > * {
+  transform-origin: 100% 50%;
+}
+
+.dock-right > * {
+  transform-origin: 0 50%;
+}
+
+@media (max-width: 760px) {
+  .od-dotmark {
+    left: -20vmin;
+    width: 80vmin;
+    height: 80vmin;
+  }
+}
+
+/* 点の格子のマークは空いている右下、小さいマークは左上へ（左の計器の文字に重ねない） */
+.od-dotmark {
+  left: auto;
+  right: -6vmin;
+  top: auto;
+  bottom: -8vmin;
+}
+
+.od-mark-2 {
+  right: auto;
+  bottom: auto;
+  left: -14vmin;
+  top: -16vmin;
+}
+
+@media (max-width: 760px) {
+  .od-dotmark {
+    right: -24vmin;
+    bottom: -10vmin;
+  }
+}

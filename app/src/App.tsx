@@ -684,7 +684,7 @@ export default function App() {
       <div className="bg-glow" aria-hidden="true" />
       <div className="tone-wash" key={`wash-${tone}`} aria-hidden="true" />
       <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} tone={TONE_RGB[tone]} />
-      <OverdriveBack slot={currentSlot} tone={TONE_RGB[tone]} hitKey={hit?.id ?? null} />
+      <OverdriveBack slot={currentSlot} tone={TONE_RGB[tone]} hitKey={hit?.id ?? null} phase={stage.phase} />
       <Ticker items={ticker} />
       <header className="top">
         <div className="brand">

@@ -419,3 +419,14 @@
     display: none;
   }
 }
+
+@media (max-width: 1099px) {
+  .top-right {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+  .top {
+    flex-wrap: wrap;
+  }
+}

@@ -27,6 +27,9 @@ type Props = {
 };
 
 const EXPLORER = "https://explorer.solana.com";
+// 判断のリール（#56）。3 択を 4 周並べ、判断中は回し続け、判断が出たら最後の周のその選択肢で止める。
+const REEL_CHOICES = ["release", "hold", "refund"] as const;
+const REEL = Array.from({ length: 4 }, () => REEL_CHOICES).flat();
 const RADIUS = 58;
 const CIRC = 2 * Math.PI * RADIUS;
 const SHARD_R = 66;
@@ -200,6 +203,26 @@ export function FlowStage({
                 {sol(vaultLamports)}
               </span>
             </>
+          )}
+          {(scanning || showRing) && (
+            <span
+              className={`vault-reel ${scanning ? "is-spinning" : "is-landed"}`}
+              aria-hidden="true"
+              data-decision={scanning ? undefined : judgement?.decision}
+              key={`reel-${runKey}-${scanning ? "spin" : "land"}`}
+              style={{
+                ["--land" as string]:
+                  REEL.length - REEL_CHOICES.length + Math.max(0, REEL_CHOICES.indexOf(judgement?.decision ?? "release")),
+              }}
+            >
+              <span className="vault-reel-strip">
+                {REEL.map((c, i) => (
+                  <span key={i} className={`vault-reel-cell reel-${c}`}>
+                    {c}
+                  </span>
+                ))}
+              </span>
+            </span>
           )}
           <span className="vault-judge" aria-live="polite">
             {scanning

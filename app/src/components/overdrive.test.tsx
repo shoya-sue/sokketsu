@@ -38,7 +38,8 @@ describe("OverdriveBack", () => {
     for (const cls of ["od-aurora", "od-hex", "od-marks", "od-bands", "od-rain"]) {
       expect(container.querySelector(`.${cls}`), cls).not.toBeNull();
     }
-    expect(container.querySelectorAll(".od-mark")).toHaveLength(3);
+    expect(container.querySelectorAll(".od-mark")).toHaveLength(2);
+    expect(container.querySelector(".od-dotmark")).not.toBeNull();
     expect(container.querySelector('img[src*="solana"]')).toBeNull();
   });
   it("確定の瞬間（hitKey あり）だけ閃光を出す", () => {
@@ -50,6 +51,21 @@ describe("OverdriveBack", () => {
   it("スクロールバーの幅を --od-sbw に渡す", () => {
     render(<OverdriveBack slot={null} tone={["1, 2, 3", "4, 5, 6"]} hitKey={null} />);
     expect(document.documentElement.style.getPropertyValue("--od-sbw")).toMatch(/^-?\d+px$/);
+  });
+});
+
+describe("DotMark（OverdriveBack の中）", () => {
+  const lit = (phase: "idle" | "judging" | "released") =>
+    render(<OverdriveBack slot={1} tone={["1, 2, 3", "4, 5, 6"]} hitKey={null} phase={phase} />).container.querySelectorAll(
+      ".od-dotmark circle.on",
+    ).length;
+  it("待機中は灯らず、工程が進むほど灯り、確定ですべて灯る", () => {
+    const all = render(<OverdriveBack slot={1} tone={["1, 2, 3", "4, 5, 6"]} hitKey={null} />).container.querySelectorAll(
+      ".od-dotmark circle",
+    ).length;
+    expect(lit("idle")).toBe(0);
+    expect(lit("judging")).toBe(Math.ceil(all / 4));
+    expect(lit("released")).toBe(all);
   });
 });
 

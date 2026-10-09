@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { hexDump, recentBlocks, timecode } from "../lib/overdrive";
 import { DataRain } from "./DataRain";
+import { DotMark } from "./DotMark";
+import type { Phase } from "../lib/phase";
 
 type BackProps = {
   slot: number | null;
   tone: readonly [string, string];
   /** 変わるたびに全レイヤーを一度に光らせる（確定の瞬間）。 */
   hitKey: number | null;
+  /** 舞台に見えている段階。点の格子のマークがこれに合わせて灯る。 */
+  phase?: Phase;
 };
 
 const BAND_A = "即決 · SOKKETSU · FINALITY < 1 S · ";
@@ -22,7 +26,7 @@ const repeat = (s: string, n: number) => Array.from({ length: n }, () => s).join
  * Sokketsu マークの透かし（3 枚・逆回転）・斜めに流れる巨大な文字の帯・データの雨・確定の閃光。
  * どの層も色調（--tone-a / --tone-b）と段階の強さ（--od-energy）に従う。Solana の公式ロゴはここに使わない。
  */
-export function OverdriveBack({ slot, tone, hitKey }: BackProps) {
+export function OverdriveBack({ slot, tone, hitKey, phase = "idle" }: BackProps) {
   // ティッカーを画面の端から端まで出すため、縦のスクロールバーの幅を CSS に渡す（100vw はそれを含んではみ出す）。
   useEffect(() => {
     const root = document.documentElement;
@@ -61,7 +65,7 @@ export function OverdriveBack({ slot, tone, hitKey }: BackProps) {
       <div className="od-marks">
         <img className="od-mark od-mark-1" src="/logo-mark.svg" alt="" />
         <img className="od-mark od-mark-2" src="/logo-mark.svg" alt="" />
-        <img className="od-mark od-mark-3" src="/logo-mark.svg" alt="" />
+        <DotMark phase={phase} />
         <div className="od-orbit od-orbit-1" />
         <div className="od-orbit od-orbit-2" />
       </div>
