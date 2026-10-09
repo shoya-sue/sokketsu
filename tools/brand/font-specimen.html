@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;600;800&family=Dela+Gothic+One&family=Unbounded:wght@600;800;900&family=M+PLUS+1p:wght@400;700;800&family=Chakra+Petch:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Orbitron:wght@600;800;900&family=Share+Tech+Mono&family=RocknRoll+One&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #07060d; color: #f2f0fa; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 24px; }
+  .set { position: relative; padding: 28px; border-radius: 20px; border: 1px solid rgba(255,255,255,.1);
+    background: radial-gradient(circle at 80% 0%, rgba(153,69,255,.25), transparent 60%), rgba(20,18,34,.8); }
+  .tag { position: absolute; top: 12px; right: 16px; font: 600 14px/1 sans-serif; color: #9a95b4; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; color: #07060d;
+    background: linear-gradient(135deg,#9945ff,#00d1ff 55%,#14f195); font-size: 24px; }
+  .brand h1 { margin: 0; font-size: 44px; background: linear-gradient(135deg,#9945ff,#00d1ff 55%,#14f195);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tagline { margin: 4px 0 0; color: #9a95b4; font-size: 15px; }
+  .hud { display: flex; gap: 22px; align-items: baseline; margin: 18px 0; }
+  .hud small { color: #9a95b4; font-size: 12px; letter-spacing: .14em; display: block; }
+  .hud b { font-size: 28px; }
+  .kicker { color: #14f195; font-size: 18px; letter-spacing: .22em; }
+  .ms { font-size: 120px; line-height: .95; background: linear-gradient(180deg,#fff 20%,#14f195);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ms small { font-size: 38px; -webkit-text-fill-color: #9a95b4; }
+  .near { color: #ffb547; font-size: 20px; margin-top: 4px; }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 18px; }
+  .btn { padding: 14px 22px; border-radius: 14px; background: linear-gradient(90deg,#9945ff,#14f195); color: #07060d; font-size: 20px; }
+  .chip { padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.15); font-size: 15px; }
+  .code { margin-top: 16px; font-size: 18px; color: #14f195; }
+  .body { margin-top: 10px; font-size: 15px; color: #c9c5dc; line-height: 1.6; }
+  /* 組ごとの割り当て */
+  .now { --jp: "Noto Sans JP"; --disp: "Space Grotesk"; --num: "Space Grotesk"; --mono: "JetBrains Mono"; --body: "Noto Sans JP"; --w: 700; }
+  .a { --jp: "Dela Gothic One"; --disp: "Unbounded"; --num: "Unbounded"; --mono: "Chakra Petch"; --body: "M PLUS 1p"; --w: 900; }
+  .b { --jp: "Zen Kaku Gothic New"; --disp: "Orbitron"; --num: "Orbitron"; --mono: "Share Tech Mono"; --body: "Zen Kaku Gothic New"; --w: 900; }
+  .c { --jp: "RocknRoll One"; --disp: "Rajdhani"; --num: "Rajdhani"; --mono: "Chakra Petch"; --body: "M PLUS 1p"; --w: 700; }
+  .set { font-family: var(--body), sans-serif; }
+  .brand h1, .hud b, .kicker { font-family: var(--disp), var(--jp), sans-serif; font-weight: var(--w); }
+  .mark, .jp, .btn { font-family: var(--jp), sans-serif; font-weight: 900; }
+  .ms { font-family: var(--num), sans-serif; font-weight: var(--w); font-variant-numeric: tabular-nums; }
+  .chip, .code, .hud small { font-family: var(--mono), monospace; }
+  .near { font-family: var(--jp), sans-serif; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <script>
+    const sets = [["now", "今（Space Grotesk / Noto Sans JP / JetBrains Mono）"], ["a", "A アーケード（Dela Gothic One / Unbounded / M PLUS 1p / Chakra Petch）"], ["b", "B サイバー（Zen Kaku Gothic New / Orbitron / Share Tech Mono）"], ["c", "C スポーツ中継（RocknRoll One / Rajdhani / M PLUS 1p / Chakra Petch）"]];
+    for (const [k, name] of sets) document.write(`
+      <section class="set ${k}">
+        <span class="tag">${name}</span>
+        <div class="brand"><div class="mark">即決</div><div><h1>Sokketsu</h1><p class="tagline">エージェントの払いを、文章ではなく型付き判断で止める。</p></div></div>
+        <div class="hud"><div><small>SCORE</small><b>12,480</b></div><div><small>COMBO</small><b>×3</b></div><div><small>BEST</small><b>412ms</b></div></div>
+        <div class="kicker jp">解放を確定</div>
+        <div class="ms">739<small> ms</small></div>
+        <div class="near">あと 140 ms で S ランク</div>
+        <div class="row"><span class="btn">▶ デモを流す</span><span class="chip">hold</span><span class="chip">release</span><span class="chip">slot 508,712,760</span></div>
+        <div class="code">decision: "release" · probability: 0.86</div>
+        <p class="body">Jev が選択肢と確率だけを返し、オラクルの署名をプログラムが確かめてから払う。確定まで 1 秒未満。</p>
+      </section>`);
+  </script>
+</div>
+</body>
+</html>

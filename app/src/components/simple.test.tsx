@@ -5,6 +5,7 @@ import "../test/dom";
 import { msg } from "../i18n";
 import { CountdownHit } from "./CountdownHit";
 import { History } from "./History";
+import { Logo } from "./Logo";
 import { ProgressTrack } from "./ProgressTrack";
 import { Timeline } from "./Timeline";
 import { Toasts } from "./Toasts";
@@ -115,5 +116,22 @@ describe("CountdownHit", () => {
     const { container } = render(<CountdownHit countdown={{ next: "release", seconds: 3 }} />);
     expect(container.querySelector(".cd-num")?.textContent).toBe("3");
     expect(container.querySelector(".cd-next")?.textContent).toBe("次は release");
+  });
+});
+
+describe("Logo", () => {
+  it("マーク（回るリング・稲妻）とワードマーク（グリッチ用の写しの文字）を出す", () => {
+    const { container } = render(<Logo />);
+    expect(container.querySelector(".logo-ring")).not.toBeNull();
+    expect(container.querySelector(".logo-spark")).not.toBeNull();
+    expect(container.querySelector(".logo-bolt")).not.toBeNull();
+    expect(container.querySelector(".logo-word")?.getAttribute("data-text")).toBe("Sokketsu");
+    expect(screen.getByRole("heading", { name: "Sokketsu" })).toBeTruthy();
+    expect(container.querySelector(".logo")?.className).not.toContain("is-hit");
+  });
+
+  it("確定の瞬間（hitKey あり）は叩かれた演出のクラスが付く", () => {
+    const { container } = render(<Logo hitKey={123} />);
+    expect(container.querySelector(".logo")?.className).toContain("is-hit");
   });
 });

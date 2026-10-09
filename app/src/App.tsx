@@ -39,6 +39,7 @@ import { ProgressTrack } from "./components/ProgressTrack";
 import { SlotPulse } from "./components/SlotPulse";
 import { BadgeOverlay, type Badge } from "./components/BadgeOverlay";
 import { Ambient } from "./components/Ambient";
+import { Logo } from "./components/Logo";
 import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
@@ -659,11 +660,8 @@ export default function App() {
       <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} tone={TONE_RGB[tone]} />
       <header className="top">
         <div className="brand">
-          <span className="brand-mark">即決</span>
-          <div>
-            <h1>Sokketsu</h1>
-            <p className="tagline">{t("app.tagline")}</p>
-          </div>
+          <Logo hitKey={hit?.id ?? null} />
+          <p className="tagline">{t("app.tagline")}</p>
         </div>
         <div className="top-right">
           <ClusterPill status={alpenglow} currentSlot={currentSlot} fallbackRpc={usingFallbackRpc} />
