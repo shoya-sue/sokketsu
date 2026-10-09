@@ -29,6 +29,14 @@ node measure.mjs --mode play --url http://localhost:5173 --api https://sokketsu.
   --keypair ../../.keys/demo-payer.json --out out
 ```
 
+デモを続けて流して録る（回ごとのランク・格・惜しさ・大当たり・コンボを記録し、画面と音を 1 本の MP4 にする）:
+
+```sh
+node record-runs.mjs --keypair ../../.keys/demo-payer.json --runs 3 --out out/runs
+```
+
+本番での測り直しの記録は `docs/motion/2026-10-09-production.md`。
+
 出力は `out/<mode>-<viewport>/` に `recording.webm`・`result.json`・`last.png`（play では確定の瞬間の `released.png` も）。表は標準出力に出る（`--json` で JSON）。
 
 ## 指標

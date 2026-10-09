@@ -1,0 +1,39 @@
+{
+  "url": "https://sokketsu.pages.dev",
+  "recordedAt": "2026-10-09T07:02:24.863Z",
+  "runs": [
+    {
+      "run": 1,
+      "className": "finality-hit hit-release tier-epic",
+      "ms": "766ms",
+      "grade": "A",
+      "near": "あと 167 ms で S ランク",
+      "jackpot": null,
+      "combo": "×1",
+      "fire": null,
+      "tx": "https://explorer.solana.com/tx/2xt1PPgGUyRnxbY1DKAqi6QrgU1BvDAQ7pcpGTfybk6oB77pUBjK6A5hkqsihSVKpL9DgRGX7zHyFz6Eb7GrGGxk?cluster=devnet"
+    },
+    {
+      "run": 2,
+      "className": "finality-hit hit-release tier-rare",
+      "ms": "991ms",
+      "grade": "B",
+      "near": "あと 92 ms で A ランク",
+      "jackpot": null,
+      "combo": "×2",
+      "fire": "🔥",
+      "tx": "https://explorer.solana.com/tx/5VYDZynvRkkmV3hFS3BWGsd9sFQEFkp1Sf1sumFiR4vCk6aeSt7o5rukDmKZMqwCHZ32q4xW4mZcxULZpoC8BBMz?cluster=devnet"
+    },
+    {
+      "run": 3,
+      "className": "finality-hit hit-release tier-epic",
+      "ms": "878ms",
+      "grade": "A",
+      "near": "あと 279 ms で S ランク",
+      "jackpot": null,
+      "combo": "×3",
+      "fire": "🔥🔥",
+      "tx": "https://explorer.solana.com/tx/34yDiRf93FfbARFuM2nJT1h48xNfyhpLwmfvhZE3AaVMBthPjKNrxjCEgfiSkU5n66cJC5d1rKfUMpLPm2YCfn36?cluster=devnet"
+    }
+  ]
+}
