@@ -104,11 +104,6 @@ h1 {
   color: transparent;
 }
 
-.tagline {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
 
 .pill {
   display: flex;
@@ -2676,10 +2671,6 @@ code {
 
 /* スマホでも舞台・判断・確定ミリ秒が 1 画面に収まるように詰める */
 @media (max-width: 720px) {
-  .tagline {
-    display: none;
-  }
-
   .top {
     gap: 10px;
     margin-bottom: 12px;
@@ -3106,10 +3097,6 @@ code {
   gap: 2px;
 }
 
-.brand .tagline {
-  margin: 0 0 0 76px;
-}
-
 .logo {
   display: flex;
   align-items: center;
@@ -3378,5 +3365,276 @@ h2,
 
   .vault-ms {
     font-size: 1.25rem;
+  }
+}
+
+/* ==== #53 初回の案内ポップアップ ==== */
+.onboard {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: radial-gradient(circle at 50% 40%, rgba(40, 20, 80, 0.75), rgba(4, 3, 10, 0.9));
+  backdrop-filter: blur(6px);
+  animation: onboard-fade 0.3s ease-out;
+}
+
+@keyframes onboard-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 背後で光線が回る */
+.onboard-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1800px;
+  height: 1800px;
+  margin: -900px 0 0 -900px;
+  background: repeating-conic-gradient(from 0deg, rgba(153, 69, 255, 0.16) 0 7deg, transparent 7deg 20deg);
+  mask: radial-gradient(closest-side, #000 15%, transparent 70%);
+  pointer-events: none;
+  animation: rays-spin 14s linear infinite;
+}
+
+/* 叩きつけて開く（大きく → 一瞬止まる → 弾む） */
+.onboard-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 34px 30px 28px;
+  border-radius: 28px;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(rgba(16, 13, 30, 0.96), rgba(16, 13, 30, 0.96)) padding-box,
+    linear-gradient(135deg, #9945ff, #00d1ff 50%, #14f195) border-box;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 30px 120px -20px rgba(153, 69, 255, 0.8);
+  text-align: center;
+  animation: onboard-slam 0.55s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes onboard-slam {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(-3deg);
+    filter: blur(8px);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(0.96);
+    filter: none;
+  }
+  70% {
+    transform: scale(1.03);
+  }
+}
+
+.onboard-logo {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 12px 40px rgba(20, 241, 149, 0.6));
+  animation:
+    onboard-logo-in 0.6s cubic-bezier(0.2, 1.8, 0.4, 1) 0.15s backwards,
+    logo-glow 2.4s ease-in-out 0.8s infinite;
+}
+
+@keyframes onboard-logo-in {
+  from {
+    transform: scale(0) rotate(-200deg);
+  }
+}
+
+.onboard-kicker {
+  color: var(--sol-green);
+  font-family: var(--label);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+}
+
+.onboard-title {
+  margin: 0;
+  font-family: var(--brand);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 0.9rem + 2vw, 2.3rem);
+  line-height: 1.25;
+  text-wrap: balance;
+  word-break: keep-all;
+  background: linear-gradient(100deg, #b98aff 0%, #00d1ff 30%, #ffffff 45%, #14f195 60%, #b98aff 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: logo-shine 3.2s linear infinite;
+}
+
+.onboard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin: 10px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+/* カードが順に跳ねて出る（遅れは style の animationDelay） */
+.onboard-step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(32, 28, 54, 0.85);
+  animation: onboard-pop 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) backwards;
+}
+
+@keyframes onboard-pop {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.6) rotate(-6deg);
+  }
+}
+
+.onboard-icon {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 14px rgba(255, 209, 102, 0.6));
+}
+
+.onboard-no {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  color: var(--muted);
+  font-family: var(--label);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+
+.onboard-step strong {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(0.88rem, 0.7rem + 0.5vw, 1.05rem);
+  white-space: nowrap;
+}
+
+.onboard-step p {
+  margin: 0;
+  color: #c9c5dc;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+/* 押したくなる「はじめる」（光が流れて脈打つ） */
+.onboard-cta {
+  position: relative;
+  overflow: hidden;
+  min-width: 240px;
+  height: 58px;
+  padding: 0 32px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #9945ff, #00d1ff, #14f195);
+  color: #07060d;
+  font-family: var(--display);
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 12px 50px -10px rgba(20, 241, 149, 0.9);
+  animation:
+    onboard-pop 0.5s cubic-bezier(0.2, 1.8, 0.4, 1) 0.95s backwards,
+    cta-pulse 1.4s ease-in-out 1.5s infinite;
+}
+
+.onboard-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: rail-sweep 1.8s var(--ease) 1.5s infinite;
+}
+
+.onboard-cta:focus-visible {
+  outline: 3px solid rgba(20, 241, 149, 0.8);
+  outline-offset: 4px;
+}
+
+@keyframes cta-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 14px 70px -6px rgba(20, 241, 149, 1);
+  }
+}
+
+/* 閉じるとき: 弾けるように大きくなって消える */
+.onboard.is-closing {
+  animation: onboard-out 0.32s ease-in forwards;
+}
+
+.onboard.is-closing .onboard-card {
+  animation: onboard-burst 0.32s ease-in forwards;
+}
+
+@keyframes onboard-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes onboard-burst {
+  to {
+    transform: scale(1.25);
+    filter: brightness(2) blur(4px);
+    opacity: 0;
+  }
+}
+
+.help-btn {
+  font-family: var(--display);
+  font-size: 1.1rem;
+}
+
+@media (max-width: 720px) {
+  .onboard-card {
+    padding: 26px 18px 22px;
+  }
+
+  .onboard-logo {
+    width: 72px;
+    height: 72px;
+  }
+
+  .onboard-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .onboard-step {
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    text-align: left;
+    column-gap: 12px;
+    padding: 14px;
+  }
+
+  .onboard-icon {
+    grid-row: span 2;
+    font-size: 1.8rem;
+  }
+
+  .onboard-no {
+    display: none;
   }
 }

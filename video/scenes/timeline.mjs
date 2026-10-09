@@ -10,6 +10,8 @@ export const DEMO_MAX_S = 40;
 export const DEMO_LEAD_S = 4;
 
 const CAPTIONS = {
+  onboard: "初めて来た人には、3 枚で仕組みを案内",
+  start: "お試しで始める（devnet SOL を自動で用意）",
   ready: "お試しで始める（devnet SOL を自動で用意）",
   depositing: "預け入れ — エスクローに 0.05 SOL",
   judging: "Jev が判断 — 選択肢と確率だけを返す",
@@ -31,7 +33,9 @@ export function buildTimeline(run) {
   const ready = markAt(run, "ready");
   const end = markAt(run, "end");
   if (ready === undefined || end === undefined) throw new Error("run.json に ready と end の印が要る");
-  const from = Math.max(0, ready - DEMO_LEAD_S);
+  // 初回の案内（onboard）を撮っていればそこから、なければ ready の少し前から映す
+  const onboard = markAt(run, "onboard");
+  const from = onboard !== undefined ? onboard : Math.max(0, ready - DEMO_LEAD_S);
   const captured = end - from;
   const demoLength = Math.min(captured, DEMO_MAX_S);
   const order = [

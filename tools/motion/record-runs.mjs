@@ -32,6 +32,8 @@ const context = await browser.newContext({
   recordVideo: { dir: out, size: { width: 1280, height: 900 } },
 });
 const page = await context.newPage();
+// 初回の案内ポップアップ（#53）は閉じた状態で測る（見終わった印を先に入れる）。
+await page.addInitScript(() => localStorage.setItem("sokketsu.onboarded.v1", "1"));
 await page.addInitScript({ path: path.join(here, "..", "..", "video", "capture", "audio-hook.js") });
 await page.goto(opt.url);
 await page.locator("details.paste-key summary").click();

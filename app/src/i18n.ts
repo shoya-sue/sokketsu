@@ -15,7 +15,6 @@ export class KeyedError extends Error {
 }
 
 const ja = {
-  "app.tagline": "エージェントの払いを、文章ではなく型付き判断で止める。",
   "app.footer": "devnet のみ。mainnet には接続しない。判断はオラクルが署名し、オンチェーンで検証する。",
   "lang.switch": "EN",
   "lang.switchLabel": "英語表示に切り替え",
@@ -176,6 +175,16 @@ const ja = {
   "badge.achievement": "実績解除",
   "badge.rank": "S ランク",
   "badge.rankBody": "{ms} ms で確定",
+  "onboard.kicker": "HOW IT WORKS",
+  "onboard.title": "払いは、型付き判断で即決する",
+  "onboard.typed.title": "型付き判断で止める",
+  "onboard.typed.body": "Jev は長文ではなく「選択肢 + 確率」だけを返す。閾値 70% に届かなければ 1 lamport も動かない",
+  "onboard.verify.title": "署名をオンチェーンで検証",
+  "onboard.verify.body": "判断にはオラクルの署名が付き、プログラムが確かめてから払う",
+  "onboard.finality.title": "1 秒未満で確定",
+  "onboard.finality.body": "Alpenglow devnet で送信から finalized までを測る。速いほどランクが上がる",
+  "onboard.cta": "はじめる",
+  "onboard.help": "使い方",
   "hit.release": "解放を確定",
   "hit.refund": "返金を確定",
   "hit.near": "あと {ms} ms で {grade} ランク",
@@ -195,7 +204,6 @@ const ja = {
 export type MsgKey = keyof typeof ja;
 
 const en: Record<MsgKey, string> = {
-  "app.tagline": "Stop agent payments with typed decisions, not generated text.",
   "app.footer": "devnet only. Never connects to mainnet. Decisions are signed by the oracle and verified on-chain.",
   "lang.switch": "日本語",
   "lang.switchLabel": "Switch to Japanese",
@@ -356,6 +364,16 @@ const en: Record<MsgKey, string> = {
   "badge.achievement": "Achievement unlocked",
   "badge.rank": "S rank",
   "badge.rankBody": "Finalized in {ms} ms",
+  "onboard.kicker": "HOW IT WORKS",
+  "onboard.title": "Payments, decided by typed judgments",
+  "onboard.typed.title": "Stop with a typed decision",
+  "onboard.typed.body": "Jev returns only a choice and a probability, not prose. Below the 70% threshold, not a single lamport moves",
+  "onboard.verify.title": "Verified on-chain",
+  "onboard.verify.body": "Each decision carries the oracle's signature; the program checks it before paying",
+  "onboard.finality.title": "Finalized in under a second",
+  "onboard.finality.body": "We measure send to finalized on Alpenglow devnet. Faster means a higher rank",
+  "onboard.cta": "Start",
+  "onboard.help": "How it works",
   "hit.release": "Release finalized",
   "hit.refund": "Refund finalized",
   "hit.near": "{ms} ms short of {grade} rank",
