@@ -5,6 +5,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import "./index.css";
 import "./cockpit.css";
+import "./hudkit.css";
 import App from "./App.tsx";
 import { LangProvider } from "./lang.tsx";
 import { RPC_URL } from "./chain";

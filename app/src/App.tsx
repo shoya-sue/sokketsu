@@ -47,6 +47,7 @@ import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
 import { TONE_RGB, toneOf } from "./lib/tone";
 import { energyOf, tickerItems } from "./lib/overdrive";
+import { slotBars } from "./lib/gauges";
 import { OverdriveBack, OverdriveFront, SolanaLogo, Ticker } from "./components/Overdrive";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
@@ -933,9 +934,20 @@ function ClusterPill({
         : t("pill.unknown", { reason: tm(status.reason) });
   return (
     <div className={`pill pill-${tone}`} role="status">
-      <span className="pill-dot" />
-      <div>
-        <strong>{label}</strong>
+      {/* 計器として重ねる（#56）：走る光・回る 2 重の環・slot ごとに跳ねる棒 */}
+      <span className="pill-sweep" aria-hidden="true" />
+      <span className="pill-reactor" aria-hidden="true">
+        <i className="pill-orbit" />
+        <i className="pill-orbit pill-orbit-2" />
+        <span className="pill-dot" key={currentSlot ?? "none"} />
+      </span>
+      <div className="pill-body">
+        <span className="pill-kicker" aria-hidden="true">
+          CLUSTER // DEVNET
+        </span>
+        <strong className="pill-title" data-text={label}>
+          {label}
+        </strong>
         <span className="pill-sub">
           {status?.kind === "alpenglow" && (
             <span className="pill-genesis">{`${t("pill.genesis", { slot: status.genesisSlot.toLocaleString() })} · `}</span>
@@ -947,6 +959,11 @@ function ClusterPill({
         </span>
         {fallbackRpc && <span className="pill-fallback">{t("pill.fallback")}</span>}
       </div>
+      <span className="pill-bars" aria-hidden="true">
+        {slotBars(currentSlot, 8).map((h, i) => (
+          <i key={i} style={{ ["--h" as string]: h, ["--i" as string]: i }} />
+        ))}
+      </span>
     </div>
   );
 }

@@ -1,0 +1,485 @@
+/* ==== #56 HUD の部品（ボタン・レベルとスコア・Alpenglow の計器） ====
+   どの部品も同じ作り：角を切り落とした形（--cut）、色調のグラデーションの縁、内側の面、走る光。
+   縁は要素自身の背景、内側の面は ::before、走る光は ::after（どちらも z-index -1 で文字の下）。
+   clip-path で outline が切れるので、キーボードの選択は縁を白く太くして示す。 */
+
+:root {
+  --cut: 12px;
+}
+
+.hb,
+.trial-btn,
+.setup-actions .wallet-adapter-button,
+.play,
+.chip-btn,
+.icon-btn,
+.lang-btn {
+  --edge: linear-gradient(135deg, var(--tone-a), var(--tone-b));
+  --fill: linear-gradient(180deg, #1c1534, #0a0816);
+  --ink: var(--text);
+  --inset: 2px;
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--edge) !important;
+  color: var(--ink) !important;
+  clip-path: polygon(
+    var(--cut) 0,
+    100% 0,
+    100% calc(100% - var(--cut)),
+    calc(100% - var(--cut)) 100%,
+    0 100%,
+    0 var(--cut)
+  );
+  box-shadow: none !important;
+  font-family: var(--label);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: none;
+  cursor: pointer;
+  transition:
+    transform 0.15s var(--ease),
+    filter 0.2s;
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn)::before {
+  content: "";
+  position: absolute;
+  inset: var(--inset);
+  z-index: -1;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px),
+    var(--fill);
+  clip-path: polygon(
+    calc(var(--cut) - 1px) 0,
+    100% 0,
+    100% calc(100% - var(--cut) + 1px),
+    calc(100% - var(--cut) + 1px) 100%,
+    0 100%,
+    0 calc(var(--cut) - 1px)
+  );
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.4) 50%, transparent 62%) 0 0 / 260% 100%;
+  animation: hb-sheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hb-sheen {
+  from {
+    background-position: 130% 0;
+  }
+  55%,
+  to {
+    background-position: -130% 0;
+  }
+}
+
+/* 主ボタン（ウォレット接続・デモを流す）は Solana のグラデーションで塗り、文字は暗く */
+.setup-actions .wallet-adapter-button,
+.play {
+  --fill: linear-gradient(135deg, var(--sol-purple), var(--sol-cyan) 55%, var(--sol-green));
+  --ink: #07060d;
+  --edge: linear-gradient(135deg, #fff, var(--tone-b));
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn):hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.18) saturate(1.2);
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn):active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn):focus-visible {
+  outline: none;
+  --edge: #fff;
+  --inset: 3px;
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn):disabled {
+  filter: grayscale(0.7) brightness(0.7);
+  cursor: not-allowed;
+}
+
+:is(.trial-btn, .setup-actions .wallet-adapter-button, .play, .chip-btn, .icon-btn, .lang-btn):disabled::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* 大きさ：小さい部品は角の切り落としも小さく */
+.icon-btn,
+.lang-btn,
+.chip-btn {
+  --cut: 8px;
+}
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.lang-btn {
+  height: 44px;
+  padding: 0 16px;
+  font-size: 0.8rem;
+}
+
+.chip-btn {
+  padding: 9px 16px;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.play {
+  --cut: 18px;
+  padding: 16px 30px 16px 18px;
+  animation: none;
+}
+
+.trial-btn,
+.setup-actions .wallet-adapter-button {
+  height: 52px;
+  padding: 0 26px;
+  font-size: 0.9rem;
+}
+
+/* ==== レベル・スコア・コンボ・ベスト ==== */
+.hud-level {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: white;
+}
+
+.hud-level-badge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.hud-hex {
+  fill: color-mix(in srgb, var(--tone-a) 30%, #07060d);
+  stroke: var(--tone-b);
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px var(--tone-b));
+}
+
+.hud-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 4;
+}
+
+.hud-ring {
+  fill: none;
+  stroke: var(--sol-green);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 4px var(--sol-green));
+  transition: stroke-dashoffset 0.8s var(--ease);
+}
+
+.hud-ring-ticks {
+  fill: none;
+  stroke: color-mix(in srgb, var(--tone-a) 80%, white);
+  stroke-width: 2;
+  stroke-dasharray: 1 6;
+  transform-origin: 50% 50%;
+  animation: od-spin 14s linear infinite;
+}
+
+.hud-level-label,
+.hud-level-num {
+  position: relative;
+}
+
+.hud-level-label {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--tone-b);
+}
+
+.hud-level-num {
+  font-family: var(--num);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: white;
+  text-shadow:
+    0 0 10px var(--tone-b),
+    0 0 22px var(--tone-a);
+}
+
+.hud-score-wrap {
+  position: relative;
+  display: inline-grid;
+}
+
+.hud-score-wrap > * {
+  grid-area: 1 / 1;
+  text-align: right;
+}
+
+.hud-score-ghost {
+  font-family: var(--num);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.08);
+  text-shadow: none;
+}
+
+.hud .hud-score {
+  font-size: 1.6rem;
+  color: white;
+  text-shadow:
+    0 0 10px var(--tone-b),
+    0 0 24px color-mix(in srgb, var(--tone-a) 70%, transparent);
+}
+
+.hud .hud-bar {
+  height: 10px;
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 8px, transparent 8px 10px);
+  clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%);
+}
+
+.hud .hud-bar-fill {
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(7, 6, 13, 0.9) 8px 10px),
+    linear-gradient(90deg, var(--sol-purple), var(--sol-green));
+  box-shadow: 0 0 12px var(--sol-green);
+}
+
+.hud-segs {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.hud-segs i {
+  width: 9px;
+  height: 16px;
+  transform: skewX(-18deg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hud-segs i.on {
+  background: linear-gradient(180deg, #fff3c4, #ffb547 50%, #ff5d6c);
+  box-shadow: 0 0 10px #ffb547;
+}
+
+.hud-combo.hot .hud-segs i.on {
+  animation: hud-seg 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes hud-seg {
+  to {
+    filter: brightness(1.5);
+  }
+}
+
+.hud .hud-combo-num,
+.hud .hud-best-num {
+  font-family: var(--num);
+  text-shadow: 0 0 10px var(--tone-b);
+}
+
+/* ==== Alpenglow の計器 ==== */
+.pill {
+  --cut: 14px;
+  position: relative;
+  isolation: isolate;
+  gap: 12px;
+  padding: 10px 18px 10px 12px;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, var(--tone-a), var(--sol-green)) !important;
+  backdrop-filter: none;
+  clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut));
+}
+
+.pill::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: -2;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'%3E%3Cpath d='M14 0 28 8v16L14 32 0 24V8zM14 32v16' fill='none' stroke='%2314f195' stroke-opacity='.14'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px),
+    linear-gradient(120deg, #120d26, #07060d 60%, #0b1f1a);
+  clip-path: polygon(13px 0, 100% 0, 100% calc(100% - 13px), calc(100% - 13px) 100%, 0 100%, 0 13px);
+}
+
+.pill-sweep {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 40%, color-mix(in srgb, var(--sol-green) 35%, transparent) 50%, transparent 60%) 0 0 / 280% 100%;
+  animation: hb-sheen 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pill-reactor {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+}
+
+.pill-orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px dashed color-mix(in srgb, var(--sol-green) 80%, transparent);
+  animation: od-spin 4s linear infinite;
+}
+
+.pill-orbit-2 {
+  inset: 6px;
+  border-style: dotted;
+  border-color: var(--tone-a);
+  animation-duration: 2s;
+  animation-direction: reverse;
+}
+
+.pill-reactor .pill-dot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  animation: pill-ping 0.6s var(--ease);
+}
+
+@keyframes pill-ping {
+  from {
+    transform: scale(2.2);
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--sol-green) 40%, transparent);
+  }
+}
+
+.pill-body {
+  display: grid;
+  min-width: 0;
+}
+
+.pill-kicker {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--sol-green);
+  text-shadow: 0 0 8px var(--sol-green);
+}
+
+.pill-title {
+  position: relative;
+  font-family: var(--brand);
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  color: white;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--sol-green) 70%, transparent);
+}
+
+/* ときどき色ずれのグリッチが走る */
+.pill-title::before,
+.pill-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pill-title::before {
+  color: var(--sol-purple);
+  animation: pill-glitch 3.2s steps(1, end) infinite;
+}
+
+.pill-title::after {
+  color: var(--sol-green);
+  animation: pill-glitch 3.2s steps(1, end) infinite reverse;
+}
+
+@keyframes pill-glitch {
+  0%,
+  90% {
+    opacity: 0;
+    transform: none;
+  }
+  92% {
+    opacity: 0.85;
+    transform: translate(-3px, 1px);
+  }
+  95% {
+    opacity: 0.85;
+    transform: translate(3px, -1px);
+  }
+  97% {
+    opacity: 0;
+  }
+}
+
+.pill-bars {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 34px;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--sol-green) 35%, transparent);
+}
+
+.pill-bars i {
+  width: 4px;
+  height: calc(var(--h) * 100%);
+  background: linear-gradient(180deg, #fff, var(--sol-green) 30%, var(--sol-purple));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--sol-green) 70%, transparent);
+  transition: height 0.3s var(--ease);
+  transition-delay: calc(var(--i) * 25ms);
+}
+
+/* 確認中・使えない RPC のときは琥珀・赤の縁 */
+.pill-wait,
+.pill-warn {
+  background: linear-gradient(135deg, #ffb547, var(--tone-a)) !important;
+}
+
+.pill-ng {
+  background: linear-gradient(135deg, #ff5d6c, #ffb547) !important;
+}
+
+@media (max-width: 760px) {
+  .pill {
+    gap: 8px;
+    padding: 8px 12px 8px 8px;
+  }
+  .pill-bars {
+    display: none;
+  }
+  .hud-level {
+    width: 72px;
+    height: 72px;
+  }
+  .play {
+    width: 100%;
+    justify-content: center;
+  }
+}
