@@ -25,3 +25,14 @@ export function notesFor(event: FlowEvent): Note[] {
       return [[196, 0, 0.15, "sawtooth"], [147, 0.12, 0.25, "sawtooth"]];
   }
 }
+
+/**
+ * 次の依頼までのカウントダウン（#34）の刻み音。残りが減るほど音階が上がり、最後の 1 秒は 2 音で溜めを切る。
+ * 残り 0 以下は鳴らさない。音階の上限を超える残りは一番下の音にする。
+ */
+export function countdownNotes(secondsLeft: number): Note[] {
+  if (secondsLeft <= 0) return [];
+  const degree = Math.max(0, SCALE.length - 1 - secondsLeft);
+  if (secondsLeft === 1) return [[freq(degree), 0, 0.05, "square"], [freq(degree) * 2, 0.07, 0.09, "square"]];
+  return [[freq(degree), 0, 0.05, "square"]];
+}

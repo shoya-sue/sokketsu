@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FLOW, notesFor } from "./sfxPlan";
+import { FLOW, countdownNotes, notesFor } from "./sfxPlan";
 
 const pitch = (e: Parameters<typeof notesFor>[0]) => Math.max(...notesFor(e).map((n) => n[0]));
 
@@ -59,5 +59,37 @@ describe("sfx の割り当て（流れの音は sfxPlan と同じ）", () => {
     expect(PATTERNS.finalize).toEqual(notesFor("finalize"));
     expect(PATTERNS.stamp).toEqual(notesFor("stop"));
     expect(PATTERNS.fail).toEqual(notesFor("fail"));
+  });
+});
+
+describe("countdownNotes", () => {
+  it("残りが減るほど音が高くなる（6 → 2 秒）", () => {
+    const pitches = [6, 5, 4, 3, 2].map((s) => countdownNotes(s)[0][0]);
+    expect(pitches).toEqual([494, 554, 659, 740, 880]);
+  });
+
+  it("2 秒以上は短い 1 音の square", () => {
+    expect(countdownNotes(3)).toEqual([[countdownNotes(3)[0][0], 0, 0.05, "square"]]);
+    expect(countdownNotes(2)).toHaveLength(1);
+  });
+
+  it("最後の 1 秒は 2 音（2 音目は 1 オクターブ上）", () => {
+    const notes = countdownNotes(1);
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toEqual([notes[0][0], 0, 0.05, "square"]);
+    expect(notes[1]).toEqual([notes[0][0] * 2, 0.07, 0.09, "square"]);
+    expect(notes[0][0]).toBeGreaterThan(countdownNotes(2)[0][0]);
+  });
+
+  it("具体的な音高（A4 基準のペンタトニック）", () => {
+    expect(countdownNotes(6)[0][0]).toBe(494);
+    expect(countdownNotes(1)[0][0]).toBe(988);
+  });
+
+  it("0 以下は鳴らさず、音階より長い残りは一番下の音", () => {
+    expect(countdownNotes(0)).toEqual([]);
+    expect(countdownNotes(-1)).toEqual([]);
+    expect(countdownNotes(30)[0][0]).toBe(440);
+    expect(countdownNotes(7)[0][0]).toBe(440);
   });
 });

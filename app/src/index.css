@@ -2814,3 +2814,149 @@ code {
     transform: scale(14);
   }
 }
+
+/* ==== #34 判断中と待ち時間の溜め ==== */
+/* 判断中は舞台の外を暗くして、視線を金庫に集める */
+.dim-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(42% 46% at 50% 42%, transparent 40%, rgba(4, 3, 10, 0.55) 100%);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+
+.shell[data-phase="judging"] .dim-veil {
+  opacity: 1;
+}
+
+/* 判断リングのスキャンは、ゆっくり回り始めて加速し、速いまま回り続ける */
+.stage.phase-judging .gate-scan {
+  animation:
+    scan-spin-up 1.4s cubic-bezier(0.55, 0, 1, 0.45),
+    spin 0.32s linear 1.4s infinite;
+}
+
+@keyframes scan-spin-up {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+/* 金庫の周りをレーダーの扇が回る（スキャンと同じく加速する） */
+.stage.phase-judging .vault::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  margin: -210px 0 0 -210px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, var(--tone-a) 55%, transparent) 97%, #fff 100%);
+  mask: radial-gradient(closest-side, transparent 30%, #000 34%, #000 92%, transparent 100%);
+  pointer-events: none;
+  animation:
+    scan-spin-up 1.4s cubic-bezier(0.55, 0, 1, 0.45),
+    spin 0.32s linear 1.4s infinite;
+}
+
+/* 金庫は心拍で脈打ち、だんだん速くなる */
+.stage.phase-judging .vault-core {
+  animation:
+    heartbeat 0.9s ease-in-out 2,
+    heartbeat 0.55s ease-in-out 1.8s infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.12);
+  }
+  30% {
+    transform: scale(0.98);
+  }
+  45% {
+    transform: scale(1.07);
+  }
+}
+
+/* 次の依頼までの残り秒を画面中央に */
+.countdown-hit {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.cd-body {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(150px, 26vw, 220px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(7, 6, 13, 0.88), rgba(7, 6, 13, 0.45) 80%, transparent);
+  animation: cd-slam 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes cd-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+.cd-ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.cd-ring circle {
+  fill: none;
+  stroke: var(--tone-a, var(--sol-purple));
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 339.3;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 10px var(--tone-a, var(--sol-purple)));
+  animation: cd-drain 1s linear forwards;
+}
+
+@keyframes cd-drain {
+  to {
+    stroke-dashoffset: 339.3;
+  }
+}
+
+.cd-num {
+  font-family: var(--display);
+  font-size: clamp(4.5rem, 3rem + 6vw, 7.5rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 0 30px var(--tone-a, var(--sol-purple));
+}
+
+.cd-next {
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(7, 6, 13, 0.75);
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+}
