@@ -1,0 +1,125 @@
+{
+  "url": "https://sokketsu.pages.dev",
+  "capturedAt": "2026-10-09T08:28:58.456Z",
+  "entry": "trial",
+  "judge": "jev (demo token)",
+  "audioOffsetS": 8.01060009765625,
+  "marks": [
+    {
+      "label": "start",
+      "at": 3.585
+    },
+    {
+      "label": "ready",
+      "at": 5.964
+    },
+    {
+      "label": "depositing",
+      "at": 7.594
+    },
+    {
+      "label": "judging",
+      "at": 8.655
+    },
+    {
+      "label": "holding",
+      "at": 9.594
+    },
+    {
+      "label": "stopped",
+      "at": 10.519
+    },
+    {
+      "label": "countdown",
+      "at": 10.688
+    },
+    {
+      "label": "depositing",
+      "at": 16.646
+    },
+    {
+      "label": "judging",
+      "at": 17.748
+    },
+    {
+      "label": "releasing",
+      "at": 18.801
+    },
+    {
+      "label": "released",
+      "at": 19.573
+    },
+    {
+      "label": "end",
+      "at": 24.53
+    }
+  ],
+  "finality": {
+    "hitMs": "731ms",
+    "vaultMs": "731ms",
+    "decision": "release 96%",
+    "source": "source: jev · ✓ 署名済み",
+    "slot": "509,118,556",
+    "grade": "A",
+    "near": "あと 132 ms で S ランク"
+  },
+  "result": {
+    "finalizedMs": 731,
+    "speedup": "18",
+    "breakdown": [
+      "0 ms送信",
+      "458 msprocessed",
+      "731 msfinalized"
+    ]
+  },
+  "timeline": [
+    {
+      "label": "依頼（hold）",
+      "detail": "hold: wait #qbtv",
+      "ms": null,
+      "tx": null
+    },
+    {
+      "label": "預け入れ 0.05 SOL → 金庫 PDA",
+      "detail": null,
+      "ms": "787 ms",
+      "tx": "https://explorer.solana.com/tx/2RfqJ1QAQ3Ndyv1oE9HZ5NBhAgMCRpcN2q5tfGL5p8boHRehahKREumhKCGSUNmKgm141pNYFncYnjo3kALEGGYa?cluster=devnet"
+    },
+    {
+      "label": "判断: hold",
+      "detail": "98.0% · source: jev · オラクル署名あり",
+      "ms": null,
+      "tx": null
+    },
+    {
+      "label": "止めた — 送金なし",
+      "detail": "settle(hold) を記録",
+      "ms": null,
+      "tx": "https://explorer.solana.com/tx/4ZWcBBCSds3iuxtkacK3TWHLC2qbE5Haf42fgDEZ2dT7sDThR4HwTdi6vdsF21ro6NHCe7BYChpaxTD6qPhseuwJ?cluster=devnet"
+    },
+    {
+      "label": "依頼（release）",
+      "detail": "release: delivered the devnet ping report; payer verified and approved #hpsn",
+      "ms": null,
+      "tx": null
+    },
+    {
+      "label": "預け入れ 0.05 SOL → 金庫 PDA",
+      "detail": null,
+      "ms": "838 ms",
+      "tx": "https://explorer.solana.com/tx/5n7vVZ9KuZRk4Mz8sCtG5UWsh8ffFjN56KxGs3PfWfwoqjQfYLgWsB1tuU2HaejSKLH7u3VSfzZuMXUdqtkCRcA7?cluster=devnet"
+    },
+    {
+      "label": "判断: release",
+      "detail": "96.0% · source: jev · オラクル署名あり",
+      "ms": null,
+      "tx": null
+    },
+    {
+      "label": "受注者へ解放 finalized",
+      "detail": null,
+      "ms": "731 ms",
+      "tx": "https://explorer.solana.com/tx/36pfdAngiAHpnFtWLYb3cumecfYbvJ82w3g9dUSuYDhoMDPuv5TUwRvBKbGZhz12PRvBBDizE5eVaaQabELEvZ2J?cluster=devnet"
+    }
+  ]
+}

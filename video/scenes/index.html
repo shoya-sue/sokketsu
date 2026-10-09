@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sokketsu — 発表動画</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=RocknRoll+One&family=Unbounded:wght@700;900&family=Chakra+Petch:wght@600&family=M+PLUS+1p:wght@400;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #07060d;
+      }
+      #stage {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        color: #f2f0fa;
+        font-family: "M PLUS 1p", sans-serif;
+        background:
+          radial-gradient(1px 1px at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 32px 32px,
+          radial-gradient(circle at 70% 25%, #1d1640 0%, #07060d 62%);
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: none;
+      }
+      .abs {
+        position: absolute;
+      }
+      .mono {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+      }
+      .num {
+        font-family: "Unbounded", sans-serif;
+        font-weight: 900;
+      }
+      .brandfont {
+        font-family: "Dela Gothic One", sans-serif;
+        font-weight: 400;
+      }
+      .pop {
+        font-family: "RocknRoll One", sans-serif;
+      }
+      .grad {
+        background: linear-gradient(135deg, #9945ff, #00d1ff 55%, #14f195);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .caption {
+        left: 120px;
+        bottom: 90px;
+        font-family: "RocknRoll One", sans-serif;
+        font-size: 46px;
+        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+      }
+      .kicker {
+        left: 120px;
+        top: 90px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: 0.2em;
+        color: #9a95b4;
+      }
+
+      /* 1. 掴み */
+      #hook-count {
+        left: 120px;
+        top: 250px;
+        font-size: 260px;
+        letter-spacing: -0.04em;
+        color: #ffb547;
+      }
+      #hook-sub {
+        left: 130px;
+        top: 590px;
+        font-size: 56px;
+        font-weight: 700;
+      }
+      .race {
+        left: 130px;
+        width: 1660px;
+        height: 40px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .race span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 100%;
+        border-radius: 20px;
+        transform-origin: left;
+      }
+      .race b {
+        position: absolute;
+        top: -58px;
+        left: 0;
+        font-size: 36px;
+      }
+      #race-tower {
+        top: 760px;
+      }
+      #race-tower span {
+        background: #5a5570;
+      }
+      #race-alpen {
+        top: 900px;
+      }
+      #race-alpen span {
+        background: linear-gradient(90deg, #9945ff, #14f195);
+      }
+      #hook-brand {
+        left: 0;
+        right: 0;
+        top: 330px;
+        text-align: center;
+      }
+      #hook-brand h1 {
+        margin: 0;
+        font-size: 210px;
+        font-weight: 900;
+      }
+      #hook-brand p {
+        margin: 24px 0 0;
+        font-size: 48px;
+        color: #14f195;
+      }
+
+      /* 2. 課題 */
+      .card {
+        top: 260px;
+        width: 780px;
+        height: 520px;
+        padding: 44px;
+        box-sizing: border-box;
+        border-radius: 32px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        background: rgba(20, 18, 34, 0.85);
+      }
+      .card h3 {
+        margin: 0 0 24px;
+        font-size: 34px;
+        color: #9a95b4;
+      }
+      #prose {
+        left: 120px;
+      }
+      #prose p {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.6;
+      }
+      #prose-strike {
+        left: 100px;
+        top: 500px;
+        width: 840px;
+        height: 10px;
+        background: #ff5d6c;
+        transform-origin: left;
+        border-radius: 5px;
+      }
+      #typed {
+        left: 1020px;
+        border-color: #14f195;
+      }
+      #typed pre {
+        margin: 40px 0 0;
+        font-size: 64px;
+        line-height: 1.5;
+      }
+      #typed .k {
+        color: #9a95b4;
+      }
+      #typed .v {
+        color: #14f195;
+      }
+
+      /* 3. 仕組み */
+      .node {
+        top: 380px;
+        width: 360px;
+        height: 250px;
+        padding: 30px;
+        box-sizing: border-box;
+        border-radius: 28px;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        background: rgba(20, 18, 34, 0.9);
+        text-align: center;
+      }
+      .node b {
+        display: block;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        margin: 18px 0 12px;
+        font-size: 44px;
+      }
+      .node small {
+        font-size: 26px;
+        color: #9a95b4;
+      }
+      .node i {
+        font-style: normal;
+        font-size: 30px;
+        color: #14f195;
+      }
+      .link {
+        top: 500px;
+        height: 8px;
+        border-radius: 4px;
+        background: linear-gradient(90deg, #9945ff, #14f195);
+        transform-origin: left;
+      }
+      #coin {
+        top: 470px;
+        width: 70px;
+        height: 70px;
+        margin-left: -35px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #a7ffd9, #14f195 60%, #0a8f58);
+        box-shadow: 0 0 40px #14f195;
+      }
+      #gauge {
+        left: 560px;
+        top: 760px;
+        width: 800px;
+        height: 36px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+      #gauge span {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: 18px;
+        background: linear-gradient(90deg, #9945ff, #14f195);
+        transform-origin: left;
+      }
+      #gauge em {
+        position: absolute;
+        top: -14px;
+        left: 70%;
+        width: 6px;
+        height: 64px;
+        background: #ffb547;
+        font-style: normal;
+      }
+      #gauge em::after {
+        content: "閾値 70%";
+        position: absolute;
+        top: 72px;
+        left: -60px;
+        width: 140px;
+        font-size: 26px;
+        color: #ffb547;
+        text-align: center;
+      }
+      #gauge-label {
+        left: 560px;
+        top: 700px;
+        font-size: 30px;
+        color: #9a95b4;
+      }
+
+      /* 4. 実演 */
+      #demo-frame {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        object-fit: cover;
+      }
+      #demo-bar {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 200px;
+        background: linear-gradient(transparent, rgba(7, 6, 13, 0.92));
+      }
+      #demo-tag {
+        right: 60px;
+        top: 50px;
+        padding: 10px 24px;
+        border-radius: 999px;
+        background: rgba(7, 6, 13, 0.8);
+        font-size: 26px;
+        letter-spacing: 0.12em;
+        color: #14f195;
+      }
+
+      /* 5. 数値 */
+      #num-ms {
+        left: 0;
+        right: 0;
+        top: 230px;
+        text-align: center;
+        font-size: 330px;
+        font-weight: 900;
+        line-height: 1;
+      }
+      #num-ms small {
+        font-size: 110px;
+        color: #9a95b4;
+      }
+      #num-sub {
+        left: 0;
+        right: 0;
+        top: 600px;
+        text-align: center;
+        font-size: 56px;
+        font-weight: 700;
+      }
+      #num-detail {
+        left: 0;
+        right: 0;
+        top: 720px;
+        text-align: center;
+        font-size: 30px;
+        color: #9a95b4;
+        line-height: 1.8;
+      }
+
+      /* 6. 締め */
+      #close {
+        left: 0;
+        right: 0;
+        top: 280px;
+        text-align: center;
+      }
+      #close .mark {
+        width: 220px;
+        height: 220px;
+        filter: drop-shadow(0 20px 60px rgba(153, 69, 255, 0.7));
+      }
+      #close h1 {
+        margin: 30px 0 0;
+        font-size: 150px;
+      }
+      #close p {
+        margin: 24px 0 0;
+        font-family: "RocknRoll One", sans-serif;
+        font-size: 44px;
+      }
+      #close .url {
+        margin-top: 40px;
+        font-size: 56px;
+        color: #14f195;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <section class="scene" id="s-hook">
+        <div class="abs kicker">SOKKETSU</div>
+        <div class="abs num" id="hook-count">0.0 秒</div>
+        <div class="abs pop" id="hook-sub">確定まで、待たされていた。</div>
+        <div class="abs race" id="race-tower"><b>Tower BFT · 12.8 秒</b><span></span></div>
+        <div class="abs race" id="race-alpen"><b id="race-alpen-label">Alpenglow</b><span></span></div>
+        <div class="abs" id="hook-brand">
+          <h1 class="grad brandfont">待たない。</h1>
+          <p>エージェントの払いを、文章ではなく型付き判断で止める</p>
+        </div>
+      </section>
+
+      <section class="scene" id="s-problem">
+        <div class="abs kicker">PROBLEM</div>
+        <div class="abs card" id="prose">
+          <h3>LLM に聞くと（長文）</h3>
+          <p id="prose-text"></p>
+        </div>
+        <div class="abs" id="prose-strike"></div>
+        <div class="abs card" id="typed">
+          <h3>Jev の答え（型付き）</h3>
+          <pre class="mono"><span class="k">decision</span>: <span class="v" id="typed-decision"></span>
+<span class="k">probability</span>: <span class="v" id="typed-prob"></span></pre>
+        </div>
+        <div class="abs caption" id="problem-caption">長文では、払いを止められない。</div>
+      </section>
+
+      <section class="scene" id="s-flow">
+        <div class="abs kicker">HOW IT WORKS</div>
+        <div class="abs node" id="n0" style="left: 120px"><small>01</small><b>預け入れ</b><i>escrow PDA</i></div>
+        <div class="abs link" id="l0" style="left: 480px; width: 100px"></div>
+        <div class="abs node" id="n1" style="left: 580px"><small>02</small><b>Jev が判断</b><i>選択肢 + 確率</i></div>
+        <div class="abs link" id="l1" style="left: 940px; width: 100px"></div>
+        <div class="abs node" id="n2" style="left: 1040px"><small>03</small><b>署名を検証</b><i>Ed25519 · on-chain</i></div>
+        <div class="abs link" id="l2" style="left: 1400px; width: 100px"></div>
+        <div class="abs node" id="n3" style="left: 1500px"><small>04</small><b>確定</b><i>Alpenglow</i></div>
+        <div class="abs" id="coin"></div>
+        <div class="abs" id="gauge-label">確率が閾値を超えたときだけ、プログラムが払う</div>
+        <div class="abs" id="gauge"><span></span><em></em></div>
+        <div class="abs caption" id="flow-caption">判断の出所と確率は、オンチェーンで確かめる。</div>
+      </section>
+
+      <section class="scene" id="s-demo">
+        <video class="abs" id="demo-frame" muted playsinline preload="auto"></video>
+        <div class="abs" id="demo-bar"></div>
+        <div class="abs" id="demo-tag">LIVE · DEVNET</div>
+        <div class="abs caption" id="demo-caption"></div>
+      </section>
+
+      <section class="scene" id="s-numbers">
+        <div class="abs kicker">MEASURED</div>
+        <div class="abs num grad" id="num-ms"></div>
+        <div class="abs pop" id="num-sub"></div>
+        <div class="abs mono" id="num-detail"></div>
+      </section>
+
+      <section class="scene" id="s-close">
+        <div class="abs" id="close">
+          <img class="mark" src="/app/public/logo-mark.svg" alt="" />
+          <h1 class="brandfont grad">Sokketsu</h1>
+          <p>devnet で動いています。ウォレットをつなげば、承認は 1 回だけ。</p>
+          <div class="url mono">sokketsu.pages.dev</div>
+        </div>
+      </section>
+    </div>
+    <script type="module">
+      import { buildTimeline, captionAt, demoTimeAt, frameAt } from "./timeline.mjs";
+
+      // すべての見た目を時刻 t（秒）と撮影データ（run.json）だけから決める。乱数・現在時刻は使わない。
+      const $ = (s) => document.querySelector(s);
+      const clamp = (x) => Math.max(0, Math.min(1, x));
+      const range = (t, a, b) => clamp((t - a) / (b - a));
+      const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+      const back = (x) => 1 + 2.7 * Math.pow(x - 1, 3) + 1.7 * Math.pow(x - 1, 2);
+      const fade = (el, o, dy = 0, s = 1) => {
+        el.style.opacity = o;
+        el.style.transform = `translateY(${dy}px) scale(${s})`;
+      };
+
+      const PROSE =
+        "この依頼を確認しました。報告書は提出されているようで、発注者も承認したと読めます。ただし承認の範囲が明確ではなく、品質について追加の確認を行う余地もあります。総合的に判断すると、解放してもおおむね問題はないと考えられますが、念のため……";
+
+      let tl = null;
+      let run = null;
+
+      window.setup = async (data, videoSrc) => {
+        run = data;
+        tl = buildTimeline(run);
+        const video = $("#demo-frame");
+        video.src = videoSrc;
+        await new Promise((r) => (video.readyState >= 1 ? r() : video.addEventListener("loadedmetadata", r, { once: true })));
+        $("#race-alpen-label").textContent = `Alpenglow · ${Math.round(run.result.finalizedMs)} ms（実測）`;
+        const [decision, pct] = (run.finality.decision ?? "release 0%").split(" ");
+        $("#typed-decision").textContent = `"${decision}"`;
+        $("#typed-prob").textContent = (parseInt(pct, 10) / 100).toFixed(2);
+        return tl.total;
+      };
+
+      async function seek(video, time) {
+        if (Math.abs(video.currentTime - time) < 1e-4 && video.readyState >= 2) return;
+        await new Promise((r) => {
+          video.addEventListener("seeked", r, { once: true });
+          video.currentTime = time;
+        });
+      }
+
+      window.renderAt = async (t) => {
+        const f = frameAt(tl, t);
+        for (const s of ["hook", "problem", "flow", "demo", "numbers", "close"]) {
+          $(`#s-${s}`).style.display = f.scene === s ? "block" : "none";
+        }
+        const u = f.local; // 場面の中の秒
+        const ms = Math.round(run.result.finalizedMs);
+
+        if (f.scene === "hook") {
+          const count = 12.8 * easeOut(range(u, 0.3, 4));
+          $("#hook-count").textContent = `${count.toFixed(1)} 秒`;
+          const hookOn = u < 5.2;
+          fade($("#hook-count"), hookOn ? range(u, 0, 0.3) : 1 - range(u, 5.2, 5.6));
+          fade($("#hook-sub"), hookOn ? range(u, 0.6, 1.2) : 1 - range(u, 5.2, 5.6), 20 * (1 - range(u, 0.6, 1.2)));
+          const raceIn = range(u, 2.2, 2.6);
+          const raceOut = 1 - range(u, 5.6, 6);
+          for (const id of ["#race-tower", "#race-alpen"]) $(id).style.opacity = Math.min(raceIn, raceOut);
+          $("#race-tower span").style.transform = `scaleX(${range(u, 2.6, 5.4)})`;
+          // Alpenglow は Tower BFT と同じ時間の比で伸びる（実測の ms / 12.8 秒）
+          const ratio = Math.min(1, ms / 12800);
+          $("#race-alpen span").style.transform = `scaleX(${Math.max(0.012, ratio) * easeOut(range(u, 2.6, 2.6 + 2.8 * ratio + 0.15))})`;
+          const b = range(u, 6, 6.5);
+          fade($("#hook-brand"), b, 0, 0.8 + 0.2 * back(b));
+        }
+
+        if (f.scene === "problem") {
+          const chars = Math.floor(PROSE.length * range(u, 0.3, 3.6));
+          $("#prose-text").textContent = PROSE.slice(0, chars);
+          fade($("#prose"), range(u, 0, 0.4), 30 * (1 - range(u, 0, 0.4)));
+          $("#prose-strike").style.transform = `scaleX(${easeOut(range(u, 4, 4.5))})`;
+          $("#prose-strike").style.opacity = u >= 4 ? 1 : 0;
+          const ty = range(u, 4.8, 5.3);
+          fade($("#typed"), ty, 0, 0.7 + 0.3 * back(ty));
+          $("#problem-caption").textContent = u < 4.8 ? "長文では、払いを止められない。" : "型付きなら、プログラムがそのまま読める。";
+          fade($("#problem-caption"), range(u, 1, 1.4));
+        }
+
+        if (f.scene === "flow") {
+          const step = (i) => range(u, 0.4 + i * 1.6, 0.9 + i * 1.6);
+          for (let i = 0; i < 4; i++) {
+            const k = step(i);
+            fade($(`#n${i}`), k, 40 * (1 - k), 0.85 + 0.15 * back(k));
+            $(`#n${i}`).style.borderColor = k >= 1 ? "rgba(20, 241, 149, 0.7)" : "rgba(255, 255, 255, 0.12)";
+          }
+          for (let i = 0; i < 3; i++) $(`#l${i}`).style.transform = `scaleX(${range(u, 1 + i * 1.6, 1.8 + i * 1.6)})`;
+          const coinT = range(u, 0.6, 6.6);
+          const xs = [300, 760, 1220, 1680];
+          const seg = Math.min(2, Math.floor(coinT * 3));
+          const local = coinT * 3 - seg;
+          $("#coin").style.left = `${xs[seg] + (xs[seg + 1] - xs[seg]) * easeOut(Math.min(1, local))}px`;
+          $("#coin").style.opacity = coinT > 0 && coinT < 1 ? 1 : coinT >= 1 ? 1 - range(u, 6.6, 7) : 0;
+          const p = parseInt((run.finality.decision ?? "x 0%").split(" ")[1], 10) / 100;
+          fade($("#gauge"), range(u, 7, 7.4));
+          fade($("#gauge-label"), range(u, 7, 7.4));
+          $("#gauge span").style.transform = `scaleX(${p * easeOut(range(u, 7.4, 8.6))})`;
+          fade($("#flow-caption"), range(u, 8.6, 9));
+        }
+
+        if (f.scene === "demo") {
+          await seek($("#demo-frame"), demoTimeAt(tl, u));
+          $("#demo-caption").textContent = captionAt(tl, u);
+        }
+
+        if (f.scene === "numbers") {
+          const c = Math.round(ms * easeOut(range(u, 0.2, 1.4)));
+          $("#num-ms").innerHTML = `${c}<small> ms</small>`;
+          fade($("#num-ms"), range(u, 0, 0.3), 0, 0.9 + 0.1 * back(range(u, 0, 0.5)));
+          $("#num-sub").textContent = `送信から finalized まで（Tower BFT の約 ${run.result.speedup} 倍速い）`;
+          fade($("#num-sub"), range(u, 1.4, 1.8), 20 * (1 - range(u, 1.4, 1.8)));
+          const tx = run.timeline.filter((e) => e.tx).at(-1)?.tx ?? "";
+          const sig = (tx.match(/tx\/([^?]+)/) ?? [])[1] ?? "";
+          $("#num-detail").innerHTML = [
+            run.result.breakdown.join("  →  "),
+            `${run.finality.source ?? ""}`,
+            `slot ${run.finality.slot ?? "—"} · tx ${sig.slice(0, 10)}…${sig.slice(-6)}`,
+          ].join("<br>");
+          fade($("#num-detail"), range(u, 2.2, 2.6));
+        }
+
+        if (f.scene === "close") {
+          const k = range(u, 0, 0.6);
+          fade($("#close"), k, 30 * (1 - k));
+        }
+      };
+    </script>
+  </body>
+</html>

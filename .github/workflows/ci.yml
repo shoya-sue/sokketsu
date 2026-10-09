@@ -33,6 +33,9 @@ jobs:
       - name: Test motion stats
         working-directory: tools/motion
         run: node --test
+      - name: Test video timeline
+        working-directory: video
+        run: node --test scenes/*.test.mjs
 
   program:
     runs-on: ubuntu-latest
