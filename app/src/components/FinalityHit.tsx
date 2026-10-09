@@ -58,7 +58,8 @@ export function FinalityHit({ hit }: Props) {
       aria-label={`${t(hit.kind === "release" ? "hit.release" : "hit.refund")} ${Math.round(hit.ms)} ms`}
     >
       <div className="hit-flash" aria-hidden="true" />
-      {hit.jackpot && <div className="hit-rays" aria-hidden="true" />}
+      {/* 光の筋は毎回回す（格の色）。大当たりは金で濃くする */}
+      <div className="hit-rays" aria-hidden="true" />
       <div className="hit-rings" aria-hidden="true">
         <i />
         <i />
