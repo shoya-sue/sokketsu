@@ -3,6 +3,7 @@ import type { Measurement } from "../chain";
 import type { JudgeOutput } from "../judge";
 import { useLang } from "../lang";
 import type { Grade } from "../lib/game";
+import { MeasureViz } from "./MeasureViz";
 
 export type Outcome =
   | { kind: "sent"; labelKey: "label.release" | "label.refund"; measurement: Measurement }
@@ -154,9 +155,7 @@ export function ResultPanel({ outcome, measuringSince, slotsLeft, grade }: Props
           <span className="race-value">12.8 s</span>
         </div>
       </div>
-      <p className="hint">
-        {t("result.processed", { ms: m.processedMs === null ? "—" : `${Math.round(m.processedMs)} ms` })}
-      </p>
+      <MeasureViz processedMs={m.processedMs} finalizedMs={finalized} />
       {m.rateLimited && <p className="warn-note">{t("result.rateLimited")}</p>}
     </div>
   );
