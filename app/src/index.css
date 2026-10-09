@@ -1650,3 +1650,188 @@ code {
   align-items: center;
   justify-content: center;
 }
+
+/* ==== #16 段階表示と状態ピル ==== */
+.progress-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 2px 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.step-no {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+}
+
+.step-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  transform-origin: left;
+}
+
+.step-active,
+.step-done {
+  color: var(--text);
+}
+
+.step-active .step-no,
+.step-done .step-no {
+  color: var(--sol-green);
+}
+
+.step-done .step-bar {
+  background: var(--sol-green);
+}
+
+.step-active .step-bar {
+  background: linear-gradient(90deg, var(--sol-green), var(--sol-cyan), var(--sol-green));
+  background-size: 200% 100%;
+  animation: step-flow 1.2s linear infinite;
+}
+
+.step-stopped .step-bar {
+  background: var(--amber);
+}
+
+.step-stopped,
+.step-stopped .step-no {
+  color: var(--amber);
+}
+
+.step-error .step-bar {
+  background: var(--red);
+}
+
+.step-error,
+.step-error .step-no {
+  color: var(--red);
+}
+
+@keyframes step-flow {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.status-pill {
+  --glow: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--glow) 55%, transparent);
+  border-radius: 999px;
+  background: var(--surface-hi);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--glow) 35%, transparent);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--glow);
+}
+
+.status-depositing,
+.status-finalizing {
+  --glow: var(--sol-cyan);
+}
+
+.status-judging {
+  --glow: var(--sol-purple);
+}
+
+.status-finalized {
+  --glow: var(--sol-green);
+}
+
+.status-stopped {
+  --glow: var(--amber);
+}
+
+.status-error {
+  --glow: var(--red);
+}
+
+.status-depositing .status-dot,
+.status-judging .status-dot,
+.status-finalizing .status-dot {
+  animation: dot-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes dot-pulse {
+  from {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* 実行中の ▶ ボタンは、4 段の小さな進行表示に変わる */
+.play-steps {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.play-step {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: transform 0.3s var(--ease), background 0.3s;
+}
+
+.play-step-done {
+  background: var(--sol-green);
+}
+
+.play-step-active {
+  background: var(--sol-cyan);
+  transform: scale(1.4);
+}
+
+.play-step-stopped {
+  background: var(--amber);
+}
+
+.play-step-error {
+  background: var(--red);
+}
+
+@media (max-width: 720px) {
+  .progress-track {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+
+
+
+}

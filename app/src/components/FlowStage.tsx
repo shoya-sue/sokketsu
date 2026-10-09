@@ -2,17 +2,9 @@ import type { PublicKey } from "@solana/web3.js";
 import type { JudgeOutput } from "../judge";
 import { useLang } from "../lang";
 
-export type Phase =
-  | "idle"
-  | "depositing"
-  | "judging"
-  | "holding"
-  | "releasing"
-  | "refunding"
-  | "stopped"
-  | "released"
-  | "refunded"
-  | "error";
+import type { Phase } from "../lib/phase";
+
+export type { Phase };
 
 type Party = { address: PublicKey | null; balance: number | null };
 
