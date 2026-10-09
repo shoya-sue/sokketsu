@@ -58,21 +58,27 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     // 貼り付け時に混ざる前後の空白・改行を除く。
     const key = env.AI_GATEWAY_API_KEY.trim();
     let res = await callJev(EVALUATE_URL, MODEL_ID, key, input);
+    // Stryker disable next-line StringLiteral: ログに出す経路名・文言は応答に影響しない
     let route = "vercel-ai-gateway";
     if (res.status === 401) {
       res = await callJev(TYPESAFE_URL, TYPESAFE_MODEL_ID, key, input);
+      // Stryker disable next-line StringLiteral: ログに出す経路名・文言は応答に影響しない
       route = "typesafe-direct";
     }
     if (!res.ok) {
+      // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答に影響しない
       console.error("jev error", route, res.status, await res.text());
       return json({ error: "jev failed" }, 502);
     }
+    // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答に影響しない
     console.log("jev ok", route);
     const body = (await res.json()) as {
       answers?: { decision?: { choice?: string; probabilities?: Record<string, number> } };
     };
+    // Stryker disable next-line OptionalChaining: try の中なので、?. を外して TypeError になっても同じ 502 に落ちる
     const answer = body.answers?.decision;
     const decision = answer?.choice as DecisionName | undefined;
+    // Stryker disable next-line OptionalChaining: 同上（try の中で 502 に落ちる）
     const probability = decision ? answer?.probabilities?.[decision] : undefined;
     if (
       !decision ||
@@ -81,6 +87,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       probability < 0 ||
       probability > 1
     ) {
+      // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答に影響しない
       console.error("jev unexpected answer", JSON.stringify(body.answers));
       return json({ error: "jev failed" }, 502);
     }
@@ -88,6 +95,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const proof = await signDecision(env.ORACLE_SECRET_KEY, input.escrow, input.task, decision, probability, "jev");
     return json({ decision, probability, source: "jev", proof }, 200);
   } catch (e) {
+    // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答に影響しない
     console.error("jev request failed", e);
     return json({ error: "jev failed" }, 502);
   }

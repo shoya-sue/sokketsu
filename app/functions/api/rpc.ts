@@ -34,7 +34,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.HELIUS_RPC_URL || !/^https:\/\/devnet\./.test(env.HELIUS_RPC_URL)) {
     return json({ error: "fallback rpc unavailable" }, 503);
   }
-  const declared = Number(request.headers.get("Content-Length") ?? "0");
+  // ヘッダが無ければ get は null を返し、Number(null) は 0。
+  const declared = Number(request.headers.get("Content-Length"));
   if (declared > MAX_BODY_BYTES) return json({ error: "too large" }, 413);
 
   const body = await request.text();
@@ -46,6 +47,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch {
     return json({ error: "bad request" }, 400);
   }
+  // Stryker disable next-line ConditionalExpression: Set.has は文字列以外で false を返す。typeof は型を絞るためだけ
   if (typeof method !== "string" || !ALLOWED_METHODS.has(method)) {
     return json({ error: "method not allowed" }, 400);
   }
@@ -65,6 +67,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   } catch (e) {
+    // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答と振る舞いに影響しない
     console.error("fallback rpc failed", method, redact(e));
     return json({ error: "upstream failed" }, 502);
   }

@@ -13,6 +13,7 @@ const TRANSFER_INDEX = 2;
  *       || 口座 3 つ [送り元, 送り先, System Program] || 直近の blockhash || 命令 1 つ
  */
 export function transferMessage(from: Uint8Array, to: Uint8Array, lamports: number, blockhash: string): Uint8Array {
+  // Stryker disable next-line StringLiteral: 例外の文言は呼び出し元のログにしか出ない
   if (from.every((b, i) => b === to[i])) throw new Error("from and to must differ");
   const recent = bs58.decode(blockhash);
   if (recent.length !== 32) throw new Error("blockhash must be 32 bytes");

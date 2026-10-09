@@ -50,3 +50,19 @@ describe("parseHistory", () => {
     expect(parseHistory(raw)).toHaveLength(HISTORY_SIZE);
   });
 });
+
+describe("parseHistory の壊れた要素", () => {
+  const good = { ms: 800, at: 1, label: "release" };
+  it("null の要素があっても、残りの正しい要素は読む", () =>
+    expect(parseHistory(JSON.stringify([null, good]))).toEqual([good]));
+  it("ms が数値でない（文字列の数字も）・at が数値でない・label が文字列でない要素は捨てる", () =>
+    expect(
+      parseHistory(
+        JSON.stringify([{ ...good, ms: "800" }, { ...good, at: "1" }, { ...good, label: 5 }, good]),
+      ),
+    ).toEqual([good]));
+  it("配列でない JSON（文字列・数値）は空", () => {
+    expect(parseHistory('"abc"')).toEqual([]);
+    expect(parseHistory("5")).toEqual([]);
+  });
+});

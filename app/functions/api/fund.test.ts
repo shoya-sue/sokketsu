@@ -134,4 +134,106 @@ describe("/api/fund", () => {
     await call({ ...ENV, HELIUS_RPC_URL: "https://mainnet.helius-rpc.com/?api-key=x" });
     expect(fetchMock.mock.calls[0][0]).toBe("https://api.devnet.solana.com");
   });
+
+  const body = async (res: Response) => ({ status: res.status, body: await res.json() });
+
+  it("拒否の理由を本文で返す（鍵なし・不正なアドレス・連打・残高あり・RPC 失敗）", async () => {
+    expect(await body(await call({}))).toEqual({ status: 503, body: { error: "faucet unavailable" } });
+    expect(await body(await call(ENV, { address: "nope" }))).toEqual({ status: 400, body: { error: "bad request" } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
+    expect(await body(await call(ENV))).toEqual({ status: 409, body: { error: "already funded" } });
+    expect(await body(await call(ENV))).toEqual({ status: 429, body: { error: "too many requests" } });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    expect(await body(await call(ENV, { address: TARGET }, "203.0.113.9"))).toEqual({
+      status: 429,
+      body: { error: "too many requests" },
+    });
+  });
+
+  it("RPC の失敗は理由つきで 502", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    expect(await body(await call(ENV))).toEqual({ status: 502, body: { error: "faucet failed" } });
+  });
+
+  it("RPC が result を返さなければ（エラーも無くても）502", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ jsonrpc: "2.0", id: 1 }), { status: 200 })));
+    expect((await call(ENV)).status).toBe(502);
+  });
+
+  it("RPC への要求は POST・JSON-RPC 2.0 で、残高・blockhash・送信の順にパラメータを渡す", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(rpc({ value: 0 }))
+      .mockResolvedValueOnce(rpc({ value: { blockhash: BLOCKHASH, lastValidBlockHeight: 1 } }))
+      .mockResolvedValueOnce(rpc("sig"));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await call(ENV)).status).toBe(200);
+    const sent = fetchMock.mock.calls.map(([, init]) => ({
+      method: init.method,
+      headers: init.headers,
+      body: JSON.parse(String(init.body)),
+    }));
+    for (const r of sent) {
+      expect(r.method).toBe("POST");
+      expect(r.headers).toEqual({ "Content-Type": "application/json" });
+      expect(r.body.jsonrpc).toBe("2.0");
+    }
+    expect(sent[0].body).toMatchObject({ method: "getBalance", params: [TARGET] });
+    expect(sent[1].body).toMatchObject({ method: "getLatestBlockhash", params: [{ commitment: "confirmed" }] });
+    expect(sent[2].body.method).toBe("sendTransaction");
+    expect(sent[2].body.params[1]).toEqual({ encoding: "base64" });
+  });
+
+  it("予備 RPC が devnet なら、公開 RPC ではなくそちらを使う", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS }));
+    vi.stubGlobal("fetch", fetchMock);
+    await call({ ...ENV, HELIUS_RPC_URL: "https://devnet.helius-rpc.com/?api-key=x" });
+    expect(fetchMock.mock.calls[0][0]).toBe("https://devnet.helius-rpc.com/?api-key=x");
+  });
+
+  it("途中に devnet を含むだけの URL は予備 RPC として使わない", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS }));
+    vi.stubGlobal("fetch", fetchMock);
+    await call({ ...ENV, HELIUS_RPC_URL: "https://evil.example/?u=https://devnet.x" });
+    expect(fetchMock.mock.calls[0][0]).toBe("https://api.devnet.solana.com");
+  });
+
+  it("制限の記録は 10 分（max-age=600）で、IP とアドレスの両方に置く", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
+    await call(ENV, { address: TARGET }, "198.51.100.7");
+    const keys = [...store.keys()];
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "https://sokketsu-fund.internal/ip/198.51.100.7",
+        `https://sokketsu-fund.internal/address/${TARGET}`,
+      ]),
+    );
+    for (const res of store.values()) expect(res.headers.get("Cache-Control")).toBe("max-age=600");
+  });
+
+  it("CF-Connecting-IP が無いリクエストも 1 つの IP（unknown）として制限する", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
+    const noIp = new Request("https://sokketsu.pages.dev/api/fund", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: TARGET }),
+    });
+    await onRequestPost({ request: noIp, env: ENV } as unknown as Parameters<typeof onRequestPost>[0]);
+    expect([...store.keys()]).toContain("https://sokketsu-fund.internal/ip/unknown");
+  });
+
+  it.each([
+    ["error を返す", { jsonrpc: "2.0", id: 1, error: { code: -32002, message: "blockhash not found" } }],
+    ["result も error も無い", { jsonrpc: "2.0", id: 1 }],
+  ])("送金（sendTransaction）が %s なら、送れていないので 502（取引 ID を返さない）", async (_, sendReply) => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(rpc({ value: 0 }))
+        .mockResolvedValueOnce(rpc({ value: { blockhash: BLOCKHASH, lastValidBlockHeight: 1 } }))
+        .mockResolvedValueOnce(new Response(JSON.stringify(sendReply), { status: 200 })),
+    );
+    expect(await (await call(ENV)).json()).toEqual({ error: "faucet failed" });
+  });
 });

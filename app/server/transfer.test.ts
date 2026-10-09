@@ -20,6 +20,15 @@ describe("transferMessage", () => {
     expect([...ours]).toEqual([...web3Tx(120_000_000).serializeMessage()]);
   });
 
+  it("1 バイトだけ違う送り先は通す（同じ鍵だけを拒否する）", () => {
+    const near = FROM.publicKey.toBytes().slice();
+    near[31] ^= 1;
+    expect(() => transferMessage(FROM.publicKey.toBytes(), near, 1, BLOCKHASH)).not.toThrow();
+  });
+
+  it("blockhash が 32 バイトでなければ例外", () =>
+    expect(() => transferMessage(FROM.publicKey.toBytes(), TO.toBytes(), 1, "1111")).toThrow("32 bytes"));
+
   it("送り先と送り元が同じなら例外（このアプリでは使わない形）", () =>
     expect(() => transferMessage(FROM.publicKey.toBytes(), FROM.publicKey.toBytes(), 1, BLOCKHASH)).toThrow());
 });

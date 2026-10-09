@@ -29,6 +29,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     );
     return json({ ...decided, proof }, 200);
   } catch (e) {
+    // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答と振る舞いに影響しない
     console.error("oracle signing failed", e);
     return json({ error: "oracle failed" }, 500);
   }

@@ -85,3 +85,18 @@ describe("createFallbackFetch", () => {
     await expect(f("https://rpc", init)).rejects.toThrow("fallback down");
   });
 });
+
+describe("createFallbackFetch の例外の扱い", () => {
+  it("トークンが空で公開 RPC が失敗したら、その例外オブジェクトをそのまま投げる", async () => {
+    const err = new Error("offline");
+    const { f } = setup([err], "");
+    await expect(f("https://rpc", init)).rejects.toBe(err);
+  });
+  it("init 無しで呼ばれても予備へ送り直せる（Authorization を付ける）", async () => {
+    const { f, baseFetch } = setup([status(503), ok('{"result":1}')]);
+    const res = await f("https://rpc");
+    expect(await res.text()).toBe('{"result":1}');
+    const [, sent] = baseFetch.mock.calls[1];
+    expect(new Headers(sent.headers).get("Authorization")).toBe("Bearer tok");
+  });
+});

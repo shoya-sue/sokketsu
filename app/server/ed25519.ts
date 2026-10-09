@@ -12,9 +12,9 @@ export function fromHex(hex: string): Uint8Array {
 
 export const toHex = (bytes: Uint8Array) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 
+// atob は Web 標準（forgiving-base64）で「=」の補完が要らないので、URL 用の文字だけ戻す。
 function fromBase64Url(text: string): Uint8Array {
-  const b64 = text.replace(/-/g, "+").replace(/_/g, "/");
-  return Uint8Array.from(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4)), (c) => c.charCodeAt(0));
+  return Uint8Array.from(atob(text.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 }
 
 export type Ed25519Signer = { publicKey: Uint8Array; sign: (message: Uint8Array) => Promise<Uint8Array> };
@@ -29,6 +29,7 @@ export async function ed25519FromSeedHex(seedHex: string): Promise<Ed25519Signer
   const key = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]);
   const jwk = (await crypto.subtle.exportKey("jwk", key)) as JsonWebKey;
   return {
+    // Stryker disable next-line StringLiteral: Ed25519 の JWK は必ず x を持つ（?? は型のためだけ）
     publicKey: fromBase64Url(jwk.x ?? ""),
     sign: async (message) => new Uint8Array(await crypto.subtle.sign("Ed25519", key, message)),
   };

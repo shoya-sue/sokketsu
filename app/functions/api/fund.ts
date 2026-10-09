@@ -27,7 +27,10 @@ async function rpcCall<T>(url: string, method: string, params: unknown[]): Promi
     signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
   });
   const body = (await res.json()) as { result?: T; error?: { code: number; message: string } };
-  if (body.error || body.result === undefined) throw new Error(`${method} failed: ${body.error?.code ?? res.status}`);
+  if (body.error || body.result === undefined) {
+    // Stryker disable next-line all: 例外の文言はログにしか出ない
+    throw new Error(`${method} failed: ${body.error?.code ?? res.status}`);
+  }
   return body.result;
 }
 
@@ -53,7 +56,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   // （Cache API は原子的ではないので窓はゼロにならない。devnet SOL なのでここまでに留める）
   await Promise.all(
     keys.map((k) =>
-      caches.default.put(k, new Response("1", { headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}` } })),
+      caches.default.put(k, new Response(null, { headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}` } })),
     ),
   );
 
@@ -71,6 +74,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await rpcCall<string>(rpcUrl, "sendTransaction", [tx.base64, { encoding: "base64" }]);
     return json({ signature: tx.signature, lamports: FUND_LAMPORTS }, 200);
   } catch (e) {
+    // Stryker disable next-line StringLiteral,CallExpression: ログの出力は応答と振る舞いに影響しない
     console.error("faucet failed", e instanceof Error ? e.message : String(e));
     return json({ error: "faucet failed" }, 502);
   }

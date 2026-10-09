@@ -22,16 +22,14 @@ export function allSubSecond(history: readonly Sample[]): boolean {
 
 /** localStorage から読んだ値を検証して Sample[] に戻す。壊れていれば空。 */
 export function parseHistory(raw: string | null): Sample[] {
-  if (!raw) return [];
+  // null・空文字・壊れた JSON は JSON.parse の例外で、配列でない値は filter が無いことで、どちらも catch で空に戻る。
   try {
-    const data: unknown = JSON.parse(raw);
-    if (!Array.isArray(data)) return [];
+    const data = JSON.parse(raw ?? "") as unknown[];
     return data
       .filter(
         (s): s is Sample =>
-          typeof s === "object" &&
           s !== null &&
-          typeof (s as Sample).ms === "number" &&
+          // Number.isFinite は型変換しないので、ms が数値であることもここで確かめている
           Number.isFinite((s as Sample).ms) &&
           typeof (s as Sample).at === "number" &&
           typeof (s as Sample).label === "string",

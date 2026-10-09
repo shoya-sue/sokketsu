@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # mutation テストは時間がかかるので手動実行（または act workflow_dispatch）のときだけ。
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -78,6 +80,28 @@ jobs:
           solana-keygen new --no-bip39-passphrase --silent --outfile .keys/deployer.json
       - name: Anchor test (localnet-oracle)
         run: npm test
+
+  mutation:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - name: Stryker (command runner)
+        run: npx stryker run
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: app/reports/mutation/mutation.json
 
   workflows:
     runs-on: ubuntu-latest

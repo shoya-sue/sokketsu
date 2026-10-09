@@ -59,19 +59,25 @@ export function toBps(probability: number): number {
 }
 
 const isHex = (v: unknown, bytes: number): v is string =>
+  // Stryker disable next-line ConditionalExpression: 文字列以外は length が合わず false になる。typeof は型を絞るためだけ
   typeof v === "string" && v.length === bytes * 2 && /^[0-9a-f]+$/i.test(v);
 
+/**
+ * 署名の形（hex の長さ）だけを見る。bps の型と範囲は、呼び出し側で「bps === toBps(確率)」かつ確率が 0〜1 であることを
+ * 確かめるので、ここでは重ねて見ない（文字列の "9300" は数値と一致しない）。
+ */
 function parseProof(raw: unknown): Proof | null {
-  if (typeof raw !== "object" || raw === null) return null;
+  // オブジェクト以外（文字列・数値）は、取り出した項目が undefined になり isHex で弾かれる。null と undefined だけ先に弾く。
+  if (raw == null) return null;
   const { bps, signature, publicKey } = raw as Record<string, unknown>;
-  if (!Number.isInteger(bps) || (bps as number) < 0 || (bps as number) > 10000) return null;
   if (!isHex(signature, 64) || !isHex(publicKey, 32)) return null;
   return { bps: bps as number, signature, publicKey };
 }
 
 /** 署名付きの判断として読めなければ null。source は呼んだ口（jev / mock）と一致すること。 */
 function parseSigned(body: unknown, source: JudgeOutput["source"]): JudgeOutput | null {
-  if (typeof body !== "object" || body === null) return null;
+  // オブジェクト以外は、取り出した項目が undefined になり以降の検査で弾かれる。null と undefined だけ先に弾く。
+  if (body == null) return null;
   const b = body as Record<string, unknown>;
   if (!DECISIONS.includes(b.decision as DecisionName)) return null;
   if (typeof b.probability !== "number" || b.probability < 0 || b.probability > 1) return null;

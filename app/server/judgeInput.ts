@@ -21,7 +21,8 @@ const isIntIn = (v: unknown, min: number, max: number): v is number =>
 /** 本文をサイズ上限つきで読み、JSON にする。大きすぎる・壊れていれば null。 */
 export async function readJsonLimited(request: Request): Promise<unknown> {
   // 申告サイズで先に切る（巨大な本文を読み込まない）。申告が無い・偽りでも読んだあとで再確認する。
-  const declared = Number(request.headers.get("Content-Length") ?? "0");
+  // ヘッダが無ければ get は null を返し、Number(null) は 0。
+  const declared = Number(request.headers.get("Content-Length"));
   if (declared > MAX_BODY_BYTES) return null;
   const text = await request.text();
   if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) return null;

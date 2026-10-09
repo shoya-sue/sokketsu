@@ -167,4 +167,58 @@ describe("Jev の呼び出し", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("timeout")));
     expect((await call(ENV, { token: "demo-token" })).status).toBe(502);
   });
+
+  const body = async (res: Response) => ({ status: res.status, body: await res.json() });
+
+  it("拒否の理由を本文で返す", async () => {
+    expect(await body(await call(ENV))).toEqual({ status: 401, body: { error: "unauthorized" } });
+    expect(await body(await call({ DEMO_TOKEN: "demo-token" }, { token: "demo-token" }))).toEqual({
+      status: 503,
+      body: { error: "jev unavailable" },
+    });
+    expect(await body(await call(ENV, { token: "demo-token", body: { task: "" } }))).toEqual({
+      status: 400,
+      body: { error: "bad request" },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
+    expect(await body(await call(ENV, { token: "demo-token" }))).toEqual({ status: 502, body: { error: "jev failed" } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 500 })));
+    expect(await body(await call(ENV, { token: "demo-token" }))).toEqual({ status: 502, body: { error: "jev failed" } });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("maybe", 0.5)));
+    expect(await body(await call(ENV, { token: "demo-token" }))).toEqual({ status: 502, body: { error: "jev failed" } });
+  });
+
+  it("失敗の状態コードなら、本文が正しい答えの形でも採用しない（502）", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ answers: { decision: { choice: "release", probabilities: { release: 0.99 } } } }), { status: 500 })));
+    expect((await call(ENV, { token: "demo-token" })).status).toBe(502);
+  });
+
+  it("refund の判断も受け付ける", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("refund", 0.9)));
+    expect(await (await call(ENV, { token: "demo-token" })).json()).toMatchObject({ decision: "refund", source: "jev" });
+  });
+
+  it("確率はちょうど 0 と 1 も受け付ける（範囲は両端を含む）", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("hold", 0)));
+    expect((await call(ENV, { token: "demo-token" })).status).toBe(200);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("release", 1)));
+    expect((await call(ENV, { token: "demo-token" })).status).toBe(200);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jevAnswer("release", -0.01)));
+    expect((await call(ENV, { token: "demo-token" })).status).toBe(502);
+  });
+
+  it("Jev への問いは POST・JSON で、choice 型の 3 択（release / hold / refund）と判断基準を送る", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jevAnswer("release", 0.93));
+    vi.stubGlobal("fetch", fetchMock);
+    await call(ENV, { token: "demo-token" });
+    const [, init] = fetchMock.mock.calls[0];
+    expect(init.method).toBe("POST");
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    const sent = JSON.parse(init.body);
+    expect(sent.state).toEqual(VALID_INPUT);
+    expect(sent.questions.decision.type).toBe("choice");
+    expect(Object.keys(sent.questions.decision.criteria)).toEqual(["release", "hold", "refund"]);
+    for (const v of Object.values(sent.questions.decision.criteria)) expect(String(v).length).toBeGreaterThan(5);
+    expect(sent.questions.decision.instructions.length).toBeGreaterThan(10);
+  });
 });
