@@ -49,6 +49,7 @@ import { TONE_RGB, toneOf } from "./lib/tone";
 import { energyOf, tickerItems } from "./lib/overdrive";
 import { slotBars } from "./lib/gauges";
 import { OverdriveBack, OverdriveFront, SolanaLogo, Ticker } from "./components/Overdrive";
+import { EscrowSteps } from "./components/EscrowSteps";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -691,6 +692,7 @@ export default function App() {
         </div>
         <div className="top-right">
           <ClusterPill status={alpenglow} currentSlot={currentSlot} fallbackRpc={usingFallbackRpc} />
+          <SolanaLogo label={t("foot.solana")} />
           {alpenglow?.kind === "alpenglow" && <SlotPulse slotTimes={slotTimes} />}
           <button
             className="icon-btn"
@@ -781,6 +783,7 @@ export default function App() {
           replayMs={attract ? attractMs(history) : null}
           finalizedMs={outcome?.kind === "sent" ? outcome.measurement.finalizedMs : null}
         />
+        <EscrowSteps phase={stage.phase} />
         {!ready ? (
           <div className="setup">
             <p className="setup-title">{t("setup.title")}</p>
@@ -889,7 +892,6 @@ export default function App() {
 
       <Ticker items={ticker} reverse />
       <footer className="foot">
-        <SolanaLogo label={t("foot.solana")} />
         <p>{t("app.footer")}</p>
         <p className="foot-note">{t("foot.notAffiliated")}</p>
       </footer>

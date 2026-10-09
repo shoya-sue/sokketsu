@@ -483,3 +483,316 @@
     justify-content: center;
   }
 }
+
+/* ==== #56 巨大ロゴはダイヤルのように「カチッ」と段階的に回る ====
+   コマの合間は止まっているので、録画の負荷は回り続けるより小さい。 */
+@keyframes od-dial-8 {
+  0.00%,
+  10.25% {
+    transform: rotate(0deg);
+  }
+  12.50%,
+  22.75% {
+    transform: rotate(45deg);
+  }
+  25.00%,
+  35.25% {
+    transform: rotate(90deg);
+  }
+  37.50%,
+  47.75% {
+    transform: rotate(135deg);
+  }
+  50.00%,
+  60.25% {
+    transform: rotate(180deg);
+  }
+  62.50%,
+  72.75% {
+    transform: rotate(225deg);
+  }
+  75.00%,
+  85.25% {
+    transform: rotate(270deg);
+  }
+  87.50%,
+  97.75% {
+    transform: rotate(315deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes od-dial-12 {
+  0.00%,
+  6.83% {
+    transform: rotate(0deg);
+  }
+  8.33%,
+  15.17% {
+    transform: rotate(30deg);
+  }
+  16.67%,
+  23.50% {
+    transform: rotate(60deg);
+  }
+  25.00%,
+  31.83% {
+    transform: rotate(90deg);
+  }
+  33.33%,
+  40.17% {
+    transform: rotate(120deg);
+  }
+  41.67%,
+  48.50% {
+    transform: rotate(150deg);
+  }
+  50.00%,
+  56.83% {
+    transform: rotate(180deg);
+  }
+  58.33%,
+  65.17% {
+    transform: rotate(210deg);
+  }
+  66.67%,
+  73.50% {
+    transform: rotate(240deg);
+  }
+  75.00%,
+  81.83% {
+    transform: rotate(270deg);
+  }
+  83.33%,
+  90.17% {
+    transform: rotate(300deg);
+  }
+  91.67%,
+  98.50% {
+    transform: rotate(330deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.od-mark-1 {
+  animation: od-dial-8 9.6s cubic-bezier(0.2, 1.4, 0.4, 1) infinite;
+}
+
+.od-mark-2 {
+  transform: none;
+  animation: od-dial-12 14.4s cubic-bezier(0.2, 1.4, 0.4, 1) infinite reverse;
+}
+
+.od-mark-3 {
+  transform: none;
+  animation: od-dial-8 7.2s cubic-bezier(0.2, 1.4, 0.4, 1) infinite;
+}
+
+.od-seal {
+  animation: od-dial-12 24s cubic-bezier(0.2, 1.4, 0.4, 1) infinite reverse;
+}
+
+.od-orbit-1 {
+  animation: od-dial-12 12s cubic-bezier(0.2, 1.4, 0.4, 1) infinite;
+}
+
+.od-orbit-2 {
+  animation: od-dial-8 6.4s cubic-bezier(0.2, 1.4, 0.4, 1) infinite reverse;
+}
+
+/* ==== ワードマークは大文字で見せる（文字列は Sokketsu のまま。読み上げで 1 文字ずつ読まれないように） ==== */
+.logo-word {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ==== エスクローの 4 工程の帯 ==== */
+.flow {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  margin: 4px auto 10px;
+  width: min(780px, 100%);
+}
+
+.flow-steps {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow-step {
+  --c: rgba(255, 255, 255, 0.16);
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px 0 20px;
+  background: var(--c);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%);
+  font-family: var(--label);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition:
+    flex-grow 0.5s var(--ease),
+    background 0.3s;
+}
+
+.flow-step:first-child {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+}
+
+.flow-no {
+  font-family: var(--num);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.flow-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.flow-step.is-done {
+  --c: linear-gradient(90deg, color-mix(in srgb, var(--sol-green) 55%, #07060d), color-mix(in srgb, var(--sol-green) 30%, #07060d));
+  color: white;
+}
+
+.flow-step.is-done .flow-no {
+  color: var(--sol-green);
+}
+
+.flow-step.is-live {
+  --c: linear-gradient(90deg, var(--tone-a), var(--tone-b));
+  flex-grow: 1.7;
+  color: #07060d;
+  animation: flow-live 0.9s ease-in-out infinite alternate;
+}
+
+.flow-step.is-live .flow-no {
+  color: #07060d;
+}
+
+.flow-step.is-stop {
+  --c: linear-gradient(90deg, #ffb547, #ff5d6c);
+  flex-grow: 1.7;
+  color: #07060d;
+}
+
+.flow-step.is-stop .flow-no {
+  color: #07060d;
+}
+
+/* 開いた工程の上を光が走る */
+.flow-step.is-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%) 0 0 / 300% 100%;
+  animation: hb-sheen 1.4s linear infinite;
+}
+
+@keyframes flow-live {
+  to {
+    filter: brightness(1.25);
+  }
+}
+
+.flow-caption {
+  margin: 0;
+  min-height: 1.5em;
+  font-family: var(--display);
+  font-size: 1rem;
+  text-align: center;
+  color: white;
+  text-shadow:
+    0 0 12px var(--tone-b),
+    0 1px 6px rgba(0, 0, 0, 0.9);
+  animation: flow-caption 0.6s var(--ease);
+}
+
+@keyframes flow-caption {
+  from {
+    opacity: 0;
+    letter-spacing: 0.3em;
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ==== Solana の公式ロゴ：ヘッダーの中の専用の枠。枠の内側は無地の余白で、ロゴには何も重ねない ==== */
+.top {
+  z-index: 46;
+}
+
+.top .solana-logo-zone {
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 16px 20px;
+  border-radius: 0;
+  background: #07060d;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--sol-green) 60%, transparent),
+    0 0 22px -6px var(--sol-green);
+}
+
+.top .solana-logo {
+  height: 18px;
+}
+
+@media (max-width: 760px) {
+  .flow-step {
+    height: 34px;
+    padding: 0 12px 0 16px;
+    font-size: 0.68rem;
+  }
+  .flow-step:not(.is-live):not(.is-stop) .flow-title {
+    display: none;
+  }
+  .flow-caption {
+    font-size: 0.85rem;
+  }
+  .top .solana-logo-zone {
+    padding: 12px 14px;
+  }
+  .top .solana-logo {
+    height: 14px;
+  }
+}
+
+/* 工程の名前は切らない：区画は中身の幅、開いている（止まった）区画だけが残りを取る。待機中は 4 つ均等 */
+.flow-step {
+  flex: 0 0 auto;
+}
+
+.flow-step.is-live,
+.flow-step.is-stop {
+  flex: 1 1 auto;
+}
+
+.flow-idle .flow-step {
+  flex: 1 1 0;
+}
+
+.flow-title {
+  overflow: visible;
+  text-overflow: clip;
+}

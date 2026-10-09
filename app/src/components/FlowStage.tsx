@@ -98,7 +98,7 @@ export function FlowStage({
 
   return (
     <div className={`stage phase-${phase} ${replayMs !== null ? "is-replay" : ""}`}>
-      <StageDeck phase={phase} />
+      <StageDeck />
       {replayMs !== null && (
         <span className="replay-tag" aria-hidden="true">
           REPLAY
