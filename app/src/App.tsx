@@ -46,6 +46,10 @@ import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
 import { TONE_RGB, toneOf } from "./lib/tone";
+import { energyOf, tickerItems } from "./lib/overdrive";
+import { slotBars } from "./lib/gauges";
+import { OverdriveBack, OverdriveFront, SolanaLogo, Ticker } from "./components/Overdrive";
+import { EscrowSteps } from "./components/EscrowSteps";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -201,7 +205,7 @@ export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [levelUp, setLevelUp] = useState<number | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
-  const stageCardRef = useRef<HTMLElement>(null);
+  const stageCardRef = useRef<HTMLDivElement>(null);
   useShake(stageCardRef, shakeKey);
   const [muted, setMutedState] = useState(isMuted);
   const [hit, setHit] = useState<Hit | null>(null);
@@ -339,7 +343,10 @@ export default function App() {
   const toneStyle = {
     ["--tone-a" as string]: `rgb(${TONE_RGB[tone][0]})`,
     ["--tone-b" as string]: `rgb(${TONE_RGB[tone][1]})`,
+    ["--od-energy" as string]: String(energyOf(stage.phase)),
   };
+  // 何重にも重ねる演出（#56）のティッカー。実測の slot と確定ミリ秒を流す。
+  const ticker = tickerItems({ phase: stage.phase, slot: currentSlot, lastMs: history.map((s) => s.ms) });
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
   const ready = session !== null && payee !== null;
@@ -673,16 +680,19 @@ export default function App() {
   };
 
   return (
-    <div className="shell" data-phase={phase} data-tone={tone} style={toneStyle}>
+    <div className="shell" data-phase={phase} data-stage={stage.phase} data-tone={tone} style={toneStyle}>
       <div className="bg-glow" aria-hidden="true" />
       <div className="tone-wash" key={`wash-${tone}`} aria-hidden="true" />
       <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} tone={TONE_RGB[tone]} />
+      <OverdriveBack slot={currentSlot} tone={TONE_RGB[tone]} hitKey={hit?.id ?? null} phase={stage.phase} />
+      <Ticker items={ticker} />
       <header className="top">
         <div className="brand">
           <Logo hitKey={hit?.id ?? null} />
         </div>
         <div className="top-right">
           <ClusterPill status={alpenglow} currentSlot={currentSlot} fallbackRpc={usingFallbackRpc} />
+          <SolanaLogo label={t("foot.solana")} />
           {alpenglow?.kind === "alpenglow" && <SlotPulse slotTimes={slotTimes} />}
           <button
             className="icon-btn"
@@ -742,9 +752,18 @@ export default function App() {
         </section>
       )}
 
-      <Hud game={game} gain={gain} />
+      {/* 箱で区切らない（#56）。中央の舞台と、左右に浮かぶ計器だけで 1 枚の画面にする */}
+      <div className="cockpit">
+      <aside className="dock dock-left">
+        <Hud game={game} gain={gain} />
+        <div className="gauge gauge-result">
+          <span className="gauge-tag">{t("card.result")}</span>
+          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsLeft} grade={grade} />
+          <History history={history} />
+        </div>
+      </aside>
 
-      <section className="card stage-card" ref={stageCardRef}>
+      <div className="arena" ref={stageCardRef}>
         {levelUp !== null && (
           <div className="levelup" aria-live="assertive">
             <span>{t("game.levelUp")}</span>
@@ -764,14 +783,7 @@ export default function App() {
           replayMs={attract ? attractMs(history) : null}
           finalizedMs={outcome?.kind === "sent" ? outcome.measurement.finalizedMs : null}
         />
-        <JudgePanel
-          task={currentTask}
-          judging={phase === "judging"}
-          judgement={judgement}
-          thresholdBps={RELEASE_THRESHOLD_BPS}
-          runKey={runKey}
-        />
-
+        <EscrowSteps phase={stage.phase} />
         {!ready ? (
           <div className="setup">
             <p className="setup-title">{t("setup.title")}</p>
@@ -856,21 +868,34 @@ export default function App() {
             </div>
           </div>
         )}
-      </section>
+      </div>
 
-      <main className="bottom">
-        <section className="card card-result">
-          <h2>{t("card.result")}</h2>
-          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsLeft} grade={grade} />
-          <History history={history} />
-        </section>
-        <section className="card">
-          <h2>{t("card.timeline")}</h2>
+      <aside className="dock dock-right">
+        {currentTask && (
+          <div className="gauge gauge-judge">
+            <span className="gauge-tag">{t("judge.title")}</span>
+            <JudgePanel
+              task={currentTask}
+              judging={phase === "judging"}
+              judgement={judgement}
+              thresholdBps={RELEASE_THRESHOLD_BPS}
+              runKey={runKey}
+            />
+          </div>
+        )}
+        <div className="gauge gauge-timeline">
+          <span className="gauge-tag">{t("card.timeline")}</span>
           <Timeline entries={timeline} />
-        </section>
-      </main>
+        </div>
+      </aside>
+      </div>
 
-      <footer className="foot">{t("app.footer")}</footer>
+      <Ticker items={ticker} reverse />
+      <footer className="foot">
+        <p>{t("app.footer")}</p>
+        <p className="foot-note">{t("foot.notAffiliated")}</p>
+      </footer>
+      <OverdriveFront slot={currentSlot} energy={energyOf(stage.phase)} phase={stage.phase} />
       <Toasts toasts={toasts} />
       <Onboarding
         open={onboarding}
@@ -911,9 +936,20 @@ function ClusterPill({
         : t("pill.unknown", { reason: tm(status.reason) });
   return (
     <div className={`pill pill-${tone}`} role="status">
-      <span className="pill-dot" />
-      <div>
-        <strong>{label}</strong>
+      {/* 計器として重ねる（#56）：走る光・回る 2 重の環・slot ごとに跳ねる棒 */}
+      <span className="pill-sweep" aria-hidden="true" />
+      <span className="pill-reactor" aria-hidden="true">
+        <i className="pill-orbit" />
+        <i className="pill-orbit pill-orbit-2" />
+        <span className="pill-dot" key={currentSlot ?? "none"} />
+      </span>
+      <div className="pill-body">
+        <span className="pill-kicker" aria-hidden="true">
+          CLUSTER // DEVNET
+        </span>
+        <strong className="pill-title" data-text={label}>
+          {label}
+        </strong>
         <span className="pill-sub">
           {status?.kind === "alpenglow" && (
             <span className="pill-genesis">{`${t("pill.genesis", { slot: status.genesisSlot.toLocaleString() })} · `}</span>
@@ -925,6 +961,11 @@ function ClusterPill({
         </span>
         {fallbackRpc && <span className="pill-fallback">{t("pill.fallback")}</span>}
       </div>
+      <span className="pill-bars" aria-hidden="true">
+        {slotBars(currentSlot, 8).map((h, i) => (
+          <i key={i} style={{ ["--h" as string]: h, ["--i" as string]: i }} />
+        ))}
+      </span>
     </div>
   );
 }

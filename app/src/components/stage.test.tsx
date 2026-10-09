@@ -48,6 +48,18 @@ describe("FlowStage", () => {
     expect(container.querySelector(".vault-amount")?.textContent).toBe("0.0500");
   });
 
+  it("判断のリール：待機中は出さず、判断中は回り、判断が出たらその選択肢で止まる", () => {
+    expect(render(stage()).container.querySelector(".vault-reel")).toBeNull();
+    const judging = render(stage({ phase: "judging" })).container.querySelector(".vault-reel");
+    expect(judging?.className).toContain("is-spinning");
+    expect(judging?.getAttribute("aria-hidden")).toBe("true");
+    const landed = render(stage({ phase: "releasing", judgement: release })).container.querySelector(".vault-reel");
+    expect(landed?.className).toContain("is-landed");
+    expect(landed?.getAttribute("data-decision")).toBe("release");
+    const stopped = render(stage({ phase: "stopped", judgement: hold })).container.querySelector(".vault-reel");
+    expect(stopped?.getAttribute("data-decision")).toBe("hold");
+  });
+
   it("判断中はスキャンと案内を出す", () => {
     const { container } = render(stage({ phase: "judging" }));
     expect(container.querySelector(".gate-scan")).not.toBeNull();
