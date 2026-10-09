@@ -46,6 +46,8 @@ import { FinalityHit, type Hit } from "./components/FinalityHit";
 import { useAttract } from "./hooks/useAttract";
 import { ATTRACT_PROBABILITY, attractMs } from "./lib/attract";
 import { TONE_RGB, toneOf } from "./lib/tone";
+import { energyOf, tickerItems } from "./lib/overdrive";
+import { OverdriveBack, OverdriveFront, SolanaLogo, Ticker } from "./components/Overdrive";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -339,7 +341,10 @@ export default function App() {
   const toneStyle = {
     ["--tone-a" as string]: `rgb(${TONE_RGB[tone][0]})`,
     ["--tone-b" as string]: `rgb(${TONE_RGB[tone][1]})`,
+    ["--od-energy" as string]: String(energyOf(stage.phase)),
   };
+  // 何重にも重ねる演出（#56）のティッカー。実測の slot と確定ミリ秒を流す。
+  const ticker = tickerItems({ phase: stage.phase, slot: currentSlot, lastMs: history.map((s) => s.ms) });
 
   const sendingAllowed = alpenglow !== null && alpenglow.kind !== "legacy";
   const ready = session !== null && payee !== null;
@@ -673,10 +678,12 @@ export default function App() {
   };
 
   return (
-    <div className="shell" data-phase={phase} data-tone={tone} style={toneStyle}>
+    <div className="shell" data-phase={phase} data-stage={stage.phase} data-tone={tone} style={toneStyle}>
       <div className="bg-glow" aria-hidden="true" />
       <div className="tone-wash" key={`wash-${tone}`} aria-hidden="true" />
       <Ambient slotTimes={slotTimes} burstId={hit?.id ?? null} tone={TONE_RGB[tone]} />
+      <OverdriveBack slot={currentSlot} tone={TONE_RGB[tone]} hitKey={hit?.id ?? null} />
+      <Ticker items={ticker} />
       <header className="top">
         <div className="brand">
           <Logo hitKey={hit?.id ?? null} />
@@ -870,7 +877,13 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="foot">{t("app.footer")}</footer>
+      <Ticker items={ticker} reverse />
+      <footer className="foot">
+        <SolanaLogo label={t("foot.solana")} />
+        <p>{t("app.footer")}</p>
+        <p className="foot-note">{t("foot.notAffiliated")}</p>
+      </footer>
+      <OverdriveFront slot={currentSlot} energy={energyOf(stage.phase)} phase={stage.phase} />
       <Toasts toasts={toasts} />
       <Onboarding
         open={onboarding}

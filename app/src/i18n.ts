@@ -16,6 +16,8 @@ export class KeyedError extends Error {
 
 const ja = {
   "app.footer": "devnet のみ。mainnet には接続しない。判断はオラクルが署名し、オンチェーンで検証する。",
+  "foot.solana": "Solana",
+  "foot.notAffiliated": "Solana の名称とロゴは Solana Foundation の商標。本プロジェクトは Solana Foundation と提携・後援の関係にない。",
   "lang.switch": "EN",
   "lang.switchLabel": "英語表示に切り替え",
   "settings.label": "設定",
@@ -205,6 +207,8 @@ export type MsgKey = keyof typeof ja;
 
 const en: Record<MsgKey, string> = {
   "app.footer": "devnet only. Never connects to mainnet. Decisions are signed by the oracle and verified on-chain.",
+  "foot.solana": "Solana",
+  "foot.notAffiliated": "The Solana name and logo are trademarks of the Solana Foundation. This project is not affiliated with or endorsed by the Solana Foundation.",
   "lang.switch": "日本語",
   "lang.switchLabel": "Switch to Japanese",
   "settings.label": "Settings",
@@ -415,5 +419,5 @@ export function describeError(lang: Lang, e: unknown): string {
 }
 
 export function parseLang(raw: string | null): Lang {
-  return raw === "en" ? "en" : "ja";
+  return raw === "ja" ? "ja" : "en";
 }

@@ -4,6 +4,8 @@ import { useLang } from "../lang";
 import { RING_COUNT, ringsBroken, thresholdRing } from "../lib/rings";
 
 import type { Phase } from "../lib/phase";
+import { StageDeck } from "./StageDeck";
+import { VaultHalo } from "./VaultHalo";
 
 export type { Phase };
 
@@ -96,6 +98,7 @@ export function FlowStage({
 
   return (
     <div className={`stage phase-${phase} ${replayMs !== null ? "is-replay" : ""}`}>
+      <StageDeck phase={phase} />
       {replayMs !== null && (
         <span className="replay-tag" aria-hidden="true">
           REPLAY
@@ -125,6 +128,13 @@ export function FlowStage({
       />
 
       <div className={`vault ${passes ? "pass" : judgement ? "stop" : ""}`}>
+        <VaultHalo
+          phase={phase}
+          probability={showRing ? probability : null}
+          thresholdPct={Math.round(threshold * 100)}
+          unfoldKey={`${phase}-${runKey}`}
+          decision={showRing ? (judgement?.decision ?? null) : null}
+        />
         <svg viewBox="0 0 140 140" className={`gate ${scanning ? "scanning" : ""}`} aria-hidden="true">
           <defs>
             <linearGradient id="gate-grad" x1="0" y1="0" x2="1" y2="1">
