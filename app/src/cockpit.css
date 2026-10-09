@@ -161,6 +161,7 @@
 
 .arena .stage {
   min-height: 420px;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr) minmax(0, 0.75fr);
 }
 
 .arena .vault {
@@ -295,4 +296,25 @@
   .arena {
     overflow-x: clip;
   }
+}
+
+/* ハローは金庫の本体（リングと中央の数字）の裏、背景より手前に置く（負の z-index だと背景の層に隠れた） */
+.arena .vault .halo {
+  z-index: 0;
+}
+
+.arena .vault > .gate,
+.arena .vault > .vault-core {
+  position: relative;
+  z-index: 1;
+}
+
+.arena .vault > .gate {
+  position: absolute;
+}
+
+/* ヘッダーはハローより手前 */
+.top {
+  position: relative;
+  z-index: 4;
 }
