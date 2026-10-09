@@ -3,6 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "capture": "node capture/capture.mjs",
+    "render": "node render.mjs",
+    "test": "node --test scenes/*.test.mjs",
     "render:playwright": "node prototypes/playwright/render.mjs",
     "render:hyperframes": "npx --yes hyperframes@0.8.139 render prototypes/hyperframes -o prototypes/hyperframes/hook-hyperframes.mp4 --quiet"
   },
