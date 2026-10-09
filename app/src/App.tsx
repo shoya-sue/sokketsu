@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
@@ -37,6 +37,7 @@ import { History } from "./components/History";
 import { JudgePanel } from "./components/JudgePanel";
 import { ProgressTrack } from "./components/ProgressTrack";
 import { SlotPulse } from "./components/SlotPulse";
+import { BadgeOverlay, type Badge } from "./components/BadgeOverlay";
 import { stepStates } from "./lib/steps";
 import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
@@ -145,6 +146,7 @@ export default function App() {
   const [beforeError, setBeforeError] = useState<Phase | undefined>(undefined);
   const [currentTask, setCurrentTask] = useState<string | null>(null);
   const [slotTimes, setSlotTimes] = useState<number[]>([]);
+  const [badge, setBadge] = useState<Badge | null>(null);
   const [judgement, setJudgement] = useState<JudgeOutput | null>(null);
   const [fallbackReason, setFallbackReason] = useState<Msg | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -170,6 +172,8 @@ export default function App() {
   const [shakeKey, setShakeKey] = useState(0);
   const [muted, setMutedState] = useState(isMuted);
 
+  const clearBadge = useCallback(() => setBadge(null), []);
+
   const toast = (t0: Omit<Toast, "id">) => {
     const id = ++toastSeq;
     setToasts((list) => [...list, { ...t0, id }]);
@@ -183,9 +187,12 @@ export default function App() {
     setGame(result.next);
     saveGame(result.next);
     if (result.gained > 0) setGain({ amount: result.gained, key: Date.now() });
-    for (const id of result.unlocked) {
-      toast({ icon: ACH_ICON[id] ?? "🏅", title: t(`ach.${id}.title`), body: t(`ach.${id}.body`), tone: "gold" });
-    }
+    // 実績はバッジで出す（同時に複数解除したら最初の 1 つを大きく、残りはトーストで）。
+    result.unlocked.forEach((id, i) => {
+      const view = { icon: ACH_ICON[id] ?? "🏅", title: t(`ach.${id}.title`), body: t(`ach.${id}.body`) };
+      if (i === 0) setBadge({ id: Date.now(), kicker: t("badge.achievement"), ...view });
+      else toast({ ...view, tone: "gold" });
+    });
     if (result.unlocked.length > 0) setTimeout(() => playSfx("achievement"), 350);
     if (result.levelUp) {
       const level = levelFromXp(result.next.xp);
@@ -484,6 +491,15 @@ export default function App() {
         playSfx("finalize");
         const g = scoreRun({ kind: "release", ms: m.finalizedMs });
         setGrade(g);
+        if (g === "S") {
+          setBadge({
+            id: Date.now(),
+            icon: "⚡",
+            kicker: t("game.grade"),
+            title: t("badge.rank"),
+            body: t("badge.rankBody", { ms: Math.round(m.finalizedMs) }),
+          });
+        }
         if (g) burstAt(".node-payee", g);
         push({
           label: msg("tl.sent", { label: "@label.release" }),
@@ -770,6 +786,7 @@ export default function App() {
 
       <footer className="foot">{t("app.footer")}</footer>
       <Toasts toasts={toasts} />
+      <BadgeOverlay badge={badge} onDone={clearBadge} />
     </div>
   );
 }

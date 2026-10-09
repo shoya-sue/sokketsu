@@ -1,6 +1,7 @@
 import type { PublicKey } from "@solana/web3.js";
 import type { JudgeOutput } from "../judge";
 import { useLang } from "../lang";
+import { RING_COUNT, ringsBroken, thresholdRing } from "../lib/rings";
 
 import type { Phase } from "../lib/phase";
 
@@ -22,6 +23,24 @@ type Props = {
 const EXPLORER = "https://explorer.solana.com";
 const RADIUS = 58;
 const CIRC = 2 * Math.PI * RADIUS;
+const SHARD_R = 66;
+const SHARD_SPAN = 360 / RING_COUNT;
+const SHARD_GAP = 4;
+
+/** 外周の欠片 i（0 が真上から時計回り）の円弧。 */
+function shardPath(i: number): string {
+  const rad = (deg: number) => ((deg - 90) * Math.PI) / 180;
+  const a0 = rad(i * SHARD_SPAN + SHARD_GAP / 2);
+  const a1 = rad((i + 1) * SHARD_SPAN - SHARD_GAP / 2);
+  const p = (a: number) => `${(70 + SHARD_R * Math.cos(a)).toFixed(2)},${(70 + SHARD_R * Math.sin(a)).toFixed(2)}`;
+  return `M${p(a0)} A${SHARD_R},${SHARD_R} 0 0 1 ${p(a1)}`;
+}
+
+/** 欠片 i が外れるときに飛ぶ向き（欠片の中央の角度の外向き）。 */
+function shardOut(i: number): { dx: number; dy: number } {
+  const a = (((i + 0.5) * SHARD_SPAN - 90) * Math.PI) / 180;
+  return { dx: Math.cos(a) * 10, dy: Math.sin(a) * 10 };
+}
 
 // コインの位置（舞台幅に対する %）。3 ノードを等間隔に置く。
 const AT_PAYER = 16.67;
@@ -62,6 +81,10 @@ export function FlowStage({
   const leftActive = phase === "depositing" || phase === "refunding";
   const rightActive = phase === "releasing";
   const tickAngle = threshold * 2 * Math.PI - Math.PI / 2;
+  // 判断が出たら、確率の分だけ外周の欠片が外れる。閾値の欠片まで外れれば執行される。
+  // hold は執行しない判断なので、確率が高くても欠片は外さない（外れると「執行された」ように見える）。
+  const broken = showRing && judgement?.decision !== "hold" ? ringsBroken(probability) : 0;
+  const thresholdShard = thresholdRing(threshold) - 1;
 
   return (
     <div className={`stage phase-${phase}`}>
@@ -96,6 +119,23 @@ export function FlowStage({
               <stop offset="100%" stopColor="var(--sol-green)" />
             </linearGradient>
           </defs>
+          <g className="shards" key={`shards-${runKey}`}>
+            {Array.from({ length: RING_COUNT }, (_, i) => {
+              const out = shardOut(i);
+              return (
+                <path
+                  key={i}
+                  d={shardPath(i)}
+                  className={`shard ${i < broken ? "broken" : ""} ${i === thresholdShard ? "threshold" : ""}`}
+                  style={{
+                    ["--i" as string]: i,
+                    ["--dx" as string]: `${out.dx}px`,
+                    ["--dy" as string]: `${out.dy}px`,
+                  }}
+                />
+              );
+            })}
+          </g>
           <circle className="gate-track" cx="70" cy="70" r={RADIUS} />
           {scanning && <circle className="gate-scan" cx="70" cy="70" r={RADIUS} strokeDasharray={`${CIRC * 0.22} ${CIRC}`} />}
           {showRing && (
