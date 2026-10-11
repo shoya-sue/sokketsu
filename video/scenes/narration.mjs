@@ -54,6 +54,6 @@ export function narrationFor(run) {
       "Native Ed25519 verification lets the program trust a signed judgment cheaply. And fees stay at a fraction of a cent.",
     close:
       "Sokketsu is live on devnet today. Connect a wallet, approve once, and watch an agent payment stop, or settle, " +
-      "in under a second. Try it at sokketsu dot pages dot dev.",
+      "in under a second. Try it at sokketsu dot pages dot dev. Thank you.",
   };
 }

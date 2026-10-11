@@ -1,90 +1,94 @@
 {
   "url": "https://sokketsu.pages.dev",
-  "capturedAt": "2026-10-09T09:46:24.979Z",
+  "capturedAt": "2026-10-11T09:58:04.279Z",
   "entry": "trial",
   "judge": "jev (demo token)",
   "lang": "en",
-  "audioOffsetS": 8.22189990234375,
+  "audioOffsetS": 4.102199951171875,
   "marks": [
     {
       "label": "onboard",
-      "at": 1.051
+      "at": 0.738
     },
     {
       "label": "start",
-      "at": 10.363
+      "at": 6.526
     },
     {
       "label": "ready",
-      "at": 16.407
+      "at": 10.703
     },
     {
       "label": "depositing",
-      "at": 18.666
+      "at": 12.751
     },
     {
       "label": "judging",
-      "at": 22.015
+      "at": 13.814
     },
     {
       "label": "holding",
-      "at": 23.074
+      "at": 14.736
     },
     {
       "label": "stopped",
-      "at": 26.915
+      "at": 15.666
     },
     {
       "label": "countdown",
-      "at": 27.172
+      "at": 15.81
     },
     {
       "label": "depositing",
-      "at": 33.165
+      "at": 21.784
     },
     {
       "label": "judging",
-      "at": 34.304
+      "at": 22.886
+    },
+    {
+      "label": "releasing",
+      "at": 23.911
     },
     {
       "label": "released",
-      "at": 36.655
+      "at": 24.854
     },
     {
       "label": "end",
-      "at": 43.254
+      "at": 29.813
     }
   ],
   "finality": {
-    "hitMs": "839ms",
-    "vaultMs": "839ms",
-    "decision": "release 96%",
+    "hitMs": "858ms",
+    "vaultMs": "858ms",
+    "decision": "release 97%",
     "source": "source: jev · ✓ signed",
-    "slot": "509,138,098",
+    "slot": "509,864,530",
     "grade": "A",
-    "near": "240 ms short of S rank"
+    "near": "259 ms short of S rank"
   },
   "result": {
-    "finalizedMs": 839,
+    "finalizedMs": 858,
     "speedup": "15",
     "breakdown": [
       "0 mssent",
-      "406 msprocessed",
-      "839 msfinalized"
+      "451 msprocessed",
+      "858 msfinalized"
     ]
   },
   "timeline": [
     {
       "label": "Request (hold)",
-      "detail": "hold: wait #whgb",
+      "detail": "hold: wait #t5rk",
       "ms": null,
       "tx": null
     },
     {
       "label": "Deposit 0.05 SOL → vault PDA",
       "detail": null,
-      "ms": "2866 ms",
-      "tx": "https://explorer.solana.com/tx/3ty7ss33EpBfex7ZZniiirmAVJ8XWJLtDiDMK9ZHaTFRR3CymxJsttpaVxffpGyxDQeSpWPUQ2orh2NC95pZBW16?cluster=devnet"
+      "ms": "781 ms",
+      "tx": "https://explorer.solana.com/tx/4nBvpPBxXYrsnafTLc6VWHF4R7G7c4nD3TaLSfJU1v7rUkw5Z99tnzdGf8KkQAnm9BEw5TbaTqgUNuPxFuU53YrW?cluster=devnet"
     },
     {
       "label": "Decision: hold",
@@ -96,31 +100,31 @@
       "label": "Stopped — no transfer",
       "detail": "recorded settle(hold)",
       "ms": null,
-      "tx": "https://explorer.solana.com/tx/5uqDnkPjpSbZhbg3yUvra6x5Ys7FnaviE6Bt9UqNveaEhtX5phvtQmBwfs7pS2zCjXDpkFitywtBmk6L6tE58ngX?cluster=devnet"
+      "tx": "https://explorer.solana.com/tx/49YeBRTGSc41d8NCAaoeS5mbVTP7ZuyH2t7wDMfZUKN1qEffTSgGb9HPKGiwG3YgZbFdK71RAcePPf5pJ9tTZe4b?cluster=devnet"
     },
     {
       "label": "Request (release)",
-      "detail": "release: delivered the devnet ping report; payer verified and approved #gydq",
+      "detail": "release: delivered the devnet ping report; payer verified and approved #t93k",
       "ms": null,
       "tx": null
     },
     {
       "label": "Deposit 0.05 SOL → vault PDA",
       "detail": null,
-      "ms": "906 ms",
-      "tx": "https://explorer.solana.com/tx/4dYsBgP7wXRZZwt9L9GQcviV3beniSUr33n4t8UTYgGuprEKJrXwzqEPaE1rsaJtZMVCWCigc2c3L5Y4QiaEqKSd?cluster=devnet"
+      "ms": "717 ms",
+      "tx": "https://explorer.solana.com/tx/36NjAyiCsVRkCYc6VDyQdYxNes1m4Mmv35rtH56Kqdu8teZaAn23kp8ToBUev9pxUY2aQtH84dw94R87nyY7mMvW?cluster=devnet"
     },
     {
       "label": "Decision: release",
-      "detail": "96.0% · source: jev · oracle-signed",
+      "detail": "97.0% · source: jev · oracle-signed",
       "ms": null,
       "tx": null
     },
     {
       "label": "Released to payee finalized",
       "detail": null,
-      "ms": "839 ms",
-      "tx": "https://explorer.solana.com/tx/gcVHL2HyqdPMBERQJc6F5rAaPN7Zk5XbsjxHZkQkZ4noh5nzVfFSgbZrZP28JJj2xikmTrTAUCY5Jk4LMibKbrS?cluster=devnet"
+      "ms": "858 ms",
+      "tx": "https://explorer.solana.com/tx/4ondkUqtcL9g6NZbtRPBYLZM1uwTSKXvScRPeGDuFbYUqcGn6zSv2d9Nf7JxeQydmujmjaRnkLbdXBG3TWbF4v8a?cluster=devnet"
     }
   ]
 }

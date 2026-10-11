@@ -44,3 +44,7 @@ test("確率が読めなければ、数を言わない文にする（作った�
   assert.match(text, /Jev returns release\./);
   assert.doesNotMatch(text, /percent/);
 });
+
+test("締めは Thank you で終える", () => {
+  assert.match(narrationFor(RUN).close, /Thank you\.$/);
+});

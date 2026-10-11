@@ -16,8 +16,9 @@ const { values: opt } = parseArgs({
     keypair: { type: "string" },
     // デモトークン（1 行のファイル）。⚙ から入れると Jev が判断する（入れないとサーバー側のモックの判断）
     "token-file": { type: "string" },
-    // 動画で文字が読めるよう、ページを拡大して撮る（1920×1080 の画面に 1280×720 相当のレイアウト）
-    zoom: { type: "string", default: "1.5" },
+    // 動画で文字が読めるよう、1920÷scale × 1080÷scale の画面を scale 倍の解像度で描く（既定 1280×720 を 1.5 倍）。
+    // CSS の zoom は #56 の 1 画面の HUD を縦にはみ出させた（ページ 1620px・開始ボタンが画面外。2026-10-11）
+    scale: { type: "string", default: "1.5" },
     // 画面の言語（en / ja）。提出用の動画は英語で撮る
     lang: { type: "string", default: "en" },
   },
@@ -41,9 +42,10 @@ const browser = await chromium.launch({
     "--disable-backgrounding-occluded-windows",
   ],
 });
+const scale = Number(opt.scale);
 const context = await browser.newContext({
-  viewport: { width: WIDTH, height: HEIGHT },
-  deviceScaleFactor: 1,
+  viewport: { width: Math.round(WIDTH / scale), height: Math.round(HEIGHT / scale) },
+  deviceScaleFactor: scale,
   locale: opt.lang === "en" ? "en-US" : "ja-JP",
 });
 const page = await context.newPage();
@@ -53,11 +55,6 @@ const elapsed = () => (Date.now() - t0) / 1000;
 await page.addInitScript({ path: path.join(here, "audio-hook.js") });
 // アプリの言語は localStorage（sokketsu.lang）から読まれるので、読み込みの前に入れておく
 await page.addInitScript((lang) => localStorage.setItem("sokketsu.lang", lang), opt.lang);
-await page.addInitScript((zoom) => {
-  document.addEventListener("DOMContentLoaded", () => {
-    document.documentElement.style.zoom = zoom;
-  });
-}, opt.zoom);
 
 const marks = [];
 let audioStartedAt = null;
@@ -70,6 +67,11 @@ if (await onboard.isVisible().catch(() => false)) {
   marks.push({ label: "onboard", at: elapsed() });
   await page.waitForTimeout(2800);
   await onboard.click({ force: true }); // ボタンは脈打ち続けるので、止まるのを待たずに押す
+  // 開く途中で押すと閉じないことがある（2026-10-11）。閉じなければもう一度押す
+  if (!(await onboard.waitFor({ state: "hidden", timeout: 4000 }).then(() => true, () => false))) {
+    await onboard.click({ force: true });
+    await onboard.waitFor({ state: "hidden", timeout: 4000 });
+  }
 }
 await page.waitForTimeout(2000); // 待機中の動き（背景・REPLAY）を少し撮る
 marks.push({ label: "start", at: elapsed() });

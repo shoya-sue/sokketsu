@@ -367,7 +367,7 @@
       #close {
         left: 0;
         right: 0;
-        top: 280px;
+        top: 170px;
         text-align: center;
       }
       #close .mark {
@@ -388,6 +388,11 @@
         margin-top: 40px;
         font-size: 56px;
         color: #14f195;
+      }
+      #close .thanks {
+        margin-top: 30px;
+        font-size: 52px;
+        color: #f2f0fa;
       }
       #close .repo {
         margin-top: 14px;
@@ -476,6 +481,7 @@
           <p>Live on devnet. Connect a wallet — approve once.</p>
           <div class="url mono">sokketsu.pages.dev</div>
           <div class="repo mono">github.com/shoya-sue/sokketsu</div>
+          <div class="thanks pop" id="thanks">Thank you</div>
         </div>
       </section>
     </div>
@@ -496,6 +502,8 @@
       const PROSE =
         "I reviewed this request. The report appears to have been delivered and the payer seems to have approved it. That said, the scope of the approval is not fully clear, and there may be room for further checks on quality. Taken together, releasing the funds is probably fine, but to be safe…";
 
+      // 締めの場面（元の長さ 7 秒の台本）で Thank you を出す時刻
+      const SCENE_T_THANKS = 5.6;
       let tl = null;
       let run = null;
 
@@ -612,6 +620,9 @@
         if (f.scene === "close") {
           const k = range(u, 0, 0.6);
           fade($("#close"), k, 30 * (1 - k));
+          // ナレーションの最後（Thank you）に合わせて、締めの終わりの方で出す
+          const th = range(u, SCENE_T_THANKS, SCENE_T_THANKS + 0.5);
+          fade($("#thanks"), th, 16 * (1 - th));
         }
       };
     </script>
