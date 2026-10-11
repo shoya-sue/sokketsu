@@ -1,6 +1,6 @@
 # 発表動画（#21・提出用の英語版）
 
-`sokketsu-pitch.mp4`（1920×1080・30fps・131.8 秒・英語ナレーションつき）。Solana ハッカソンの提出用ピッチ動画。本番の画面を英語表示で実際に操作して撮った素材と、時刻からコマを決める場面（`docs/video/tooling.md` の B 方式）を組み合わせ、macOS の `say`（Samantha）で作った英語ナレーションを重ねて書き出す。
+`sokketsu-pitch.mp4`（1920×1080・30fps・131.8 秒・英語ナレーションつき。次の書き出しから 60fps）。Solana ハッカソンの提出用ピッチ動画。本番の画面を英語表示で実際に操作して撮った素材と、時刻からコマを決める場面（`docs/video/tooling.md` の B 方式）を組み合わせ、macOS の `say`（Samantha）で作った英語ナレーションを重ねて書き出す。
 
 ## 構成
 
@@ -38,13 +38,13 @@
 
 ```sh
 cd video && npm install
-npx playwright-core install chromium-headless-shell   # 初回だけ
+npx playwright-core install chromium chromium-headless-shell   # 初回だけ（撮影は chromium、書き出しは headless-shell）
 
 # 1. 本番を英語表示で撮る（お試しで始め、デモトークンを入れて Jev に判断させる）。capture/out/ に screen.webm・audio.webm・run.json
 npm run capture -- --token-file ../.keys/demo-token.txt          # 日本語で撮るなら --lang ja
 # 2. 要所のコマだけ確かめる（動画は書き出さない）→ <出力>.<秒>.png
 PREVIEW=4,27,75,97,118 node render.mjs /tmp/preview.mp4
-# 3. 書き出す（手元の M 系 Mac で約 23 分）→ sokketsu-pitch.mp4
+# 3. 書き出す（60fps。30fps のときは約 23 分だった。60fps はその約 2 倍の見込み・未計測）→ sokketsu-pitch.mp4
 npm run render                                                     # 声は VOICE=… VOICE_RATE=…（既定 Samantha・182）
 # 台本とナレーションのテスト
 npm test
@@ -52,7 +52,8 @@ npm test
 
 - お試しは faucet を使う（IP ごとに 10 分 1 回）。続けて撮るときは `--keypair <devnet 鍵の JSON>`
 - 撮影はページを 1.5 倍に拡大する（`--zoom`）。1920×1080 の画面に 1280×720 相当のレイアウトで、動画でも文字が読める
-- 実演のナレーションが次の文に重なると、書き出しのときに `narration overlaps` と警告が出る
+- 実演のナレーションが次の文に重なると、書き出しのときに `narration overlaps` と警告が出る。撮影が速く終わると段階の間隔が縮んで重なる（2026-10-11 の試し撮りは 26 秒で、最大 4.2 秒重なった）
+- 撮影は CDP の screencast でコマを受け取り、受け取った時刻どおりに 60fps の VP9 にまとめる（`capture/screencast.mjs`）。Playwright の recordVideo は 25fps が上限で、headless では実質 10fps 前後だった。2026-10-11 の実測：実演の区間で実際に変化したコマが約 50fps（旧方式は同じ基準で約 24fps）
 - 書体とロゴはアプリと同じ（`docs/brand/README.md`）
 
 ## ファイル
@@ -60,6 +61,7 @@ npm test
 | パス | 役割 |
 |---|---|
 | `capture/capture.mjs` | 本番を操作して撮り、数値と取引 ID を `run.json` に書く（`--lang en` が既定） |
+| `capture/screencast.mjs` | CDP screencast でコマを受け取り、60fps の `screen.webm` にする |
 | `capture/audio-hook.js` | アプリの効果音を MediaRecorder で録る |
 | `scenes/index.html` | 時刻 t から全場面のコマを決める（`window.renderAt(t)`） |
 | `scenes/timeline.mjs` | 台本（場面の長さ）・実演で撮影のどの時刻を映すか・字幕・実演のナレーションの位置（純粋関数、テストあり） |

@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { narrationFor } from "./scenes/narration.mjs";
 import { VOICE_LEAD_S, buildTimeline, demoCueTimes } from "./scenes/timeline.mjs";
 
-const FPS = 30;
+const FPS = 60;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const here = path.dirname(fileURLToPath(import.meta.url));

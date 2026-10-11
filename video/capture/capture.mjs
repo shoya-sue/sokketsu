@@ -3,10 +3,11 @@
 // 画面に出た数値・取引 ID（run.json）を書き出す。動画に出す数値はすべてここで撮った本番の値を使う。
 // 使い方: node capture/capture.mjs [--url https://sokketsu.pages.dev] [--keypair <devnet 鍵の JSON>]
 import { chromium } from "playwright-core";
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { startScreencast } from "./screencast.mjs";
 
 const { values: opt } = parseArgs({
   options: {
@@ -30,14 +31,23 @@ const HEIGHT = 1080;
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
+// headless-shell ではなく Chromium 本体の新しい headless で撮る（screencast のコマが実質 60fps 近く出る）
+const browser = await chromium.launch({
+  channel: "chromium",
+  args: [
+    "--autoplay-policy=no-user-gesture-required",
+    "--disable-renderer-backgrounding",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+  ],
+});
 const context = await browser.newContext({
   viewport: { width: WIDTH, height: HEIGHT },
   deviceScaleFactor: 1,
   locale: opt.lang === "en" ? "en-US" : "ja-JP",
-  recordVideo: { dir: out, size: { width: WIDTH, height: HEIGHT } },
 });
 const page = await context.newPage();
+const screencast = await startScreencast(context, page, { width: WIDTH, height: HEIGHT });
 const t0 = Date.now();
 const elapsed = () => (Date.now() - t0) / 1000;
 await page.addInitScript({ path: path.join(here, "audio-hook.js") });
@@ -132,8 +142,9 @@ const b64 = await page.evaluate(() => window.__stopAudio?.());
 audioStartedAt = await page.evaluate(() =>
   window.__audioStartedAt == null ? null : performance.timeOrigin + window.__audioStartedAt,
 );
+const shot = await screencast.stop(path.join(out, "screen.webm"), t0);
+console.error(`screencast: ${shot.frames} frames over ${shot.span.toFixed(1)} s (${(shot.frames / shot.span).toFixed(1)} fps)`);
 await context.close();
-renameSync(await page.video().path(), path.join(out, "screen.webm"));
 await browser.close();
 if (b64) writeFileSync(path.join(out, "audio.webm"), Buffer.from(b64, "base64"));
 
