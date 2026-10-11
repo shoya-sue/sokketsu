@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sokketsu — pitch deck</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=RocknRoll+One&family=Unbounded:wght@700;900&family=Chakra+Petch:wght@600&family=M+PLUS+1p:wght@400;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* 1 枚 = 1920×1080。?deck=pitch|tech で表示する組を選ぶ。?print で全ページを縦に並べる（PDF 用） */
+      :root {
+        --bg: #07060d;
+        --ink: #f2f0fa;
+        --mute: #9a95b4;
+        --soft: #c9c5dc;
+        --green: #14f195;
+        --purple: #9945ff;
+        --cyan: #00d1ff;
+        --amber: #ffb547;
+        --red: #ff5d6c;
+        --card: rgba(20, 18, 34, 0.88);
+        --line: rgba(255, 255, 255, 0.1);
+      }
+      @page {
+        size: 1920px 1080px;
+        margin: 0;
+      }
+      html,
+      body {
+        margin: 0;
+        background: #000;
+        color: var(--ink);
+        font-family: "M PLUS 1p", sans-serif;
+      }
+      .slide {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        box-sizing: border-box;
+        padding: 96px 120px;
+        background:
+          radial-gradient(1px 1px at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 32px 32px,
+          radial-gradient(circle at 75% 20%, #1d1640 0%, var(--bg) 62%);
+        page-break-after: always;
+        break-after: page;
+      }
+      /* Chrome の PDF 書き出しは background-clip: text の箱の縁を線として描く。PDF（?print）では単色にする */
+      body.print .grad {
+        background: none;
+        color: var(--cyan);
+      }
+      /* 見出しの下の本文を縦の中央に置く（表紙以外） */
+      .slide:not(.cover) {
+        display: flex;
+        flex-direction: column;
+      }
+      .slide:not(.cover) > h2 + * {
+        margin-top: auto !important;
+      }
+      .slide:not(.cover) > :last-child {
+        margin-bottom: auto;
+      }
+      .slide[hidden] {
+        display: none;
+      }
+      body.present {
+        overflow: hidden;
+        background: #000;
+      }
+      body.present .slide {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform-origin: center;
+      }
+      .kicker {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 28px;
+        letter-spacing: 0.22em;
+        color: var(--mute);
+        text-transform: uppercase;
+      }
+      h1,
+      h2 {
+        margin: 18px 0 0;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        line-height: 1.15;
+      }
+      h2 {
+        font-size: 76px;
+      }
+      p,
+      li {
+        font-size: 34px;
+        line-height: 1.55;
+        color: var(--soft);
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.1em;
+      }
+      .grad {
+        display: inline-block;
+        background: linear-gradient(135deg, var(--purple), var(--cyan) 55%, var(--green));
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .brand {
+        font-family: "Dela Gothic One", sans-serif;
+      }
+      .num {
+        font-family: "Unbounded", sans-serif;
+        font-weight: 900;
+      }
+      .mono {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+      }
+      .green {
+        color: var(--green);
+      }
+      .amber {
+        color: var(--amber);
+      }
+      .red {
+        color: var(--red);
+      }
+      .row {
+        display: flex;
+        gap: 40px;
+      }
+      .card {
+        flex: 1;
+        padding: 40px 44px;
+        border-radius: 28px;
+        border: 2px solid var(--line);
+        background: var(--card);
+      }
+      .card.good {
+        border-color: rgba(20, 241, 149, 0.55);
+      }
+      .card.bad {
+        border-color: rgba(255, 93, 108, 0.45);
+      }
+      .card small {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 24px;
+        letter-spacing: 0.18em;
+        color: var(--mute);
+      }
+      .card b {
+        display: block;
+        margin: 16px 0 14px;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        font-size: 48px;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+      .card p {
+        margin: 0;
+        font-size: 32px;
+      }
+      .foot {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        bottom: 56px;
+        display: flex;
+        justify-content: space-between;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 24px;
+        color: var(--mute);
+      }
+      code,
+      pre {
+        font-family: "Share Tech Mono", ui-monospace, monospace;
+      }
+      pre {
+        margin: 0;
+        padding: 36px 40px;
+        border-radius: 24px;
+        border: 2px solid var(--line);
+        background: rgba(10, 9, 20, 0.9);
+        font-size: 28px;
+        line-height: 1.5;
+        color: var(--soft);
+        white-space: pre;
+      }
+      .k {
+        color: var(--purple);
+      }
+      .s {
+        color: var(--green);
+      }
+      .c {
+        color: #6f6a8a;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 30px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 18px 22px;
+        border-bottom: 2px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        color: var(--mute);
+        font-size: 24px;
+        text-transform: uppercase;
+      }
+      td {
+        color: var(--soft);
+      }
+      td code {
+        color: var(--ink);
+      }
+      .shot {
+        border-radius: 22px;
+        border: 2px solid var(--line);
+        width: 100%;
+        display: block;
+      }
+      .caption {
+        margin-top: 18px;
+        font-size: 28px;
+        color: var(--soft);
+      }
+
+      /* 表紙 */
+      .cover {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .cover img {
+        width: 220px;
+        height: 220px;
+        filter: drop-shadow(0 20px 60px rgba(153, 69, 255, 0.7));
+      }
+      .cover h1 {
+        font-family: "Dela Gothic One", sans-serif;
+        font-size: 170px;
+        margin-top: 30px;
+      }
+      .cover p {
+        margin: 26px 0 0;
+        font-size: 44px;
+        color: var(--ink);
+        font-family: "RocknRoll One", sans-serif;
+      }
+      .cover .tag {
+        margin-top: 34px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 32px;
+        color: var(--green);
+      }
+
+      /* 流れ */
+      .flow {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        margin-top: 70px;
+      }
+      .flow .step {
+        flex: 1;
+        padding: 36px 30px;
+        border-radius: 26px;
+        border: 2px solid rgba(20, 241, 149, 0.5);
+        background: var(--card);
+        text-align: center;
+      }
+      .flow .step small {
+        font-size: 26px;
+        color: var(--mute);
+      }
+      .flow .step b {
+        display: block;
+        margin: 14px 0 10px;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        font-size: 42px;
+      }
+      .flow .step i {
+        font-style: normal;
+        font-size: 28px;
+        color: var(--green);
+      }
+      .flow .arrow {
+        width: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 44px;
+        color: var(--mute);
+      }
+
+      /* 計測 */
+      .big {
+        font-size: 300px;
+        line-height: 1;
+        margin-top: 40px;
+      }
+      .big small {
+        font-size: 100px;
+        color: var(--mute);
+      }
+
+      /* 構成図 */
+      .arch {
+        position: relative;
+        height: 700px;
+        margin-top: 40px;
+      }
+      .arch .box {
+        position: absolute;
+        padding: 26px 30px;
+        border-radius: 22px;
+        border: 2px solid var(--line);
+        background: var(--card);
+        font-size: 28px;
+        color: var(--soft);
+        line-height: 1.45;
+      }
+      .arch .box b {
+        display: block;
+        font-family: "RocknRoll One", sans-serif;
+        font-weight: 400;
+        font-size: 36px;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .arch .box.chain {
+        border-color: rgba(20, 241, 149, 0.6);
+      }
+      .arch svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ ピッチ用（PDF） ============ -->
+    <section class="slide cover" data-deck="pitch tech">
+      <img src="../app/public/logo-mark.svg" alt="Sokketsu logo" />
+      <h1><span class="grad">Sokketsu</span></h1>
+      <p>Stop agent payments with typed decisions, not generated text.</p>
+      <div class="tag" data-only="pitch">Live on Solana devnet · Alpenglow · finalized in <span data-v="ms"></span> ms</div>
+      <div class="tag" data-only="tech">Technical demo · Anchor program + signed typed decisions</div>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">Problem</div>
+      <h2>AI agents are starting to pay for work.<br />But an LLM answers in <span class="red">prose</span>.</h2>
+      <div class="row" style="margin-top: 60px">
+        <div class="card bad">
+          <small>ASK AN LLM: "RELEASE THE ESCROW?"</small>
+          <p style="margin-top: 22px; font-size: 29px">
+            "I reviewed this request. The report appears to have been delivered and the payer seems to have approved it. That said, the scope of the
+            approval is not fully clear… releasing the funds is probably fine, but to be safe…"
+          </p>
+        </div>
+        <div class="card" style="flex: 0.8">
+          <small>WHY IT FAILS</small>
+          <ul style="margin-top: 18px">
+            <li>A program can't act on "probably fine".</li>
+            <li>Nobody can check who decided, or how sure.</li>
+            <li>Waiting ~12.8 s for finality breaks the flow.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">Solution</div>
+      <h2>A <span class="green">typed</span> decision the chain can verify — and settle in under a second.</h2>
+      <div class="row" style="margin-top: 60px">
+        <div class="card good">
+          <small>01 · TYPED</small>
+          <b>Jev returns only a choice and a probability</b>
+          <pre style="margin-top: 20px; font-size: 32px"><span class="c">decision</span>:    <span class="s">"release"</span>
+<span class="c">probability</span>: <span class="s" data-v="releaseP"></span></pre>
+        </div>
+        <div class="card good">
+          <small>02 · SIGNED</small>
+          <b>Our oracle signs it; the program checks Ed25519 on-chain</b>
+          <p>Tampered, re-used or unsigned decisions are rejected.</p>
+        </div>
+        <div class="card good">
+          <small>03 · SETTLED</small>
+          <b>Funds move only on a signed release ≥ 70%</b>
+          <p>Measured on Alpenglow devnet: <span class="green"><span data-v="ms"></span> ms</span> to finalized.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">How it works</div>
+      <h2>Two clicks. One wallet approval.</h2>
+      <div class="flow">
+        <div class="step"><small>01</small><b>Deposit</b><i>payer → vault PDA</i></div>
+        <div class="arrow">→</div>
+        <div class="step"><small>02</small><b>Jev decides</b><i>choice + probability</i></div>
+        <div class="arrow">→</div>
+        <div class="step"><small>03</small><b>Verify</b><i>Ed25519 · on-chain</i></div>
+        <div class="arrow">→</div>
+        <div class="step"><small>04</small><b>Finalize</b><i>Alpenglow</i></div>
+      </div>
+      <ul style="margin-top: 70px">
+        <li>The wallet signs only the deposit. Settlement is sent by an in-page operator key.</li>
+        <li><span class="amber">hold</span> stops the payment — not a single lamport moves. <span class="green">release</span> pays the payee.</li>
+        <li>No wallet? "Try it" creates a throwaway devnet key and funds it from our faucet.</li>
+      </ul>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">Live demo · devnet</div>
+      <h2>Stopped, then settled — on the live site.</h2>
+      <div class="row" style="margin-top: 50px">
+        <div style="flex: 1">
+          <img class="shot" src="assets/demo-hold.jpg" alt="hold stops the payment" />
+          <div class="caption"><span class="amber">hold <span data-v="holdP"></span></span> — the vault locks, the payee gets nothing.</div>
+        </div>
+        <div style="flex: 1">
+          <img class="shot" src="assets/demo-released.jpg" alt="release finalized" />
+          <div class="caption"><span class="green">release <span data-v="releaseP"></span></span> — finalized in <span data-v="ms"></span> ms.</div>
+        </div>
+      </div>
+      <div class="foot"><span>sokketsu.pages.dev</span><span>captured <span data-v="capturedAt"></span> · Jev decisions, oracle-signed</span></div>
+    </section>
+
+    <section class="slide" data-deck="pitch tech" data-narration-key="measured">
+      <div class="kicker">Measured on Alpenglow devnet</div>
+      <div class="big num"><span class="grad" data-v="ms"></span><small> ms</small></div>
+      <h2 style="font-size: 60px">send → finalized · about <span data-v="speedup"></span>× faster than Tower BFT (~12.8 s)</h2>
+      <p class="mono" style="margin-top: 40px; font-size: 32px" data-v="breakdown"></p>
+      <p class="mono" style="font-size: 28px; color: var(--mute)">slot <span data-v="slot"></span> · tx <span data-v="tx"></span> · measured with WebSocket <code>signatureSubscribe</code> (processed / finalized)</p>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">Why Solana</div>
+      <h2>Agent payments need a chain that settles as fast as the agent decides.</h2>
+      <div class="row" style="margin-top: 60px">
+        <div class="card good">
+          <small>01 · ALPENGLOW</small>
+          <b>Sub-second finality</b>
+          <p>The decision and the payment settle together. <span class="green"><span data-v="ms"></span> ms</span> measured.</p>
+        </div>
+        <div class="card good">
+          <small>02 · ED25519</small>
+          <b>Native signature verification</b>
+          <p>The program reads the Ed25519 instruction to trust a signed judgment cheaply.</p>
+        </div>
+        <div class="card good">
+          <small>03 · FEES</small>
+          <b>A fraction of a cent</b>
+          <p>5,000 lamports per signature — cheap enough for every agent payment.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-deck="pitch tech" data-narration-key="trust">
+      <div class="kicker">Trust model</div>
+      <h2>Who can settle — enforced by the program.</h2>
+      <table style="margin-top: 50px">
+        <tr>
+          <th>Case</th>
+          <th>Rule</th>
+          <th>Error</th>
+        </tr>
+        <tr>
+          <td>Decision from Jev</td>
+          <td>Anyone may submit it — the payer can't block a valid release</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Mock decision (fallback)</td>
+          <td>Only the payer or its registered operator key</td>
+          <td><code>UnauthorizedSubmitter</code></td>
+        </tr>
+        <tr>
+          <td>No / altered / re-used signature, or changed source</td>
+          <td>Rejected before any lamport moves</td>
+          <td><code>MissingOracleSignature</code> · <code>BadOracleSignature</code></td>
+        </tr>
+        <tr>
+          <td>Refund / close</td>
+          <td>Anyone may send; funds always return to the payer</td>
+          <td><code>RefundNotAllowed</code> · <code>NotFinished</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section class="slide" data-deck="pitch">
+      <div class="kicker">Go-to-market (plan)</div>
+      <h2>Start where agents already pay for tasks.</h2>
+      <div class="row" style="margin-top: 60px">
+        <div class="card">
+          <small>WHO</small>
+          <b>Agent marketplaces &amp; task platforms</b>
+          <p>Teams that escrow payment for work done by AI agents and need a release rule they can audit.</p>
+        </div>
+        <div class="card">
+          <small>HOW</small>
+          <b>Open-source program + API</b>
+          <p>Deploy the Anchor program, call <code>/api/judge</code> for a signed decision, settle in one transaction.</p>
+        </div>
+        <div class="card">
+          <small>NEXT</small>
+          <b>From devnet to production</b>
+          <p>Verify the model provider's own signature on-chain, freeze the program, then audit before mainnet.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide cover" data-deck="pitch tech" data-narration-key="thanks">
+      <img src="../app/public/logo-mark.svg" alt="" />
+      <h1><span class="grad">Thank you</span></h1>
+      <p>Try it: <span class="green mono">sokketsu.pages.dev</span></p>
+      <div class="tag" style="color: var(--soft)">github.com/shoya-sue/sokketsu · program <span data-v="programShort"></span> (devnet)</div>
+    </section>
+
+    <!-- ============ 技術デモ用（動画） ============ -->
+    <section class="slide" data-deck="tech" data-narration-key="arch">
+      <div class="kicker">Architecture</div>
+      <h2>Browser, signer, and an Anchor program.</h2>
+      <div class="arch">
+        <svg viewBox="0 0 1680 700" fill="none" stroke="#5a5570" stroke-width="4">
+          <path d="M420 120 H620" />
+          <path d="M420 520 H620" />
+          <path d="M1060 120 H1200" />
+          <path d="M1060 520 H1200" />
+          <path d="M840 220 V420" />
+        </svg>
+        <div class="box" style="left: 0; top: 30px; width: 400px">
+          <b>Browser</b>React 19 · wallet adapter<br />Wallet signs the deposit only
+        </div>
+        <div class="box" style="left: 0; top: 430px; width: 400px">
+          <b>Operator key</b>in-page key sends <code>settle</code>
+        </div>
+        <div class="box" style="left: 620px; top: 30px; width: 440px">
+          <b>Pages Functions</b><code>/api/judge</code> (Jev) · <code>/api/decide</code> (mock)<br /><code>/api/fund</code> faucet · <code>/api/rpc</code>
+        </div>
+        <div class="box" style="left: 620px; top: 430px; width: 440px">
+          <b>Oracle signer</b>ed25519 over the decision message
+        </div>
+        <div class="box" style="left: 1200px; top: 30px; width: 480px">
+          <b>Jev (TypeSafe)</b>typed judge: choice + probability
+        </div>
+        <div class="box chain" style="left: 1200px; top: 430px; width: 480px">
+          <b>sokketsu program</b>Anchor 0.31 · devnet<br /><span class="mono" style="font-size: 22px; word-break: break-all; display: block; color: var(--green)" data-v="program"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-deck="tech" data-narration-key="program">
+      <div class="kicker">On-chain program</div>
+      <h2>Four instructions, one rule.</h2>
+      <table style="margin-top: 44px">
+        <tr>
+          <th>Instruction</th>
+          <th>What it does</th>
+        </tr>
+        <tr>
+          <td><code>deposit</code></td>
+          <td>Payer locks SOL in the escrow PDA, with a deadline and a hash of the request</td>
+        </tr>
+        <tr>
+          <td><code>settle</code></td>
+          <td>Checks the oracle-signed decision; pays the payee only if <code>release</code> and probability ≥ <code>7000</code> bps</td>
+        </tr>
+        <tr>
+          <td><code>refund</code></td>
+          <td>After a signed refund ≥ 70%, or once the deadline passes — funds return to the payer</td>
+        </tr>
+        <tr>
+          <td><code>close</code></td>
+          <td>Closes a finished escrow and returns the rent to the payer</td>
+        </tr>
+      </table>
+      <pre style="margin-top: 36px"><span class="k">let</span> release = decision == DECISION_RELEASE <span class="k">&amp;&amp;</span> probability_bps &gt;= RELEASE_THRESHOLD_BPS; <span class="c">// 7000</span></pre>
+    </section>
+
+    <section class="slide" data-deck="tech" data-narration-key="sig">
+      <div class="kicker">Signed decisions</div>
+      <h2>The program reads the Ed25519 instruction right before <code>settle</code>.</h2>
+      <div class="row" style="margin-top: 44px; gap: 36px">
+        <pre style="flex: 1"><span class="c">// 88-byte message the oracle signs</span>
+<span class="s">"sokketsu-decision-v3"</span>  <span class="c">20 bytes</span>
+escrow pubkey           <span class="c">32</span>
+sha256(request)         <span class="c">32</span>
+decision                <span class="c"> 1</span>  <span class="c">release·hold·refund</span>
+probability_bps         <span class="c"> 2</span>
+source                  <span class="c"> 1</span>  <span class="c">jev · mock</span></pre>
+        <pre style="flex: 1"><span class="c">// verify_oracle_decision</span>
+prev = instruction[current - 1]
+require prev.program == <span class="k">ed25519_program</span>
+require pubkey  == <span class="k">ORACLE_PUBKEY</span>
+require message == decision_message(
+  escrow, state_hash,
+  decision, bps, source)
+<span class="c">// else BadOracleSignature</span></pre>
+      </div>
+      <p style="margin-top: 30px">Binding the escrow and the request hash means a signature can't be re-used for another escrow or a different request.</p>
+    </section>
+
+    <section class="slide" data-deck="tech" data-narration-key="quality">
+      <div class="kicker">Quality</div>
+      <h2>Tested on every layer.</h2>
+      <div class="row" style="margin-top: 60px">
+        <div class="card good">
+          <small>PROGRAM</small>
+          <b><span class="num">14</span> anchor tests</b>
+          <p>Signatures, re-use, source tampering, submitter rules, refund and close — run in CI.</p>
+        </div>
+        <div class="card good">
+          <small>APP &amp; API</small>
+          <b><span class="num">554</span> vitest tests</b>
+          <p>Judge, oracle signing, ed25519 instruction building, faucet and RPC fallback.</p>
+        </div>
+        <div class="card good">
+          <small>LIVE</small>
+          <b>Real devnet runs</b>
+          <p>Every number in the videos comes from a captured devnet transaction.</p>
+        </div>
+      </div>
+    </section>
+
+    <script type="module">
+      // 数値はすべて撮影データ（video/capture/out/run.json）から入れる。作った数字は書かない。
+      const params = new URLSearchParams(location.search);
+      const deck = params.get("deck") ?? "pitch";
+      const PROGRAM = "Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp";
+      const pct = (text) => {
+        const m = /(\d+(?:\.\d+)?)%/.exec(text ?? "");
+        return m ? `${Math.round(Number(m[1]))}%` : "—";
+      };
+
+      // 組（pitch / tech）に入らないページと、組で出し分ける行を隠す。技術デモは data-order の順に並べ替える
+      const slides = [...document.querySelectorAll(".slide")];
+      for (const s of slides) s.hidden = !s.dataset.deck.split(" ").includes(deck);
+      for (const el of document.querySelectorAll("[data-only]")) el.hidden = el.dataset.only !== deck;
+      if (deck === "tech") {
+        const order = ["cover", "arch", "program", "sig", "trust", "measured", "quality", "thanks"];
+        const key = (s) => (s.classList.contains("cover") && !s.dataset.narrationKey ? "cover" : s.dataset.narrationKey);
+        slides
+          .filter((s) => !s.hidden)
+          .sort((a, b) => order.indexOf(key(a)) - order.indexOf(key(b)))
+          .forEach((s) => document.body.insertBefore(s, document.querySelector("script")));
+      }
+
+      const run = await fetch("../video/capture/out/run.json").then((r) => r.json());
+      const tx = run.timeline.filter((e) => e.tx).at(-1)?.tx ?? "";
+      const sig = (tx.match(/tx\/([^?]+)/) ?? [])[1] ?? "";
+      const values = {
+        ms: String(Math.round(run.result.finalizedMs)),
+        speedup: run.result.speedup,
+        releaseP: pct(run.finality.decision),
+        holdP: pct(run.timeline.find((e) => e.label === "Decision: hold")?.detail),
+        slot: run.finality.slot,
+        tx: `${sig.slice(0, 10)}…${sig.slice(-6)}`,
+        breakdown: run.result.breakdown.map((b) => b.replace(/^(\d+ ms)\s*/, "$1 ")).join("  →  "),
+        capturedAt: run.capturedAt.slice(0, 16).replace("T", " ") + " UTC",
+        program: PROGRAM,
+        programShort: `${PROGRAM.slice(0, 6)}…${PROGRAM.slice(-5)}`,
+      };
+      for (const el of document.querySelectorAll("[data-v]")) el.textContent = values[el.dataset.v] ?? "—";
+      await document.fonts.ready;
+
+      // 発表：1 枚ずつ画面に合わせて拡大し、← → / クリックで送る（?print のときは全ページを縦に並べる）
+      if (params.has("print")) document.body.classList.add("print");
+      if (!params.has("print")) {
+        document.body.classList.add("present");
+        const shown = [...document.querySelectorAll(".slide")].filter((s) => !s.hidden);
+        let i = Math.min(shown.length - 1, Math.max(0, Number(location.hash.slice(1)) - 1 || 0));
+        const show = () => {
+          const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+          shown.forEach((s, j) => {
+            s.style.display = j === i ? "" : "none";
+            s.style.transform = `translate(-50%, -50%) scale(${k})`;
+          });
+          history.replaceState(null, "", `#${i + 1}`);
+        };
+        addEventListener("resize", show);
+        addEventListener("keydown", (e) => {
+          if (["ArrowRight", "PageDown", " "].includes(e.key)) i = Math.min(shown.length - 1, i + 1);
+          if (["ArrowLeft", "PageUp"].includes(e.key)) i = Math.max(0, i - 1);
+          show();
+        });
+        addEventListener("click", () => {
+          i = (i + 1) % shown.length;
+          show();
+        });
+        show();
+      }
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>

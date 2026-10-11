@@ -4,7 +4,7 @@
 import { chromium } from "playwright-core";
 import { spawn } from "node:child_process";
 import { execFileSync } from "node:child_process";
-import { createReadStream, existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { createReadStream, existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -177,4 +177,6 @@ await new Promise((resolve, reject) => {
 });
 rmSync(voiceDir, { recursive: true, force: true });
 for (const c of clips) console.log(`voice ${c.at.toFixed(2)}s +${c.length.toFixed(2)}s`);
+// 台本の時刻（場面の開始と長さ）を残す。技術デモ動画（pitch/build.mjs）が実演の場面を切り出すのに使う
+writeFileSync(`${out.replace(/\.mp4$/, "")}.timeline.json`, `${JSON.stringify({ fps: FPS, total, scenes: tl.scenes }, null, 2)}\n`);
 console.log(`wrote ${out} (${frames} frames, ${total.toFixed(1)} s)`);
