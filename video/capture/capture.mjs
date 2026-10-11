@@ -143,7 +143,10 @@ audioStartedAt = await page.evaluate(() =>
   window.__audioStartedAt == null ? null : performance.timeOrigin + window.__audioStartedAt,
 );
 const shot = await screencast.stop(path.join(out, "screen.webm"), t0);
-console.error(`screencast: ${shot.frames} frames over ${shot.span.toFixed(1)} s (${(shot.frames / shot.span).toFixed(1)} fps)`);
+const shotFps = shot.frames / shot.span;
+console.error(`screencast: ${shot.frames} frames over ${shot.span.toFixed(1)} s (${shotFps.toFixed(1)} fps)`);
+// 同じ方式でも回によって 57 fps と 28 fps に分かれた（2026-10-11）。少なければ重い処理を止めて撮り直す
+if (shotFps < 45) console.error(`warning: screencast is ${shotFps.toFixed(1)} fps (< 45). Close heavy apps and capture again for smooth video`);
 await context.close();
 await browser.close();
 if (b64) writeFileSync(path.join(out, "audio.webm"), Buffer.from(b64, "base64"));

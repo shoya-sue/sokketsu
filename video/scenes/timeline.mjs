@@ -15,6 +15,12 @@ export const VOICE_LEAD_S = 0.3;
 /** 場面をナレーションに合わせて伸ばすときの余白（頭の VOICE_LEAD_S と、言い終えてからの間）。 */
 export const VOICE_PAD_S = 1.2;
 
+/** 実演のナレーションの文と文の間（秒）。足りなければ実演を止めて待つ。 */
+export const CUE_GAP_S = 0.4;
+
+/** 止めている間に映すコマは、次の印のこれだけ前（印ちょうどだと次の段階の画面と字幕になる）。 */
+export const HOLD_EPS_S = 0.05;
+
 const ORDER = ["hook", "problem", "flow", "demo", "numbers", "solana", "close"];
 
 const CAPTIONS = {
@@ -33,11 +39,32 @@ const CAPTIONS = {
 
 const markAt = (run, label) => run.marks.find((m) => m.label === label)?.at;
 
+/** 撮影の nth 回目の印 mark の時刻（無ければ undefined）。 */
+const nthMarkAt = (marks, mark, nth) => marks.filter((m) => m.label === mark)[nth]?.at;
+
 /**
- * 撮影データ（capture.mjs の run.json）とナレーションの長さ（場面ごとの秒）から台本を作る。
+ * 実演のナレーションが次の文の印までに収まらない分だけ、次の印の直前で止める長さを求める。
+ * @returns {{ at: number, length: number }[]} at は撮影の時刻（次の印）、length は止める秒
+ */
+function holdsFor(marks, cues, from, end, speed) {
+  const placed = cues
+    .map((c) => ({ ...c, at: nthMarkAt(marks, c.mark, c.nth) }))
+    .filter((c) => c.at !== undefined)
+    .map((c) => ({ ...c, at: Math.max(from, c.at) }))
+    .sort((a, b) => a.at - b.at);
+  return placed.flatMap((c, i) => {
+    const next = placed[i + 1]?.at ?? end;
+    const short = c.length + VOICE_LEAD_S + CUE_GAP_S - (next - c.at) / speed;
+    return short > 1e-9 && next > c.at ? [{ at: next, length: short }] : [];
+  });
+}
+
+/**
+ * 撮影データ（capture.mjs の run.json）とナレーションの長さから台本を作る。
+ * voice の場面名には場面のナレーションの秒、voice.demo には実演の文（撮影の nth 回目の印 mark に置く）の秒。
  * @param {object} run
- * @param {Partial<Record<keyof typeof SCENE_S, number>>} [voice]
- * @returns {{ scenes: { name: string, start: number, length: number }[], total: number, demo: { from: number, speed: number }, marks: { label: string, at: number }[], ms: number }}
+ * @param {Partial<Record<keyof typeof SCENE_S, number>> & { demo?: { mark: string, nth: number, length: number }[] }} [voice]
+ * @returns {{ scenes: { name: string, start: number, length: number }[], total: number, demo: { from: number, speed: number, holds: { at: number, length: number }[] }, marks: { label: string, at: number }[], ms: number }}
  */
 export function buildTimeline(run, voice = {}) {
   const ready = markAt(run, "ready");
@@ -47,7 +74,9 @@ export function buildTimeline(run, voice = {}) {
   const onboard = markAt(run, "onboard");
   const from = onboard !== undefined ? onboard : Math.max(0, ready - DEMO_LEAD_S);
   const captured = end - from;
-  const demoLength = Math.min(captured, DEMO_MAX_S);
+  const speed = captured / Math.min(captured, DEMO_MAX_S);
+  const holds = holdsFor(run.marks, voice.demo ?? [], from, end, speed);
+  const demoLength = captured / speed + holds.reduce((sum, h) => sum + h.length, 0);
   const lengthOf = (name) =>
     name === "demo" ? demoLength : Math.max(SCENE_S[name], voice[name] === undefined ? 0 : voice[name] + VOICE_PAD_S);
   let start = 0;
@@ -59,7 +88,7 @@ export function buildTimeline(run, voice = {}) {
   return {
     scenes,
     total: start,
-    demo: { from, speed: captured / demoLength },
+    demo: { from, speed, holds },
     marks: run.marks,
     ms: Math.round(run.result.finalizedMs),
   };
@@ -77,8 +106,44 @@ export function frameAt(tl, t) {
   return { scene: scene.name, local, paced };
 }
 
-/** 実演の場面の中の秒 u に映す、撮影の時刻（秒）。 */
-export const demoTimeAt = (tl, u) => tl.demo.from + u * tl.demo.speed;
+/** 実演の場面の中の秒 u に映す、撮影の時刻（秒）。止めている間は次の印の HOLD_EPS_S 前。 */
+export function demoTimeAt(tl, u) {
+  const { from, speed, holds = [] } = tl.demo;
+  let c = from;
+  let start = 0; // c を映し始める実演の中の秒
+  for (const h of holds) {
+    const play = (h.at - c) / speed;
+    if (u < start + play) return c + (u - start) * speed;
+    if (u < start + play + h.length) return h.at - HOLD_EPS_S;
+    start += play + h.length;
+    c = h.at;
+  }
+  return c + (u - start) * speed;
+}
+
+/** 撮影の時刻 c を映す、実演の場面の中の秒（demoTimeAt の逆。印ちょうどは止め終わった後）。 */
+export function demoUAt(tl, c) {
+  const { from, speed, holds = [] } = tl.demo;
+  let cur = from;
+  let start = 0;
+  for (const h of holds) {
+    if (c < h.at) return start + (c - cur) / speed;
+    start += (h.at - cur) / speed + h.length;
+    cur = h.at;
+  }
+  return start + (c - cur) / speed;
+}
+
+/**
+ * 実演で撮影を再生する区間（止める位置で切れる）。効果音を同じ区切りで並べ直すのに使う。
+ * @returns {{ from: number, to: number, at: number }[]} from / to は撮影の時刻、at は動画の時刻
+ */
+export function demoSegments(tl) {
+  const demo = tl.scenes.find((s) => s.name === "demo");
+  const end = tl.demo.from + (demo.length - tl.demo.holds.reduce((sum, h) => sum + h.length, 0)) * tl.demo.speed;
+  const cuts = [tl.demo.from, ...tl.demo.holds.map((h) => h.at), end];
+  return cuts.slice(0, -1).map((from, i) => ({ from, to: cuts[i + 1], at: demo.start + demoUAt(tl, from) }));
+}
 
 /** 実演の場面の中の秒 u に出す字幕（撮影の段階の切り替わりから）。 */
 export function captionAt(tl, u) {
@@ -95,9 +160,9 @@ export function captionAt(tl, u) {
 export function demoCueTimes(tl, cues) {
   const demo = tl.scenes.find((s) => s.name === "demo");
   return cues.flatMap(({ mark, nth, text }) => {
-    const m = tl.marks.filter((x) => x.label === mark)[nth];
-    if (!m) return [];
-    const u = Math.max(0, (m.at - tl.demo.from) / tl.demo.speed);
+    const at = nthMarkAt(tl.marks, mark, nth);
+    if (at === undefined) return [];
+    const u = demoUAt(tl, Math.max(tl.demo.from, at));
     return [{ at: demo.start + u + VOICE_LEAD_S, text }];
   });
 }

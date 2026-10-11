@@ -1,3 +1,5 @@
 node_modules
 renders
 .debug
+*.video.mp4
+*.mp4.*.png

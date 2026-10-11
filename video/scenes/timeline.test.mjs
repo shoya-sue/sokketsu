@@ -9,7 +9,11 @@ import {
   buildTimeline,
   captionAt,
   demoCueTimes,
+  CUE_GAP_S,
+  HOLD_EPS_S,
+  demoSegments,
   demoTimeAt,
+  demoUAt,
   frameAt,
 } from "./timeline.mjs";
 
@@ -44,7 +48,7 @@ test("台本は hook → problem → flow → demo → numbers → solana → cl
     ],
   );
   assert.equal(tl.total, 79);
-  assert.deepEqual(tl.demo, { from: 12 - DEMO_LEAD_S, speed: 1 });
+  assert.deepEqual(tl.demo, { from: 12 - DEMO_LEAD_S, speed: 1, holds: [] });
   assert.equal(tl.ms, 812);
   assert.deepEqual(SCENE_S, { hook: 8, problem: 9, flow: 11, numbers: 9, solana: 12, close: 7 });
 });
@@ -161,4 +165,69 @@ test("実演より前の印のナレーションは、実演の頭から始め�
   const tl = buildTimeline(RUN);
   const [cue] = demoCueTimes(tl, [{ mark: "start", nth: 0, text: "a" }]); // start は 3 秒、映すのは 8 秒から
   assert.equal(cue.at, tl.scenes[3].start + VOICE_LEAD_S);
+});
+
+// 実演のナレーションが次の段階までに収まらなければ、次の段階の直前のコマで止めて待つ（RUN：映すのは 8 秒から）
+const CUES = [
+  { mark: "ready", nth: 0, length: 3 }, // ready 12 → depositing 13.5（1.5 秒しかない）
+  { mark: "depositing", nth: 0, length: 1 }, // 13.5 → countdown 17.2（3.7 秒あるので収まる）
+  { mark: "countdown", nth: 0, length: 2 },
+];
+
+test("収まらない分だけ、次の印の直前で止める（印の時刻・止める長さ）", () => {
+  const tl = buildTimeline(RUN, { demo: CUES });
+  const need = 3 + VOICE_LEAD_S + CUE_GAP_S;
+  assert.deepEqual(tl.demo.holds, [{ at: 13.5, length: need - 1.5 }]);
+  // 実演は止めた分だけ長くなる
+  assert.equal(tl.scenes[3].length, 23 + (need - 1.5));
+  assert.equal(tl.scenes[4].start, 28 + 23 + (need - 1.5));
+});
+
+test("止めている間は印の直前のコマを映し、字幕も前の段階のまま", () => {
+  const tl = buildTimeline(RUN, { demo: CUES });
+  const hold = tl.demo.holds[0];
+  const uHold = 13.5 - 8; // 止め始める実演の中の秒
+  assert.equal(demoTimeAt(tl, uHold + 0.01), 13.5 - HOLD_EPS_S);
+  assert.equal(demoTimeAt(tl, uHold + hold.length - 0.01), 13.5 - HOLD_EPS_S);
+  assert.equal(captionAt(tl, uHold + 0.01), "Start a trial — devnet SOL is funded for you");
+  // 止め終わると印の時刻から再生を続ける
+  assert.ok(Math.abs(demoTimeAt(tl, uHold + hold.length + 1) - 14.5) < 1e-9);
+  assert.equal(captionAt(tl, uHold + hold.length + 1), "Deposit — 0.05 SOL into the escrow vault");
+});
+
+test("撮影の時刻から実演の中の秒（止めた分を足す）。印ちょうどは止め終わった後", () => {
+  const tl = buildTimeline(RUN, { demo: CUES });
+  const len = tl.demo.holds[0].length;
+  assert.equal(demoUAt(tl, 12), 4);
+  assert.equal(demoUAt(tl, 13.5), 5.5 + len);
+  assert.equal(demoUAt(tl, 20), 12 + len);
+  for (const u of [0, 3, 9, 15]) {
+    const c = demoTimeAt(tl, u + (u > 5.5 ? len : 0));
+    assert.ok(Math.abs(demoUAt(tl, c) - (u + (u > 5.5 ? len : 0))) < 1e-9, `u=${u}`);
+  }
+});
+
+test("ナレーションは止めた後の印の時刻から始まり、前の文と重ならない", () => {
+  const tl = buildTimeline(RUN, { demo: CUES });
+  const cues = demoCueTimes(tl, CUES.map((c) => ({ ...c, text: c.mark })));
+  for (let i = 1; i < cues.length; i++) {
+    assert.ok(cues[i - 1].at + CUES[i - 1].length <= cues[i].at, `cue ${i}`);
+  }
+});
+
+test("再生する区間（効果音を並べ直すのに使う）は、止める位置で切れる", () => {
+  const tl = buildTimeline(RUN, { demo: CUES });
+  const demo = tl.scenes[3];
+  const len = tl.demo.holds[0].length;
+  assert.deepEqual(demoSegments(tl), [
+    { from: 8, to: 13.5, at: demo.start },
+    { from: 13.5, to: 31, at: demo.start + 5.5 + len },
+  ]);
+  // 止めなければ 1 区間
+  assert.deepEqual(demoSegments(buildTimeline(RUN)), [{ from: 8, to: 31, at: demo.start }]);
+});
+
+test("撮っていない印のナレーションは止める計算に入れない", () => {
+  const tl = buildTimeline(RUN, { demo: [{ mark: "onboard", nth: 0, length: 30 }] });
+  assert.deepEqual(tl.demo.holds, []);
 });
