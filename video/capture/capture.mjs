@@ -3,10 +3,11 @@
 // 画面に出た数値・取引 ID（run.json）を書き出す。動画に出す数値はすべてここで撮った本番の値を使う。
 // 使い方: node capture/capture.mjs [--url https://sokketsu.pages.dev] [--keypair <devnet 鍵の JSON>]
 import { chromium } from "playwright-core";
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
+import { startScreencast } from "./screencast.mjs";
 
 const { values: opt } = parseArgs({
   options: {
@@ -15,8 +16,11 @@ const { values: opt } = parseArgs({
     keypair: { type: "string" },
     // デモトークン（1 行のファイル）。⚙ から入れると Jev が判断する（入れないとサーバー側のモックの判断）
     "token-file": { type: "string" },
-    // 動画で文字が読めるよう、ページを拡大して撮る（1920×1080 の画面に 1280×720 相当のレイアウト）
-    zoom: { type: "string", default: "1.5" },
+    // 動画で文字が読めるよう、1920÷scale × 1080÷scale の画面を scale 倍の解像度で描く（既定 1280×720 を 1.5 倍）。
+    // CSS の zoom は #56 の 1 画面の HUD を縦にはみ出させた（ページ 1620px・開始ボタンが画面外。2026-10-11）
+    scale: { type: "string", default: "1.5" },
+    // 画面の言語（en / ja）。提出用の動画は英語で撮る
+    lang: { type: "string", default: "en" },
   },
 });
 
@@ -28,22 +32,29 @@ const HEIGHT = 1080;
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
+// headless-shell ではなく Chromium 本体の新しい headless で撮る（screencast のコマが実質 60fps 近く出る）
+const browser = await chromium.launch({
+  channel: "chromium",
+  args: [
+    "--autoplay-policy=no-user-gesture-required",
+    "--disable-renderer-backgrounding",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+  ],
+});
+const scale = Number(opt.scale);
 const context = await browser.newContext({
-  viewport: { width: WIDTH, height: HEIGHT },
-  deviceScaleFactor: 1,
-  locale: "ja-JP",
-  recordVideo: { dir: out, size: { width: WIDTH, height: HEIGHT } },
+  viewport: { width: Math.round(WIDTH / scale), height: Math.round(HEIGHT / scale) },
+  deviceScaleFactor: scale,
+  locale: opt.lang === "en" ? "en-US" : "ja-JP",
 });
 const page = await context.newPage();
+const screencast = await startScreencast(context, page, { width: WIDTH, height: HEIGHT });
 const t0 = Date.now();
 const elapsed = () => (Date.now() - t0) / 1000;
 await page.addInitScript({ path: path.join(here, "audio-hook.js") });
-await page.addInitScript((zoom) => {
-  document.addEventListener("DOMContentLoaded", () => {
-    document.documentElement.style.zoom = zoom;
-  });
-}, opt.zoom);
+// アプリの言語は localStorage（sokketsu.lang）から読まれるので、読み込みの前に入れておく
+await page.addInitScript((lang) => localStorage.setItem("sokketsu.lang", lang), opt.lang);
 
 const marks = [];
 let audioStartedAt = null;
@@ -56,6 +67,11 @@ if (await onboard.isVisible().catch(() => false)) {
   marks.push({ label: "onboard", at: elapsed() });
   await page.waitForTimeout(2800);
   await onboard.click({ force: true }); // ボタンは脈打ち続けるので、止まるのを待たずに押す
+  // 開く途中で押すと閉じないことがある（2026-10-11）。閉じなければもう一度押す
+  if (!(await onboard.waitFor({ state: "hidden", timeout: 4000 }).then(() => true, () => false))) {
+    await onboard.click({ force: true });
+    await onboard.waitFor({ state: "hidden", timeout: 4000 });
+  }
 }
 await page.waitForTimeout(2000); // 待機中の動き（背景・REPLAY）を少し撮る
 marks.push({ label: "start", at: elapsed() });
@@ -128,8 +144,12 @@ const b64 = await page.evaluate(() => window.__stopAudio?.());
 audioStartedAt = await page.evaluate(() =>
   window.__audioStartedAt == null ? null : performance.timeOrigin + window.__audioStartedAt,
 );
+const shot = await screencast.stop(path.join(out, "screen.webm"), t0);
+const shotFps = shot.frames / shot.span;
+console.error(`screencast: ${shot.frames} frames over ${shot.span.toFixed(1)} s (${shotFps.toFixed(1)} fps)`);
+// 同じ方式でも回によって 57 fps と 28 fps に分かれた（2026-10-11）。少なければ重い処理を止めて撮り直す
+if (shotFps < 45) console.error(`warning: screencast is ${shotFps.toFixed(1)} fps (< 45). Close heavy apps and capture again for smooth video`);
 await context.close();
-renameSync(await page.video().path(), path.join(out, "screen.webm"));
 await browser.close();
 if (b64) writeFileSync(path.join(out, "audio.webm"), Buffer.from(b64, "base64"));
 
@@ -138,6 +158,7 @@ const run = {
   capturedAt: new Date(t0).toISOString(),
   entry: opt.keypair ? "pasted-devnet-key" : "trial",
   judge: opt["token-file"] ? "jev (demo token)" : "mock",
+  lang: opt.lang,
   // 音の録音が始まった時刻（画面の録画の先頭からの秒）。動画で音を合わせるのに使う
   audioOffsetS: audioStartedAt ? (audioStartedAt - t0) / 1000 : null,
   marks,

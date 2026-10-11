@@ -1,129 +1,130 @@
 {
   "url": "https://sokketsu.pages.dev",
-  "capturedAt": "2026-10-09T09:08:47.248Z",
+  "capturedAt": "2026-10-11T09:58:04.279Z",
   "entry": "trial",
   "judge": "jev (demo token)",
-  "audioOffsetS": 3.529199951171875,
+  "lang": "en",
+  "audioOffsetS": 4.102199951171875,
   "marks": [
     {
       "label": "onboard",
-      "at": 0.583
+      "at": 0.738
     },
     {
       "label": "start",
-      "at": 5.569
+      "at": 6.526
     },
     {
       "label": "ready",
-      "at": 8.138
+      "at": 10.703
     },
     {
       "label": "depositing",
-      "at": 9.857
+      "at": 12.751
     },
     {
       "label": "judging",
-      "at": 11.009
+      "at": 13.814
     },
     {
       "label": "holding",
-      "at": 11.914
+      "at": 14.736
     },
     {
       "label": "stopped",
-      "at": 12.839
+      "at": 15.666
     },
     {
       "label": "countdown",
-      "at": 13.206
+      "at": 15.81
     },
     {
       "label": "depositing",
-      "at": 19.193
+      "at": 21.784
     },
     {
       "label": "judging",
-      "at": 20.371
+      "at": 22.886
     },
     {
       "label": "releasing",
-      "at": 21.404
+      "at": 23.911
     },
     {
       "label": "released",
-      "at": 22.254
+      "at": 24.854
     },
     {
       "label": "end",
-      "at": 27.209
+      "at": 29.813
     }
   ],
   "finality": {
-    "hitMs": "809ms",
-    "vaultMs": "809ms",
-    "decision": "release 94%",
-    "source": "source: jev · ✓ 署名済み",
-    "slot": "509,128,572",
+    "hitMs": "858ms",
+    "vaultMs": "858ms",
+    "decision": "release 97%",
+    "source": "source: jev · ✓ signed",
+    "slot": "509,864,530",
     "grade": "A",
-    "near": "あと 210 ms で S ランク"
+    "near": "259 ms short of S rank"
   },
   "result": {
-    "finalizedMs": 809,
-    "speedup": "16",
+    "finalizedMs": 858,
+    "speedup": "15",
     "breakdown": [
-      "0 ms送信",
-      "276 msprocessed",
-      "809 msfinalized"
+      "0 mssent",
+      "451 msprocessed",
+      "858 msfinalized"
     ]
   },
   "timeline": [
     {
-      "label": "依頼（hold）",
-      "detail": "hold: wait #zsm4",
+      "label": "Request (hold)",
+      "detail": "hold: wait #t5rk",
       "ms": null,
       "tx": null
     },
     {
-      "label": "預け入れ 0.05 SOL → 金庫 PDA",
+      "label": "Deposit 0.05 SOL → vault PDA",
       "detail": null,
-      "ms": "932 ms",
-      "tx": "https://explorer.solana.com/tx/3n4sZvk71tNQPq9G9SRgFo2S2tLS4WAHmXfgKztGP3dCzX7vJjcQu2zSGByJr5apJBsd7HKhpcwgFr5nLmbz22wi?cluster=devnet"
+      "ms": "781 ms",
+      "tx": "https://explorer.solana.com/tx/4nBvpPBxXYrsnafTLc6VWHF4R7G7c4nD3TaLSfJU1v7rUkw5Z99tnzdGf8KkQAnm9BEw5TbaTqgUNuPxFuU53YrW?cluster=devnet"
     },
     {
-      "label": "判断: hold",
-      "detail": "99.0% · source: jev · オラクル署名あり",
+      "label": "Decision: hold",
+      "detail": "99.0% · source: jev · oracle-signed",
       "ms": null,
       "tx": null
     },
     {
-      "label": "止めた — 送金なし",
-      "detail": "settle(hold) を記録",
+      "label": "Stopped — no transfer",
+      "detail": "recorded settle(hold)",
       "ms": null,
-      "tx": "https://explorer.solana.com/tx/Df7J3fKfafECaYyVqWmC4zSxuc6Dicc1uRKqHWMWqGRjaTTmr2yu7CQ8yiWtqFeCH3vqyKPTsPgFGurE8tpfgt6?cluster=devnet"
+      "tx": "https://explorer.solana.com/tx/49YeBRTGSc41d8NCAaoeS5mbVTP7ZuyH2t7wDMfZUKN1qEffTSgGb9HPKGiwG3YgZbFdK71RAcePPf5pJ9tTZe4b?cluster=devnet"
     },
     {
-      "label": "依頼（release）",
-      "detail": "release: delivered the devnet ping report; payer verified and approved #cchl",
+      "label": "Request (release)",
+      "detail": "release: delivered the devnet ping report; payer verified and approved #t93k",
       "ms": null,
       "tx": null
     },
     {
-      "label": "預け入れ 0.05 SOL → 金庫 PDA",
+      "label": "Deposit 0.05 SOL → vault PDA",
       "detail": null,
-      "ms": "939 ms",
-      "tx": "https://explorer.solana.com/tx/fdJ9aAWS4vbbhB3oGy6WV1fUCUXhjxzGxzGQrXEaARJ9ro5mL15VzMLVBDMGV1pZd7sehWC48XvNPuhAwmFa1Vk?cluster=devnet"
+      "ms": "717 ms",
+      "tx": "https://explorer.solana.com/tx/36NjAyiCsVRkCYc6VDyQdYxNes1m4Mmv35rtH56Kqdu8teZaAn23kp8ToBUev9pxUY2aQtH84dw94R87nyY7mMvW?cluster=devnet"
     },
     {
-      "label": "判断: release",
-      "detail": "94.0% · source: jev · オラクル署名あり",
+      "label": "Decision: release",
+      "detail": "97.0% · source: jev · oracle-signed",
       "ms": null,
       "tx": null
     },
     {
-      "label": "受注者へ解放 finalized",
+      "label": "Released to payee finalized",
       "detail": null,
-      "ms": "809 ms",
-      "tx": "https://explorer.solana.com/tx/2DYdKdWGdWqz1Ugg8R42z8cT51mnyef8MQxC9h73aqRgDdPD1rogbbjyTmHjuhWjgWgDPhDvYXQnaqxUetRJaeLD?cluster=devnet"
+      "ms": "858 ms",
+      "tx": "https://explorer.solana.com/tx/4ondkUqtcL9g6NZbtRPBYLZM1uwTSKXvScRPeGDuFbYUqcGn6zSv2d9Nf7JxeQydmujmjaRnkLbdXBG3TWbF4v8a?cluster=devnet"
     }
   ]
 }
