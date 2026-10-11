@@ -39,6 +39,14 @@ describe("FlowStage", () => {
     expect(container.querySelectorAll(".shard")).toHaveLength(12);
   });
 
+  it("両端のノードは名前の下に役割を 1 行で添える", () => {
+    const { container } = render(stage());
+    expect(container.querySelector(".node-payer .node-role")?.textContent).toBe("発注者");
+    expect(container.querySelector(".node-payer .node-hint")?.textContent).toBe("SOL を預ける");
+    expect(container.querySelector(".node-payee .node-role")?.textContent).toBe("受注者");
+    expect(container.querySelector(".node-payee .node-hint")?.textContent).toBe("解放で受け取る");
+  });
+
   it("預け入れ中はコインが発注者から金庫へ動き、左のレールが光る", () => {
     const { container } = render(stage({ phase: "depositing", vaultLamports: 50_000_000 }));
     const coin = container.querySelector<HTMLElement>(".coin");

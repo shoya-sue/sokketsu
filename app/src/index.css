@@ -441,6 +441,18 @@ a:focus-visible {
   color: var(--muted);
 }
 
+/* 名前の下の役割（何をする側か）。名前より一段小さく、等幅で添える */
+.node-hint {
+  margin-top: -2px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.25;
+}
+
 .node-balance {
   display: flex;
   gap: 4px;

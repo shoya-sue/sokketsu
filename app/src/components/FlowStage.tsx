@@ -124,6 +124,7 @@ export function FlowStage({
 
       <Node
         role={t("stage.payer")}
+        hint={t("stage.payerHint")}
         party={payer}
         glow={phase === "refunded"}
         dim={false}
@@ -241,7 +242,14 @@ export function FlowStage({
         )}
       </div>
 
-      <Node role={t("stage.payee")} party={payee} glow={phase === "released"} dim={false} className="node-payee" />
+      <Node
+        role={t("stage.payee")}
+        hint={t("stage.payeeHint")}
+        party={payee}
+        glow={phase === "released"}
+        dim={false}
+        className="node-payee"
+      />
 
       {phase === "stopped" && (
         <div className="stage-stamp" key={`s-${runKey}`}>
@@ -254,12 +262,14 @@ export function FlowStage({
 
 function Node({
   role,
+  hint,
   party,
   glow,
   dim,
   className,
 }: {
   role: string;
+  hint: string;
   party: Party;
   glow: boolean;
   dim: boolean;
@@ -268,6 +278,7 @@ function Node({
   return (
     <div className={`node ${className} ${glow ? "glow" : ""} ${dim ? "dim" : ""}`}>
       <span className="node-role">{role}</span>
+      <span className="node-hint">{hint}</span>
       <span className="node-balance" key={party.balance ?? "none"}>
         {sol(party.balance)}
         <small>SOL</small>
