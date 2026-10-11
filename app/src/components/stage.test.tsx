@@ -39,6 +39,14 @@ describe("FlowStage", () => {
     expect(container.querySelectorAll(".shard")).toHaveLength(12);
   });
 
+  it("両端のノードは名前の下に役割を 1 行で添える", () => {
+    const { container } = render(stage());
+    expect(container.querySelector(".node-payer .node-role")?.textContent).toBe("発注者");
+    expect(container.querySelector(".node-payer .node-hint")?.textContent).toBe("SOL を預ける");
+    expect(container.querySelector(".node-payee .node-role")?.textContent).toBe("受注者");
+    expect(container.querySelector(".node-payee .node-hint")?.textContent).toBe("解放で受け取る");
+  });
+
   it("預け入れ中はコインが発注者から金庫へ動き、左のレールが光る", () => {
     const { container } = render(stage({ phase: "depositing", vaultLamports: 50_000_000 }));
     const coin = container.querySelector<HTMLElement>(".coin");
@@ -46,6 +54,18 @@ describe("FlowStage", () => {
     expect(coin?.style.getPropertyValue("--to")).toBe("50%");
     expect(container.querySelector(".rail-left")?.className).toContain("active");
     expect(container.querySelector(".vault-amount")?.textContent).toBe("0.0500");
+  });
+
+  it("判断のリール：待機中は出さず、判断中は回り、判断が出たらその選択肢で止まる", () => {
+    expect(render(stage()).container.querySelector(".vault-reel")).toBeNull();
+    const judging = render(stage({ phase: "judging" })).container.querySelector(".vault-reel");
+    expect(judging?.className).toContain("is-spinning");
+    expect(judging?.getAttribute("aria-hidden")).toBe("true");
+    const landed = render(stage({ phase: "releasing", judgement: release })).container.querySelector(".vault-reel");
+    expect(landed?.className).toContain("is-landed");
+    expect(landed?.getAttribute("data-decision")).toBe("release");
+    const stopped = render(stage({ phase: "stopped", judgement: hold })).container.querySelector(".vault-reel");
+    expect(stopped?.getAttribute("data-decision")).toBe("hold");
   });
 
   it("判断中はスキャンと案内を出す", () => {

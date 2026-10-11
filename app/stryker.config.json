@@ -1,8 +1,10 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "_comment": "vitest-runner は vitest 5 で mutant を有効化できず全件 survived になった（2026-10-07 実測）。mutant ごとに vitest を丸ごと実行する command runner を使う。",
+  "_comment": "vitest-runner は vitest 5 で mutant を有効化できず全件 survived になった（2026-10-07 実測）。mutant ごとに vitest を丸ごと実行する command runner を使う。 並列 6 本で毎回テスト全体を流すと、vitest の worker が CPU を取り合って 1 回が時間切れの基準を超え、ほぼ全件が「時間切れ」（検出扱い）になっていた。stats.ts の 54 件で、並列 6 本は検出 1・時間切れ 53、並列 2 本 + worker 4 個までは検出 54・時間切れ 0（かかる時間はほぼ同じ）。2026-10-09 #56。",
   "testRunner": "command",
-  "commandRunner": { "command": "npx vitest run --reporter=dot" },
+  "commandRunner": {
+    "command": "npx vitest run --reporter=dot --maxWorkers=4"
+  },
   "coverageAnalysis": "off",
   "mutate": [
     "src/lib/**/*.ts",
@@ -13,9 +15,19 @@
     "!src/lib/fx.ts",
     "!src/lib/sfx.ts"
   ],
-  "reporters": ["clear-text", "progress", "json"],
-  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
-  "thresholds": { "high": 90, "low": 80, "break": null },
+  "reporters": [
+    "clear-text",
+    "progress",
+    "json"
+  ],
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "thresholds": {
+    "high": 90,
+    "low": 80,
+    "break": null
+  },
   "tempDirName": ".stryker-tmp",
-  "concurrency": 6
+  "concurrency": 2
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { levelFromXp, levelProgress, type GameState } from "../lib/game";
 import { fireLevel } from "../lib/thrill";
+import { comboSegments, ringDashOffset } from "../lib/gauges";
 import { useLang } from "../lang";
 
 type Props = {
@@ -29,7 +30,14 @@ function useTween(target: number, durationMs = 700): number {
   return value;
 }
 
-/** レベル・経験値バー・スコア・コンボ・ベストを並べる。 */
+const RING_R = 44;
+const RING_C = 2 * Math.PI * RING_R;
+const HEX = "50,4 90,27 90,73 50,96 10,73 10,27";
+
+/**
+ * レベル・経験値バー・スコア・コンボ・ベストを並べる。
+ * 計器として重ねる（#56）：レベルは六角形のバッジと経験値の環、スコアは裏に残像の桁、コンボは 5 段のメーター。
+ */
 export function Hud({ game, gain }: Props) {
   const { t } = useLang();
   const score = useTween(game.xp);
@@ -39,13 +47,31 @@ export function Hud({ game, gain }: Props) {
   return (
     <section className="hud" aria-label={t("hud.label")}>
       <div className="hud-level" key={`lv-${level}`}>
+        <svg className="hud-level-badge" viewBox="0 0 100 100" aria-hidden="true">
+          <polygon className="hud-hex" points={HEX} />
+          <circle className="hud-ring-track" cx="50" cy="50" r={RING_R} />
+          <circle
+            className="hud-ring"
+            cx="50"
+            cy="50"
+            r={RING_R}
+            strokeDasharray={RING_C}
+            strokeDashoffset={ringDashOffset(progress, RING_C)}
+          />
+          <circle className="hud-ring-ticks" cx="50" cy="50" r="48" />
+        </svg>
         <span className="hud-level-label">LV</span>
         <span className="hud-level-num">{level}</span>
       </div>
       <div className="hud-xp">
         <div className="hud-xp-head">
           <span>{t("hud.score")}</span>
-          <strong className="hud-score">{Math.round(score).toLocaleString()}</strong>
+          <span className="hud-score-wrap">
+            <span className="hud-score-ghost" aria-hidden="true">
+              888,888
+            </span>
+            <strong className="hud-score">{Math.round(score).toLocaleString()}</strong>
+          </span>
           {gain && gain.amount > 0 && (
             <span className="hud-gain" key={gain.key}>
               +{gain.amount}
@@ -65,6 +91,11 @@ export function Hud({ game, gain }: Props) {
       <div className={`hud-combo ${game.combo >= 2 ? "hot" : ""} fire-${fire}`} key={`combo-${game.combo}`}>
         <span className="hud-combo-label">{t("hud.combo")}</span>
         <span className="hud-combo-num">×{game.combo}</span>
+        <span className="hud-segs" aria-hidden="true">
+          {comboSegments(game.combo).map((on, i) => (
+            <i key={i} className={on ? "on" : undefined} />
+          ))}
+        </span>
         {fire > 0 && (
           <span className="hud-fire" role="img" aria-label={t("hud.fire", { combo: game.combo })}>
             {"🔥".repeat(fire)}

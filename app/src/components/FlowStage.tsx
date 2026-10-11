@@ -4,6 +4,8 @@ import { useLang } from "../lang";
 import { RING_COUNT, ringsBroken, thresholdRing } from "../lib/rings";
 
 import type { Phase } from "../lib/phase";
+import { StageDeck } from "./StageDeck";
+import { VaultHalo } from "./VaultHalo";
 
 export type { Phase };
 
@@ -25,6 +27,9 @@ type Props = {
 };
 
 const EXPLORER = "https://explorer.solana.com";
+// 判断のリール（#56）。3 択を 4 周並べ、判断中は回し続け、判断が出たら最後の周のその選択肢で止める。
+const REEL_CHOICES = ["release", "hold", "refund"] as const;
+const REEL = Array.from({ length: 4 }, () => REEL_CHOICES).flat();
 const RADIUS = 58;
 const CIRC = 2 * Math.PI * RADIUS;
 const SHARD_R = 66;
@@ -96,6 +101,7 @@ export function FlowStage({
 
   return (
     <div className={`stage phase-${phase} ${replayMs !== null ? "is-replay" : ""}`}>
+      <StageDeck />
       {replayMs !== null && (
         <span className="replay-tag" aria-hidden="true">
           REPLAY
@@ -118,6 +124,7 @@ export function FlowStage({
 
       <Node
         role={t("stage.payer")}
+        hint={t("stage.payerHint")}
         party={payer}
         glow={phase === "refunded"}
         dim={false}
@@ -125,6 +132,13 @@ export function FlowStage({
       />
 
       <div className={`vault ${passes ? "pass" : judgement ? "stop" : ""}`}>
+        <VaultHalo
+          phase={phase}
+          probability={showRing ? probability : null}
+          thresholdPct={Math.round(threshold * 100)}
+          unfoldKey={`${phase}-${runKey}`}
+          decision={showRing ? (judgement?.decision ?? null) : null}
+        />
         <svg viewBox="0 0 140 140" className={`gate ${scanning ? "scanning" : ""}`} aria-hidden="true">
           <defs>
             <linearGradient id="gate-grad" x1="0" y1="0" x2="1" y2="1">
@@ -191,6 +205,26 @@ export function FlowStage({
               </span>
             </>
           )}
+          {(scanning || showRing) && (
+            <span
+              className={`vault-reel ${scanning ? "is-spinning" : "is-landed"}`}
+              aria-hidden="true"
+              data-decision={scanning ? undefined : judgement?.decision}
+              key={`reel-${runKey}-${scanning ? "spin" : "land"}`}
+              style={{
+                ["--land" as string]:
+                  REEL.length - REEL_CHOICES.length + Math.max(0, REEL_CHOICES.indexOf(judgement?.decision ?? "release")),
+              }}
+            >
+              <span className="vault-reel-strip">
+                {REEL.map((c, i) => (
+                  <span key={i} className={`vault-reel-cell reel-${c}`}>
+                    {c}
+                  </span>
+                ))}
+              </span>
+            </span>
+          )}
           <span className="vault-judge" aria-live="polite">
             {scanning
               ? t("stage.judging")
@@ -208,7 +242,14 @@ export function FlowStage({
         )}
       </div>
 
-      <Node role={t("stage.payee")} party={payee} glow={phase === "released"} dim={false} className="node-payee" />
+      <Node
+        role={t("stage.payee")}
+        hint={t("stage.payeeHint")}
+        party={payee}
+        glow={phase === "released"}
+        dim={false}
+        className="node-payee"
+      />
 
       {phase === "stopped" && (
         <div className="stage-stamp" key={`s-${runKey}`}>
@@ -221,12 +262,14 @@ export function FlowStage({
 
 function Node({
   role,
+  hint,
   party,
   glow,
   dim,
   className,
 }: {
   role: string;
+  hint: string;
   party: Party;
   glow: boolean;
   dim: boolean;
@@ -235,6 +278,7 @@ function Node({
   return (
     <div className={`node ${className} ${glow ? "glow" : ""} ${dim ? "dim" : ""}`}>
       <span className="node-role">{role}</span>
+      <span className="node-hint">{hint}</span>
       <span className="node-balance" key={party.balance ?? "none"}>
         {sol(party.balance)}
         <small>SOL</small>

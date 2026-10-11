@@ -46,9 +46,10 @@ describe("describeError", () => {
 
 describe("msg / parseLang", () => {
   it("msg はキーと値を持つ", () => expect(msg("a", { b: 1 })).toEqual({ k: "a", p: { b: 1 } }));
-  it("en 以外は ja", () => {
+  it("既定は英語。ja を選んだときだけ日本語", () => {
+    expect(parseLang("ja")).toBe("ja");
     expect(parseLang("en")).toBe("en");
-    expect(parseLang(null)).toBe("ja");
-    expect(parseLang("fr")).toBe("ja");
+    expect(parseLang(null)).toBe("en");
+    expect(parseLang("fr")).toBe("en");
   });
 });

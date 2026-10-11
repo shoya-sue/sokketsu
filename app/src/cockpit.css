@@ -1,0 +1,432 @@
+/* ==== #56 箱で区切らない画面（cockpit） ====
+   セクション（背景・枠・角丸のカード）を使わない。画面全体を 1 枚の HUD として組み、
+   中央に舞台（.arena）、左右に浮かぶ計器（.dock の .gauge）を置く。計器の名札は .gauge-tag。
+   index.css の後に読み込み、ここが画面の構成と面の扱いの正本になる。 */
+
+.shell {
+  max-width: 1680px;
+  padding: 18px 28px 40px;
+}
+
+.cockpit {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(270px, 330px);
+  gap: 18px 32px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.dock {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+/* ---- 計器：箱ではなく、左の光る線と名札だけ ---- */
+.gauge {
+  position: relative;
+  min-width: 0;
+  padding: 18px 0 6px 18px;
+}
+
+.gauge::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--tone-b), color-mix(in srgb, var(--tone-a) 70%, transparent) 40%, transparent);
+  box-shadow: 0 0 12px var(--tone-b);
+}
+
+.gauge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 26px;
+  height: 2px;
+  background: var(--tone-b);
+  box-shadow: 0 0 10px var(--tone-b);
+}
+
+.gauge-tag {
+  position: absolute;
+  top: 0;
+  left: 34px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--tone-b) 80%, white);
+  text-shadow: 0 0 10px var(--tone-b);
+}
+
+.gauge-tag::before {
+  content: "[ ";
+  color: var(--tone-a);
+}
+
+.gauge-tag::after {
+  content: " ]";
+  color: var(--tone-a);
+}
+
+/* 計器の中身は文字に影を付け、背景の層の上でも読めるようにする（面は敷かない） */
+.dock {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* ---- 箱だった部品から面と枠を外す ---- */
+.hud,
+.settings,
+.judge-panel {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  backdrop-filter: none;
+}
+
+.hud {
+  grid-template-columns: auto 1fr;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 18px 0 6px 18px;
+  position: relative;
+}
+
+.hud::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--tone-a), transparent);
+  box-shadow: 0 0 12px var(--tone-a);
+}
+
+.hud-combo,
+.hud-best {
+  grid-column: span 1;
+}
+
+.settings {
+  padding: 4px 0 12px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--tone-b) 40%, transparent);
+}
+
+.judge-panel {
+  margin: 0;
+  padding: 0;
+}
+
+/* 右の列は細いので、判断の流れは縦に並べる */
+.dock .judge-flow {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.dock .flow-link {
+  justify-self: start;
+  width: 2px;
+  height: 16px;
+  margin: 0 0 0 14px;
+}
+
+.dock .flow-link::after {
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.dock .judge-compare {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dock .result {
+  min-height: 0;
+  justify-items: start;
+  text-align: left;
+}
+
+/* ---- 中央の舞台：枠も面も無く、画面に直接置く ---- */
+.arena {
+  position: relative;
+  min-width: 0;
+  padding: 10px 0 18px;
+}
+
+.arena .stage {
+  min-height: 420px;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.5fr) minmax(0, 0.75fr);
+}
+
+.arena .vault {
+  width: min(280px, 100%);
+}
+
+/* ハローは舞台の外へはみ出すので、入口・操作はその手前に出し、ボタンの面は透かさない */
+.arena > .setup,
+.arena > .controls,
+.arena > .progress-track {
+  position: relative;
+  z-index: 3;
+}
+
+/* 判断中・止めた瞬間：舞台の上下に警告テープが流れる */
+.arena::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(-45deg, var(--tone-a) 0 12px, #07060d 12px 24px) top / 200% 8px no-repeat,
+    repeating-linear-gradient(-45deg, var(--tone-b) 0 12px, #07060d 12px 24px) bottom / 200% 8px no-repeat;
+  transition: opacity 0.3s;
+}
+
+.shell[data-stage="judging"] .arena::after,
+.shell[data-stage="holding"] .arena::after {
+  opacity: 0.9;
+  animation: od-tape 1.2s linear infinite;
+}
+
+@keyframes od-tape {
+  to {
+    background-position:
+      -34px 0,
+      34px 100%;
+  }
+}
+
+/* レベルアップの重ね表示は、舞台の範囲に収める（角丸の箱にしない） */
+.arena .levelup {
+  border-radius: 0;
+}
+
+/* ---- 狭い画面：1 列に並べ、計器を舞台の前後に配る ---- */
+@media (max-width: 1100px) {
+  .cockpit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dock {
+    display: contents;
+  }
+  .hud {
+    order: 1;
+  }
+  .arena {
+    order: 2;
+  }
+  .gauge-result {
+    order: 3;
+  }
+  .gauge-judge {
+    order: 4;
+  }
+  .gauge-timeline {
+    order: 5;
+  }
+  .gauge,
+  .hud {
+    position: relative;
+    z-index: 3;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+  }
+  .arena .stage {
+    min-height: 300px;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 14px 14px 32px;
+  }
+  .arena .vault {
+    width: min(170px, 100%);
+  }
+  .arena .stage {
+    min-height: 240px;
+  }
+}
+
+/* ---- 舞台のノード：面を外し、四隅の括弧だけの照準にする ---- */
+.arena .node {
+  border: 0;
+  border-radius: 0;
+  background: radial-gradient(closest-side, rgba(7, 6, 13, 0.75), transparent);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+}
+
+.arena .node::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --c: color-mix(in srgb, var(--tone-b) 85%, white);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 16px 2px no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / 2px 16px no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 16px 2px no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 2px 16px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 16px 2px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 2px 16px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 16px 2px no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 2px 16px no-repeat;
+  filter: drop-shadow(0 0 6px var(--tone-b));
+}
+
+/* 舞台の奥（床・漢字）は舞台の幅に収める。狭い画面ではハローも横を切る（横スクロールを出さない） */
+.arena .deck {
+  inset: -10px 0 -18px;
+}
+
+.lang-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .arena {
+    overflow-x: clip;
+  }
+}
+
+/* ハローは金庫の本体（リングと中央の数字）の裏、背景より手前に置く（負の z-index だと背景の層に隠れた） */
+.arena .vault .halo {
+  z-index: 0;
+}
+
+.arena .vault > .gate,
+.arena .vault > .vault-core {
+  position: relative;
+  z-index: 1;
+}
+
+.arena .vault > .gate {
+  position: absolute;
+}
+
+/* ヘッダーはハローより手前 */
+.top {
+  position: relative;
+  z-index: 4;
+}
+
+/* ==== ファーストビューに全部収める（広い画面） ====
+   画面の高さに固定し、ティッカー・ヘッダー・計器・舞台・注記の帯を 1 画面に置く。
+   左右の計器は中で流す（スクロールバーは出さない）。舞台と金庫は画面の高さに合わせて縮める。 */
+.foot {
+  margin: 0;
+  padding: 4px 0 0;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+
+.foot p {
+  display: inline;
+  margin: 0 8px;
+}
+
+@media (min-width: 1100px) and (min-height: 700px) {
+  .shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding-bottom: 6px;
+    overflow: hidden;
+  }
+  .cockpit {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 2px;
+  }
+  .dock {
+    max-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+    mask-image: linear-gradient(180deg, #000 88%, transparent);
+  }
+  .dock::-webkit-scrollbar {
+    display: none;
+  }
+  .arena {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    height: 100%;
+    padding: 0;
+  }
+  .arena .stage {
+    min-height: min(420px, 44dvh);
+  }
+  .arena .vault {
+    width: min(280px, 28dvh, 100%);
+  }
+  .od-ticker {
+    margin-block: -10px 8px;
+  }
+  .od-ticker.is-reverse {
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+  .od-chain {
+    bottom: 64px;
+  }
+}
+
+@media (min-width: 1100px) and (min-height: 700px) {
+  /* ヘッダーは 1 段に収める（大文字のワードマークは少し小さく、波形は広い画面だけ） */
+  .top {
+    flex-wrap: nowrap;
+    margin-bottom: 6px;
+  }
+  .top-right {
+    flex-wrap: nowrap;
+  }
+  .logo-word {
+    font-size: clamp(1.6rem, 0.9rem + 1.6vw, 2.4rem);
+  }
+  .arena .stage {
+    min-height: min(380px, 38dvh);
+  }
+  .arena .vault {
+    width: min(260px, 25dvh, 100%);
+  }
+  .arena .setup {
+    gap: 6px;
+  }
+  .arena .setup .hint,
+  .arena .paste-key {
+    font-size: 0.72rem;
+  }
+  .od-chain {
+    display: none;
+  }
+}
+
+@media (max-width: 1499px) {
+  .top .slot-pulse {
+    display: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  .top-right {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+  .top {
+    flex-wrap: wrap;
+  }
+}

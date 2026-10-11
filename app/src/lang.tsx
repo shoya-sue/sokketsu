@@ -10,6 +10,7 @@ type LangValue = {
   tm: (m: Msg) => string;
 };
 
+// Provider の外（部品の単体テスト）で使う既定。画面は必ず LangProvider を通り、そちらの既定は英語（loadLang）。
 const LangContext = createContext<LangValue>({
   lang: "ja",
   toggle: () => {},
@@ -21,7 +22,7 @@ function loadLang(): Lang {
   try {
     return parseLang(localStorage.getItem(LANG_KEY));
   } catch {
-    return "ja";
+    return "en";
   }
 }
 
