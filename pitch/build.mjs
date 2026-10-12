@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const want = new Set(process.argv.slice(2).length ? process.argv.slice(2) : ["pdf", "logo", "tech"]);
+const want = new Set(process.argv.slice(2).length ? process.argv.slice(2) : ["pdf", "logo", "graphics", "tech"]);
 const FPS = 60;
 const TECH_MAX_S = 180; // 技術デモ動画の上限（Colosseum：3 分以内）
 
@@ -64,6 +64,30 @@ if (want.has("logo")) {
   await page.close();
 }
 
+if (want.has("graphics")) {
+  // 提出用の画像：英語の OGP（tools/brand/og.html の文言だけ英語にする。サイトの og.png は日本語のまま）と、スライドの表紙
+  const og = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+  await og.goto(`${base}/tools/brand/og.html`, { waitUntil: "networkidle" });
+  await og.evaluate(() => {
+    document.documentElement.lang = "en";
+    document.querySelector(".tag").textContent = "Stop agent payments with typed decisions.";
+    document.querySelector(".num span").textContent = "finality on Alpenglow";
+  });
+  await og.evaluate(() => document.fonts.ready);
+  const ogFile = path.join(here, "assets", "og-en-1200x630.png");
+  await og.locator("#og").screenshot({ path: ogFile });
+  console.log(`wrote ${ogFile}`);
+  await og.close();
+
+  const cover = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+  await cover.goto(`${base}/pitch/slides.html?deck=pitch#1`);
+  await cover.waitForFunction(() => document.body.dataset.ready === "1");
+  const coverFile = path.join(here, "assets", "cover-1920x1080.png");
+  await cover.screenshot({ path: coverFile });
+  console.log(`wrote ${coverFile}`);
+  await cover.close();
+}
+
 if (want.has("tech")) {
   const run = JSON.parse(readFileSync(path.join(root, "video", "capture", "out", "run.json"), "utf8"));
   const timeline = JSON.parse(readFileSync(path.join(root, "video", "sokketsu-pitch.timeline.json"), "utf8"));
@@ -91,7 +115,7 @@ if (want.has("tech")) {
       `Finality is measured in the browser with a WebSocket signature subscription. In this run the release reached finalized in ${ms} milliseconds, ` +
       `about ${run.result.speedup} times faster than Tower BFT.`,
     quality:
-      "The program has fourteen anchor tests, covering signatures, re-use, source tampering and submitter rules. The app and API have five hundred fifty four vitest tests.",
+      "The program has fourteen anchor tests, covering signatures, re-use, source tampering and submitter rules. The app and API have five hundred fifty four vee-test tests.",
     thanks: "Sokketsu is open source, and live on devnet at sokketsu dot pages dot dev. Thank you.",
   };
   const ORDER = ["cover", "arch", "program", "sig", "demo", "trust", "measured", "quality", "thanks"];

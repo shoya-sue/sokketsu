@@ -8,6 +8,8 @@ Colosseum のハッカソンに出す資料。提出フォームの文面と、�
 | `sokketsu-tech-demo.mp4` | 技術デモ動画（154.6 秒・1920×1080・60fps・英語ナレーション）。技術スライド + ピッチ動画の実演の場面 |
 | `slides.html` | スライドの元。ブラウザで開くと 1 枚ずつ表示（← → / クリックで送る、`#3` で 3 枚目）。`?deck=tech` で技術デモ用の組 |
 | `assets/logo-1024.png` | 提出用のロゴ（1024×1024・透過） |
+| `assets/og-en-1200x630.png` | 提出用の英語のバナー（`tools/brand/og.html` の文言だけ英語にしたもの） |
+| `assets/cover-1920x1080.png` | スライドの表紙（グラデーションつき） |
 | `assets/demo-*.jpg` | スライドに載せた本番の画面（`video/capture/out/screen.webm` から切り出し） |
 | `SUBMISSION.md` | 提出フォームの英語の文面と、提出前にやること |
 
@@ -17,7 +19,7 @@ Colosseum のハッカソンに出す資料。提出フォームの文面と、�
 
 ```sh
 cd video && npm install                    # Playwright は video/ の依存を使う
-cd .. && node pitch/build.mjs              # PDF・ロゴ・技術デモ動画（pdf / logo / tech を個別にも指定できる）
+cd .. && node pitch/build.mjs              # PDF・ロゴ・画像・技術デモ動画（pdf / logo / graphics / tech を個別にも指定できる）
 # 画面を撮り直したときは、スライドの画面も切り出し直す
 ffmpeg -ss <秒> -i video/capture/out/screen.webm -frames:v 1 -q:v 3 pitch/assets/demo-hold.jpg
 ```
