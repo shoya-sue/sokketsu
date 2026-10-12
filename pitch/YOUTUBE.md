@@ -21,7 +21,7 @@ Measured on Alpenglow devnet: 858 ms from send to finalized — about 15x faster
 
 ▶ Try it live: https://sokketsu.pages.dev
 💻 Code (MIT): https://github.com/shoya-sue/sokketsu
-🛠 Technical demo: <技術デモ動画の URL>
+🛠 Technical demo: TECH_DEMO_URL
 
 0:00 Hook — 12.8 s vs 858 ms
 0:14 Problem — prose can't stop a payment
@@ -64,7 +64,7 @@ Technical walkthrough of Sokketsu, a typed-decision escrow on Solana devnet.
 
 ▶ Try it live: https://sokketsu.pages.dev
 💻 Code (MIT): https://github.com/shoya-sue/sokketsu
-🎬 Pitch video: <ピッチ動画の URL>
+🎬 Pitch video: PITCH_VIDEO_URL
 Program (devnet): Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp
 
 0:00 Overview & architecture
@@ -86,4 +86,4 @@ Solana, Anchor, Ed25519, oracle, escrow, AI agents, Alpenglow, devnet, Rust, Typ
 
 - YouTube の章は各 10 秒以上が必要。技術デモの冒頭（8 秒）とリンク（6.7 秒）は隣とまとめた
 - 章の時刻は `video/sokketsu-pitch.timeline.json` と `pitch/build.mjs` の各ページの長さから出した（ピッチ：hook 14.2・problem 17.2・flow 20.0・demo 36.9・numbers 11.5・solana 15.1・close 12.3 秒 / 技術デモ：8.0・19.3・19.4・25.1・36.9・15.6・12.4・11.4・6.7 秒）
-- `<…の URL>` は 2 本とも上げた後に、もう片方の説明文へ追記する
+- YouTube の説明文には `<` と `>` を使えない。`TECH_DEMO_URL` / `PITCH_VIDEO_URL` は、2 本とも上げた後にもう片方の URL へ置き換える（説明文は後から編集できる）
