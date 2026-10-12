@@ -32,12 +32,8 @@ Measured on Alpenglow devnet: 858 ms from send to finalized — about 15x faster
 1:54 Try it
 
 Built for the Colosseum Crypto World's Fair hackathon.
-```
 
-**Tags**
-
-```
-Solana, Alpenglow, Anchor, escrow, AI agents, Ed25519, Colosseum, hackathon, devnet, typed decisions
+#Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Hackathon #Web3
 ```
 
 ## 2. 技術デモ動画（`pitch/sokketsu-tech-demo.mp4`・2:34）
@@ -74,16 +70,13 @@ Program (devnet): Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp
 1:49 Who can settle
 2:05 Measuring finality
 2:17 Tests & links
-```
 
-**Tags**
-
-```
-Solana, Anchor, Ed25519, oracle, escrow, AI agents, Alpenglow, devnet, Rust, TypeScript, Colosseum
+#Solana #Anchor #Ed25519 #AIagents #Colosseum #Rust #TypeScript #Web3
 ```
 
 ## メモ
 
 - YouTube の章は各 10 秒以上が必要。技術デモの冒頭（8 秒）とリンク（6.7 秒）は隣とまとめた
 - 章の時刻は `video/sokketsu-pitch.timeline.json` と `pitch/build.mjs` の各ページの長さから出した（ピッチ：hook 14.2・problem 17.2・flow 20.0・demo 36.9・numbers 11.5・solana 15.1・close 12.3 秒 / 技術デモ：8.0・19.3・19.4・25.1・36.9・15.6・12.4・11.4・6.7 秒）
+- タグの欄が無いので、ハッシュタグを説明文の最後に入れた（空白なし・15 個以下。最初の 3 個がタイトルの上に出る）
 - YouTube の説明文には `<` と `>` を使えない。`TECH_DEMO_URL` / `PITCH_VIDEO_URL` は、2 本とも上げた後にもう片方の URL へ置き換える（説明文は後から編集できる）
