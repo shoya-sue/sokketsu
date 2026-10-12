@@ -2,7 +2,7 @@
 
 公開範囲は「限定公開（URL を知っている人）」か「公開」。審査員が見られれば、どちらでもよい。
 
-## 1. ピッチ動画（`video/sokketsu-pitch.mp4`・2:07）
+## 1. ピッチ動画（`video/sokketsu-pitch.mp4`・2:07）— 公開済み https://youtu.be/odzsFW4E_NU
 
 **Thumbnail**：`pitch/assets/youtube-thumb-pitch.jpg`（1280×720）
 
@@ -60,7 +60,7 @@ Technical walkthrough of Sokketsu, a typed-decision escrow on Solana devnet.
 
 ▶ Try it live: https://sokketsu.pages.dev
 💻 Code (MIT): https://github.com/shoya-sue/sokketsu
-🎬 Pitch video: PITCH_VIDEO_URL
+🎬 Pitch video: https://youtu.be/odzsFW4E_NU
 Program (devnet): Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp
 
 0:00 Overview & architecture
