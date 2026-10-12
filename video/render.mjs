@@ -10,13 +10,16 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { narrationFor } from "./scenes/narration.mjs";
-import { VOICE_LEAD_S, buildTimeline, demoCueTimes, demoSegments } from "./scenes/timeline.mjs";
+import { ORDER, SHORT_ORDER, VOICE_LEAD_S, buildTimeline, demoCueTimes, demoSegments } from "./scenes/timeline.mjs";
 
 const FPS = 60;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const here = path.dirname(fileURLToPath(import.meta.url));
-const out = path.resolve(process.argv[2] ?? path.join(here, "sokketsu-pitch.mp4"));
+// PITCH=short なら短い版（実演なし・自己紹介つき・2 分以内）を sokketsu-pitch-short.mp4 に書き出す
+const SHORT = process.env.PITCH === "short";
+const order = SHORT ? SHORT_ORDER : ORDER;
+const out = path.resolve(process.argv[2] ?? path.join(here, SHORT ? "sokketsu-pitch-short.mp4" : "sokketsu-pitch.mp4"));
 const capture = path.join(here, "capture", "out");
 const run = JSON.parse(readFileSync(path.join(capture, "run.json"), "utf8"));
 
@@ -33,15 +36,15 @@ const speak = (name, text) => {
 };
 const narration = narrationFor(run);
 const sceneVoice = Object.fromEntries(
-  ["hook", "problem", "flow", "numbers", "solana", "close"].map((k) => [k, speak(k, narration[k])]),
+  order.filter((k) => k !== "demo").map((k) => [k, speak(k, narration[k])]),
 );
 // 実演の文も先に長さを測る。収まらない段階では、実演を次の段階の直前のコマで止めて待つ（timeline.mjs の holds）
-const demoVoice = narration.demo.map((c, i) => ({ ...c, ...speak(`demo${i}`, c.text) }));
+const demoVoice = order.includes("demo") ? narration.demo.map((c, i) => ({ ...c, ...speak(`demo${i}`, c.text) })) : [];
 const voiceLengths = {
   ...Object.fromEntries(Object.entries(sceneVoice).map(([k, v]) => [k, v.length])),
   demo: demoVoice.map(({ mark, nth, length }) => ({ mark, nth, length })),
 };
-const tl = buildTimeline(run, voiceLengths);
+const tl = buildTimeline(run, voiceLengths, { order });
 const clips = [
   ...Object.entries(sceneVoice).map(([k, v]) => ({ ...v, at: tl.scenes.find((s) => s.name === k).start + VOICE_LEAD_S })),
   ...demoCueTimes(tl, demoVoice).map((c, i) => ({ ...demoVoice.find((d) => d.text === c.text), at: c.at })),
@@ -104,7 +107,7 @@ async function renderFrames() {
   page.on("pageerror", (e) => console.error("page error:", e.message));
   await page.goto(`${base}/video/scenes/index.html`);
   await page.waitForFunction(() => typeof window.setup === "function");
-  const pageTotal = await page.evaluate(([data, src, voice]) => window.setup(data, src, voice), [run, "/video/capture/out/screen.webm", voiceLengths]);
+  const pageTotal = await page.evaluate(([data, src, voice, order]) => window.setup(data, src, voice, order), [run, "/video/capture/out/screen.webm", voiceLengths, order]);
   if (Math.abs(pageTotal - total) > 1e-6) throw new Error(`page timeline ${pageTotal} != ${total}`);
   await page.evaluate(() => document.fonts.ready);
   console.log(tl.scenes.map((s) => `${s.name} ${s.start.toFixed(1)}s +${s.length.toFixed(1)}s`).join(" | "));
@@ -148,7 +151,7 @@ clips.forEach((c, i) => {
   chains.push(`[${i + 1}:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${ms}|${ms}[v${i}]`);
   mixes.push(`[v${i}]`);
 });
-if (existsSync(audio) && run.audioOffsetS != null) {
+if (demo && existsSync(audio) && run.audioOffsetS != null) {
   // 撮影の音の先頭は撮影の audioOffsetS 秒。実演を止めた所で切り、再生する区間ごとに動画の時刻へ置く
   const end = demo.start + demo.length;
   const tempo = tl.demo.speed === 1 ? "" : `,atempo=${Math.min(2, tl.demo.speed).toFixed(4)}`;

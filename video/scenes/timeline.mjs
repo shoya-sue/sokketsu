@@ -1,7 +1,7 @@
 // 発表動画の台本（場面の長さ）と、実演の場面で撮影のどの時刻を映し、どの字幕を出すかを決める純粋関数。
 
 /** 実演以外の場面の長さ（秒）。ナレーションが長ければ伸ばす。実演の長さは撮影から決まる。 */
-export const SCENE_S = { hook: 8, problem: 9, flow: 11, numbers: 9, solana: 12, close: 7 };
+export const SCENE_S = { hook: 8, intro: 9, problem: 9, flow: 11, numbers: 9, solana: 12, close: 7 };
 
 /** 実演の場面の上限（秒）。撮影がこれより長ければ早送りする。 */
 export const DEMO_MAX_S = 50;
@@ -21,7 +21,11 @@ export const CUE_GAP_S = 0.4;
 /** 止めている間に映すコマは、次の印のこれだけ前（印ちょうどだと次の段階の画面と字幕になる）。 */
 export const HOLD_EPS_S = 0.05;
 
-const ORDER = ["hook", "problem", "flow", "demo", "numbers", "solana", "close"];
+/** 通常の並び（実演あり・約 2 分 7 秒）。 */
+export const ORDER = ["hook", "problem", "flow", "demo", "numbers", "solana", "close"];
+
+/** 短い版（Colosseum のピッチ動画は 2 分以内・自己紹介つき。実演は別のデモ動画で見せる）。 */
+export const SHORT_ORDER = ["hook", "intro", "problem", "flow", "numbers", "solana", "close"];
 
 const CAPTIONS = {
   onboard: "First visit: a three-card walkthrough",
@@ -66,7 +70,7 @@ function holdsFor(marks, cues, from, end, speed) {
  * @param {Partial<Record<keyof typeof SCENE_S, number>> & { demo?: { mark: string, nth: number, length: number }[] }} [voice]
  * @returns {{ scenes: { name: string, start: number, length: number }[], total: number, demo: { from: number, speed: number, holds: { at: number, length: number }[] }, marks: { label: string, at: number }[], ms: number }}
  */
-export function buildTimeline(run, voice = {}) {
+export function buildTimeline(run, voice = {}, { order = ORDER } = {}) {
   const ready = markAt(run, "ready");
   const end = markAt(run, "end");
   if (ready === undefined || end === undefined) throw new Error("run.json needs the ready and end marks");
@@ -80,7 +84,7 @@ export function buildTimeline(run, voice = {}) {
   const lengthOf = (name) =>
     name === "demo" ? demoLength : Math.max(SCENE_S[name], voice[name] === undefined ? 0 : voice[name] + VOICE_PAD_S);
   let start = 0;
-  const scenes = ORDER.map((name) => {
+  const scenes = order.map((name) => {
     const scene = { name, start, length: lengthOf(name) };
     start += scene.length;
     return scene;
@@ -140,6 +144,7 @@ export function demoUAt(tl, c) {
  */
 export function demoSegments(tl) {
   const demo = tl.scenes.find((s) => s.name === "demo");
+  if (!demo) return [];
   const end = tl.demo.from + (demo.length - tl.demo.holds.reduce((sum, h) => sum + h.length, 0)) * tl.demo.speed;
   const cuts = [tl.demo.from, ...tl.demo.holds.map((h) => h.at), end];
   return cuts.slice(0, -1).map((from, i) => ({ from, to: cuts[i + 1], at: demo.start + demoUAt(tl, from) }));
@@ -159,6 +164,7 @@ export function captionAt(tl, u) {
  */
 export function demoCueTimes(tl, cues) {
   const demo = tl.scenes.find((s) => s.name === "demo");
+  if (!demo) return [];
   return cues.flatMap(({ mark, nth, text }) => {
     const at = nthMarkAt(tl.marks, mark, nth);
     if (at === undefined) return [];

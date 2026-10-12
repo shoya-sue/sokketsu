@@ -19,6 +19,10 @@ export function narrationFor(run) {
     hook:
       `On Solana's old consensus, Tower BFT, a payment took about twelve point eight seconds to finalize. ` +
       `On Alpenglow, we measured ${ms} milliseconds. This is Sokketsu: agent payments that don't wait.`,
+    // 短い版（Colosseum のピッチ動画）の自己紹介。GitHub のプロフィールとコミット履歴（2026-10-04〜10-12）で確かめられることだけ
+    intro:
+      "Hi, I'm SHO, a solo builder from Japan. I built Sokketsu during this hackathon, in nine days: " +
+      "the Anchor program, the oracle signer, the Cloudflare backend, and the live app on devnet.",
     problem:
       "AI agents are starting to pay for work. But ask a language model whether to release an escrow, " +
       "and you get a paragraph: probably fine, but to be safe. A program can't act on prose. " +
