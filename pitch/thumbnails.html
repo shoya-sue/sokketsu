@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sokketsu — YouTube thumbnails</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=RocknRoll+One&family=Unbounded:wght@700;900&family=Chakra+Petch:wght@600&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* YouTube のサムネイル（1280×720）。?v=pitch|tech。数値は video/capture/out/run.json から入れる */
+      html,
+      body {
+        margin: 0;
+        background: #07060d;
+      }
+      .thumb {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        color: #f2f0fa;
+        background:
+          radial-gradient(1px 1px at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0) 0 0 / 28px 28px,
+          radial-gradient(circle at 78% 30%, rgba(20, 241, 149, 0.22) 0%, transparent 45%),
+          radial-gradient(circle at 15% 85%, rgba(153, 69, 255, 0.35) 0%, transparent 50%),
+          #07060d;
+      }
+      .thumb[hidden] {
+        display: none;
+      }
+      .shot {
+        position: absolute;
+        right: -120px;
+        top: 70px;
+        width: 760px;
+        border-radius: 26px;
+        border: 3px solid rgba(20, 241, 149, 0.55);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7), 0 0 60px rgba(20, 241, 149, 0.25);
+        transform: rotate(-4deg);
+        opacity: 0.92;
+      }
+      .fade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, #07060d 38%, rgba(7, 6, 13, 0.75) 58%, rgba(7, 6, 13, 0.1) 100%);
+      }
+      .brand {
+        position: absolute;
+        left: 64px;
+        top: 56px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+      }
+      .brand img {
+        width: 96px;
+        height: 96px;
+        filter: drop-shadow(0 10px 30px rgba(153, 69, 255, 0.7));
+      }
+      .brand span {
+        font-family: "Dela Gothic One", sans-serif;
+        font-size: 64px;
+        background: linear-gradient(135deg, #9945ff, #00d1ff 55%, #14f195);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .big {
+        position: absolute;
+        left: 58px;
+        top: 200px;
+        font-family: "Unbounded", sans-serif;
+        font-weight: 900;
+        font-size: 230px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        color: #14f195;
+        text-shadow: 0 0 50px rgba(20, 241, 149, 0.45);
+      }
+      .big small {
+        font-size: 96px;
+        color: #f2f0fa;
+        text-shadow: none;
+      }
+      .line {
+        position: absolute;
+        left: 66px;
+        font-family: "RocknRoll One", sans-serif;
+        font-size: 52px;
+        line-height: 1.2;
+      }
+      .tag {
+        position: absolute;
+        left: 66px;
+        bottom: 54px;
+        display: flex;
+        gap: 16px;
+      }
+      .tag b {
+        padding: 10px 22px;
+        border-radius: 999px;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        background: rgba(7, 6, 13, 0.7);
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 26px;
+        letter-spacing: 0.12em;
+      }
+      .tag b.on {
+        border-color: #14f195;
+        color: #14f195;
+      }
+      .tech-title {
+        position: absolute;
+        left: 64px;
+        top: 200px;
+        font-family: "Unbounded", sans-serif;
+        font-weight: 900;
+        font-size: 104px;
+        line-height: 1.02;
+        color: #f2f0fa;
+      }
+      .tech-title em {
+        font-style: normal;
+        color: #14f195;
+      }
+      .msg {
+        position: absolute;
+        left: 66px;
+        top: 452px;
+        padding: 18px 26px;
+        border-radius: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        background: rgba(10, 9, 20, 0.85);
+        font-family: "Share Tech Mono", monospace;
+        font-size: 28px;
+        line-height: 1.45;
+        color: #c9c5dc;
+      }
+      .msg i {
+        font-style: normal;
+        color: #14f195;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="thumb" id="pitch">
+      <img class="shot" src="assets/demo-released.jpg" alt="" />
+      <div class="fade"></div>
+      <div class="brand"><img src="../app/public/logo-mark.svg" alt="" /><span>Sokketsu</span></div>
+      <div class="big"><span data-v="ms"></span><small>ms</small></div>
+      <div class="line" style="top: 460px">Agent payments,<br />stopped or settled.</div>
+      <div class="tag"><b class="on">SOLANA DEVNET</b><b>ALPENGLOW</b><b>TYPED DECISIONS</b></div>
+    </section>
+
+    <section class="thumb" id="tech">
+      <img class="shot" src="assets/demo-hold.jpg" alt="" />
+      <div class="fade"></div>
+      <div class="brand"><img src="../app/public/logo-mark.svg" alt="" /><span>Sokketsu</span></div>
+      <div class="tech-title">TECHNICAL<br /><em>DEMO</em></div>
+      <div class="msg">ed25519 · signed decision<br /><i>verified on-chain</i> before settle</div>
+      <div class="tag"><b class="on">ANCHOR</b><b>ED25519</b><b>RUST · TS</b></div>
+    </section>
+
+    <script type="module">
+      const v = new URLSearchParams(location.search).get("v") ?? "pitch";
+      for (const s of document.querySelectorAll(".thumb")) s.hidden = s.id !== v;
+      const run = await fetch("../video/capture/out/run.json").then((r) => r.json());
+      for (const el of document.querySelectorAll('[data-v="ms"]')) el.textContent = String(Math.round(run.result.finalizedMs));
+      await document.fonts.ready;
+      await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => (i.onload = i.onerror = r)))));
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>
