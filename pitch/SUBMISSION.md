@@ -1,11 +1,13 @@
 # 提出フォームの文面（Colosseum・#64）
 
-提出項目は Colosseum の公式ページ（https://colosseum.com/hackathon 、2026-10-11 に確認）に合わせた。英語の文面はそのまま貼れる。Team・Location は GitHub のプロフィールとコミット履歴、Demand validation は devnet の取引履歴（2026-10-12 に `solana transaction-history` で確認）だけから書いた。
+提出項目は Colosseum の公式ページ（https://colosseum.com/hackathon 、2026-10-11 に確認）と、提出フォームの各欄の文言（2026-10-12 に Claude in Chrome で確認）に合わせた。英語の文面はそのまま貼れる。Team・Location は GitHub のプロフィールとコミット履歴、Demand validation は devnet の取引履歴（2026-10-12 に `solana transaction-history` で確認）だけから書いた。
 
 | 項目 | 中身 | 状態 |
 |---|---|---|
-| ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.3 秒・1920×1080・60fps） | YouTube（公開）https://youtu.be/odzsFW4E_NU（2026-10-12 にログインなしで再生できることを確認） |
-| 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.8 秒・1920×1080・60fps） | 同上 |
+| **デモ動画**（フォームの「demo video」欄：3 分以内・実際のプロダクトだけ） | `pitch/sokketsu-demo.mp4`（56 秒：本番の画面 → Solana Explorer の実際の取引） | 明日 YouTube に上げる（`pitch/SUBMIT-CHECKLIST.md`） |
+| **ピッチ動画**（フォームの「Pitch video」欄：2 分以内・デモ動画とは別・自己紹介） | `video/sokketsu-pitch-short.mp4`（約 1:44・自己紹介つき） | 明日 YouTube に上げる |
+| 補足：長いピッチ動画 | `video/sokketsu-pitch.mp4`（2:07・実演入り） | YouTube（公開）https://youtu.be/odzsFW4E_NU 。2 分を超えるのでフォームのピッチ欄には使わない |
+| 補足：技術デモ動画 | `pitch/sokketsu-tech-demo.mp4`（2:34・スライドとコード中心） | フォームのデモ欄の要件（スライド・コードの説明は不可）に合わないので使わない。リポジトリから見られる |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |
 | ロゴ・画像 | ロゴ `pitch/assets/logo-1024.png`（1024×1024・透過）・英語のバナー `pitch/assets/og-en-1200x630.png`・表紙 `pitch/assets/cover-1920x1080.png` | 済み（サイトの `app/public/og.png` は日本語のまま） |
 | スライド（任意） | `pitch/sokketsu-deck.pdf`（10 ページ）・`pitch/slides.html` | 済み |
@@ -50,8 +52,10 @@ Users approve once: the wallet signs only the deposit, and an in-page operator k
 
 - Live: https://sokketsu.pages.dev
 - Code: https://github.com/shoya-sue/sokketsu
-- Pitch video: https://youtu.be/odzsFW4E_NU
-- Technical demo: https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-tech-demo.mp4
+- Demo video: DEMO_VIDEO_URL（明日アップロード後に差し替え）
+- Pitch video (2 min): PITCH_VIDEO_URL（明日アップロード後に差し替え）
+- Full pitch with live demo (2:07): https://youtu.be/odzsFW4E_NU
+- Technical walkthrough: https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-tech-demo.mp4
 - Slides (PDF): https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-deck.pdf
 
 ## Go-to-market strategy (plan)
