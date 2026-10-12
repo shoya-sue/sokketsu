@@ -1,16 +1,16 @@
 # 提出フォームの文面（Colosseum・#64）
 
-提出項目は Colosseum の公式ページ（https://colosseum.com/hackathon 、2026-10-11 に確認）に合わせた。英語の文面はそのまま貼れる。**`TODO（持ち主）` の項目は事実を持っていないので空けてある。必ず埋めてから提出する。**
+提出項目は Colosseum の公式ページ（https://colosseum.com/hackathon 、2026-10-11 に確認）に合わせた。英語の文面はそのまま貼れる。Team・Location は GitHub のプロフィールとコミット履歴、Demand validation は devnet の取引履歴（2026-10-12 に `solana transaction-history` で確認）だけから書いた。
 
 | 項目 | 中身 | 状態 |
 |---|---|---|
-| ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.1 秒・1920×1080・60fps） | YouTube などに上げて URL を貼る（未実施） |
-| 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.6 秒・1920×1080・60fps） | 同上（未実施） |
+| ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.1 秒・1920×1080・60fps） | 公開リポジトリの URL（下の Links・開けることを確認済み）。GitHub は大きいファイルを再生プレビューしない（ダウンロードで見られる）ので、YouTube に上げ直して差し替えるのを推奨 |
+| 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.6 秒・1920×1080・60fps） | 同上 |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |
 | ロゴ・画像 | `pitch/assets/logo-1024.png`（1024×1024・透過）・`app/public/og.png`（1200×630） | 済み |
 | スライド（任意） | `pitch/sokketsu-deck.pdf`（10 ページ）・`pitch/slides.html` | 済み |
-| チームと経歴・所在地 | 下の「Team」 | **TODO（持ち主）** |
-| 需要の検証 | 下の「Demand validation」 | **TODO（持ち主）** |
+| チームと経歴・所在地 | 下の「Team」「Team location」 | 済み（経歴を足すなら追記） |
+| 需要の検証 | 下の「Demand validation」 | 済み（検証の実績が出たら追記） |
 
 ---
 
@@ -50,8 +50,9 @@ Users approve once: the wallet signs only the deposit, and an in-page operator k
 
 - Live: https://sokketsu.pages.dev
 - Code: https://github.com/shoya-sue/sokketsu
-- Pitch video: TODO（持ち主：アップロード後の URL）
-- Technical demo: TODO（持ち主：アップロード後の URL）
+- Pitch video: https://github.com/shoya-sue/sokketsu/blob/main/video/sokketsu-pitch.mp4
+- Technical demo: https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-tech-demo.mp4
+- Slides (PDF): https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-deck.pdf
 
 ## Go-to-market strategy (plan)
 
@@ -65,21 +66,31 @@ Start where agents already pay for work: agent marketplaces and task platforms t
 
 ## Demand validation
 
-TODO（持ち主）：話した相手・反応・試用の数など、実際にあった事実だけを書く。無ければ「まだ無い。提出後に◯◯で検証する」と書く。
+Honest status: Sokketsu is at the working-prototype stage. No external user interviews or pilots are recorded for this project yet.
+
+What we can show today:
+
+- A live product anyone can try without a wallet: https://sokketsu.pages.dev ("Try it" funds a throwaway devnet key).
+- 348 devnet transactions to the program and 11 faucet transactions so far (as of 2026-10-12, from devnet RPC history). Most of these come from our own end-to-end tests and demo captures, so we do not count them as external demand.
+
+How we will validate next:
+
+1. Show the demo to teams building agent marketplaces and task platforms in the Solana and AI-agent developer communities, and ask whether "release only on a verifiable decision" would replace their current manual approval step.
+2. Offer a free devnet integration (program + `/api/judge`) to the first teams, and measure how many escrows they settle through Sokketsu.
 
 ## Team
 
-TODO（持ち主）：メンバー全員の名前・役割・経歴（GitHub: shoya-sue ほか）。
+SHO — solo builder (GitHub [@shoya-sue](https://github.com/shoya-sue), X [@be_into_net](https://x.com/be_into_net)). Designed and built everything in this repository between 2026-10-04 and 2026-10-12 (85 commits): the Anchor program, the oracle signer, the Cloudflare Pages Functions, the React app, and the pitch and technical demo videos. Claude Code was used as a coding assistant.
 
 ## Team location
 
-TODO（持ち主）
+Japan
 
 ---
 
 ## 提出前に持ち主がやること
 
-1. ピッチ動画と技術デモ動画をアップロードし、URL を上の Links に貼る
-2. Team・Team location・Demand validation を埋める
+1. 動画を YouTube などに上げ直すなら、上の Links の URL を差し替える（今は公開リポジトリの URL）
+2. Team に経歴を足すなら追記する（今は GitHub のプロフィールとコミット履歴にある事実だけ）
 3. Colosseum のダッシュボードで締切（公式ページの表記は「Sep 14 — Oct 12」、時刻は未確認）と項目を確かめ、チームを登録して提出する
 4. ナレーションを一度聞いて確かめる（「Sokketsu」「Ed25519」の読み方。未確認）
