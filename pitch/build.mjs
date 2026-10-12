@@ -103,6 +103,49 @@ if (want.has("thumbs")) {
   }
 }
 
+if (want.has("demo")) {
+  // Colosseum の「デモ動画」：実際のプロダクトだけを見せる（スライド・コードの説明は不可・3 分以内）。
+  // ピッチ動画の実演の場面（本番の画面）+ 同じ release の取引を Solana Explorer で見せる場面（video/capture/explorer.mjs で撮影）
+  const timeline = JSON.parse(readFileSync(path.join(root, "video", "sokketsu-pitch.timeline.json"), "utf8"));
+  const run = JSON.parse(readFileSync(path.join(root, "video", "capture", "out", "run.json"), "utf8"));
+  const live = timeline.scenes.find((s) => s.name === "demo");
+  const explorer = path.join(root, "video", "capture", "out", "explorer.webm");
+  const ms = Math.round(run.result.finalizedMs);
+  const text =
+    `And here is that release on Solana Explorer. Success, finalized in ${ms} milliseconds from send. ` +
+    "The payee received zero point zero five SOL, and the Ed25519 signature check runs right before our program. " +
+    "Try it yourself at sokketsu dot pages dot dev.";
+  const work = mkdtempSync(path.join(os.tmpdir(), "sokketsu-demo-"));
+  const ff = (args) => {
+    const r = spawnSync("ffmpeg", ["-v", "error", "-y", ...args], { stdio: "inherit" });
+    if (r.status !== 0) throw new Error(`ffmpeg ${r.status}`);
+  };
+  const durationOf = (file) =>
+    Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file]).toString());
+  const ENC = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-preset", "medium", "-r", "60", "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2"];
+  const part1 = path.join(work, "1-live.mp4");
+  ff(["-ss", live.start.toFixed(3), "-t", live.length.toFixed(3), "-i", path.join(root, "video", "sokketsu-pitch.mp4"), ...ENC, part1]);
+  const aiff = path.join(work, "explorer.aiff");
+  execFileSync("say", ["-v", process.env.VOICE ?? "Samantha", "-r", process.env.VOICE_RATE ?? "182", "-o", aiff, text]);
+  const lead = 0.4;
+  const len = Math.max(durationOf(explorer), lead + durationOf(aiff) + 1.2);
+  const part2 = path.join(work, "2-explorer.mp4");
+  const pad = Math.max(0, len - durationOf(explorer));
+  const leadMs = Math.round(lead * 1000);
+  ff(["-i", explorer, "-i", aiff, "-filter_complex",
+    `[0:v]tpad=stop_mode=clone:stop_duration=${pad.toFixed(3)},fade=t=out:st=${(len - 0.5).toFixed(3)}:d=0.5[v];` +
+    `[1:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${leadMs}|${leadMs},apad,atrim=end=${len.toFixed(3)}[a]`,
+    "-map", "[v]", "-map", "[a]", ...ENC, "-t", len.toFixed(3), part2]);
+  const list = path.join(work, "list.txt");
+  writeFileSync(list, `file '${part1}'\nfile '${part2}'\n`);
+  const out = path.join(here, "sokketsu-demo.mp4");
+  ff(["-f", "concat", "-safe", "0", "-i", list, "-c", "copy", "-movflags", "+faststart", out]);
+  rmSync(work, { recursive: true, force: true });
+  const total = durationOf(out);
+  console.log(`wrote ${out} (${total.toFixed(1)} s: live ${live.length.toFixed(1)} + explorer ${len.toFixed(1)})`);
+  if (total > 180) throw new Error("demo video is over 3 minutes");
+}
+
 if (want.has("tech")) {
   const run = JSON.parse(readFileSync(path.join(root, "video", "capture", "out", "run.json"), "utf8"));
   const timeline = JSON.parse(readFileSync(path.join(root, "video", "sokketsu-pitch.timeline.json"), "utf8"));
