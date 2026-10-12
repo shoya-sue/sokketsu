@@ -6,6 +6,7 @@
 - Live: https://sokketsu.pages.dev
 - Program (devnet): `Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp`
 - 仕様（正本）: [`sokketsu-spec.md`](./sokketsu-spec.md)
+- 提出資料（スライド・技術デモ動画・提出フォームの文面）: [`pitch/`](./pitch/README.md)・発表動画: [`video/`](./video/README.md)
 
 ## 何ができるか
 

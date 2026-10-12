@@ -1,0 +1,41 @@
+{
+  "fps": 60,
+  "total": 127.05381399999999,
+  "scenes": [
+    {
+      "name": "hook",
+      "start": 0,
+      "length": 14.220407999999999
+    },
+    {
+      "name": "problem",
+      "start": 14.220407999999999,
+      "length": 17.195782
+    },
+    {
+      "name": "flow",
+      "start": 31.41619,
+      "length": 19.99356
+    },
+    {
+      "name": "demo",
+      "start": 51.40975,
+      "length": 36.652772
+    },
+    {
+      "name": "numbers",
+      "start": 88.062522,
+      "length": 11.495465
+    },
+    {
+      "name": "solana",
+      "start": 99.557987,
+      "length": 15.146484999999998
+    },
+    {
+      "name": "close",
+      "start": 114.704472,
+      "length": 12.349342
+    }
+  ]
+}
