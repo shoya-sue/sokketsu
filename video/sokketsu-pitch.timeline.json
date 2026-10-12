@@ -1,6 +1,6 @@
 {
   "fps": 60,
-  "total": 127.05381399999999,
+  "total": 127.251183,
   "scenes": [
     {
       "name": "hook",
@@ -20,21 +20,21 @@
     {
       "name": "demo",
       "start": 51.40975,
-      "length": 36.652772
+      "length": 36.850141
     },
     {
       "name": "numbers",
-      "start": 88.062522,
+      "start": 88.25989100000001,
       "length": 11.495465
     },
     {
       "name": "solana",
-      "start": 99.557987,
+      "start": 99.755356,
       "length": 15.146484999999998
     },
     {
       "name": "close",
-      "start": 114.704472,
+      "start": 114.901841,
       "length": 12.349342
     }
   ]
