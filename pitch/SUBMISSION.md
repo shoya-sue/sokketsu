@@ -4,8 +4,8 @@
 
 | 項目 | 中身 | 状態 |
 |---|---|---|
-| ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.1 秒・1920×1080・60fps） | 公開リポジトリの URL（下の Links・開けることを確認済み）。GitHub は大きいファイルを再生プレビューしない（ダウンロードで見られる）ので、YouTube に上げ直して差し替えるのを推奨 |
-| 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.6 秒・1920×1080・60fps） | 同上 |
+| ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.3 秒・1920×1080・60fps） | YouTube（公開）https://youtu.be/odzsFW4E_NU（2026-10-12 にログインなしで再生できることを確認） |
+| 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.8 秒・1920×1080・60fps） | 同上 |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |
 | ロゴ・画像 | ロゴ `pitch/assets/logo-1024.png`（1024×1024・透過）・英語のバナー `pitch/assets/og-en-1200x630.png`・表紙 `pitch/assets/cover-1920x1080.png` | 済み（サイトの `app/public/og.png` は日本語のまま） |
 | スライド（任意） | `pitch/sokketsu-deck.pdf`（10 ページ）・`pitch/slides.html` | 済み |
@@ -50,7 +50,7 @@ Users approve once: the wallet signs only the deposit, and an in-page operator k
 
 - Live: https://sokketsu.pages.dev
 - Code: https://github.com/shoya-sue/sokketsu
-- Pitch video: https://github.com/shoya-sue/sokketsu/blob/main/video/sokketsu-pitch.mp4
+- Pitch video: https://youtu.be/odzsFW4E_NU
 - Technical demo: https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-tech-demo.mp4
 - Slides (PDF): https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-deck.pdf
 
