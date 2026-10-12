@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const want = new Set(process.argv.slice(2).length ? process.argv.slice(2) : ["pdf", "logo", "graphics", "tech"]);
+const want = new Set(process.argv.slice(2).length ? process.argv.slice(2) : ["pdf", "logo", "graphics", "thumbs", "tech"]);
 const FPS = 60;
 const TECH_MAX_S = 180; // 技術デモ動画の上限（Colosseum：3 分以内）
 
@@ -86,6 +86,21 @@ if (want.has("graphics")) {
   await cover.screenshot({ path: coverFile });
   console.log(`wrote ${coverFile}`);
   await cover.close();
+}
+
+if (want.has("thumbs")) {
+  // YouTube のサムネイル（1280×720・2 MB 以下の JPEG）
+  for (const v of ["pitch", "tech"]) {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+    await page.goto(`${base}/pitch/thumbnails.html?v=${v}`);
+    await page.waitForFunction(() => document.body.dataset.ready === "1");
+    const file = path.join(here, "assets", `youtube-thumb-${v}.jpg`);
+    await page.locator(`#${v}`).screenshot({ path: file, type: "jpeg", quality: 90 });
+    const size = statSync(file).size;
+    console.log(`wrote ${file} (${(size / 1024).toFixed(0)} KB)`);
+    if (size > 2 * 1024 * 1024) throw new Error(`${file} is over 2 MB`);
+    await page.close();
+  }
 }
 
 if (want.has("tech")) {

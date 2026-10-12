@@ -12,6 +12,8 @@ Colosseum のハッカソンに出す資料。提出フォームの文面と、�
 | `assets/cover-1920x1080.png` | スライドの表紙（グラデーションつき） |
 | `assets/demo-*.jpg` | スライドに載せた本番の画面（`video/capture/out/screen.webm` から切り出し） |
 | `SUBMISSION.md` | 提出フォームの英語の文面と、提出前にやること |
+| `YOUTUBE.md` | YouTube に載せるタイトル・説明文・章立て・タグ |
+| `thumbnails.html`・`assets/youtube-thumb-*.jpg` | YouTube のサムネイル（1280×720・2 MB 以下）。`?v=pitch` / `?v=tech` |
 
 ## 作り直す
 
@@ -19,7 +21,7 @@ Colosseum のハッカソンに出す資料。提出フォームの文面と、�
 
 ```sh
 cd video && npm install                    # Playwright は video/ の依存を使う
-cd .. && node pitch/build.mjs              # PDF・ロゴ・画像・技術デモ動画（pdf / logo / graphics / tech を個別にも指定できる）
+cd .. && node pitch/build.mjs              # PDF・ロゴ・画像・技術デモ動画（pdf / logo / graphics / thumbs / tech を個別にも指定できる）
 # 画面を撮り直したときは、スライドの画面も切り出し直す
 ffmpeg -ss <秒> -i video/capture/out/screen.webm -frames:v 1 -q:v 3 pitch/assets/demo-hold.jpg
 ```
