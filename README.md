@@ -9,6 +9,7 @@ and the program verifies the signature on-chain before a single lamport moves �
 [![Solana devnet](https://img.shields.io/badge/Solana-devnet_·_Alpenglow-9945ff?style=for-the-badge&labelColor=07060d)](https://explorer.solana.com/address/Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp?cluster=devnet)
 [![Anchor](https://img.shields.io/badge/Anchor-0.31-00d1ff?style=for-the-badge&labelColor=07060d)](programs/sokketsu/src/lib.rs)
 [![Colosseum](https://img.shields.io/badge/Colosseum-Crypto_World's_Fair-ffb547?style=for-the-badge&labelColor=07060d)](https://colosseum.com/worldsfair)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f2f0fa?style=for-the-badge&labelColor=07060d)](LICENSE)
 
 [**▶ Pitch video**](video/sokketsu-pitch.mp4) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
 
@@ -126,4 +127,4 @@ Secrets, deployment and the full developer notes are in [README.ja.md](README.ja
 - On-chain we verify **our oracle's** signature, not the model provider's own signature yet.
 - The program is still upgradeable during the hackathon. Next: verify the provider's signature on-chain, freeze the program, and get an audit before mainnet.
 
-<div align="center"><br /><a href="https://sokketsu.pages.dev"><img src="pitch/assets/logo-1024.png" alt="Sokketsu" width="96" /></a><br /><sub>Built by <a href="https://github.com/shoya-sue">@shoya-sue</a> for the Colosseum Crypto World's Fair.</sub></div>
+<div align="center"><br /><a href="https://sokketsu.pages.dev"><img src="pitch/assets/logo-1024.png" alt="Sokketsu" width="96" /></a><br /><sub>Built by <a href="https://github.com/shoya-sue">@shoya-sue</a> for the Colosseum Crypto World's Fair · <a href="LICENSE">MIT License</a></sub></div>
