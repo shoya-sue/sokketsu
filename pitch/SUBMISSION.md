@@ -7,7 +7,7 @@
 | ピッチ動画（2〜3 分） | `video/sokketsu-pitch.mp4`（127.1 秒・1920×1080・60fps） | 公開リポジトリの URL（下の Links・開けることを確認済み）。GitHub は大きいファイルを再生プレビューしない（ダウンロードで見られる）ので、YouTube に上げ直して差し替えるのを推奨 |
 | 技術デモ動画（3 分以内） | `pitch/sokketsu-tech-demo.mp4`（154.6 秒・1920×1080・60fps） | 同上 |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |
-| ロゴ・画像 | `pitch/assets/logo-1024.png`（1024×1024・透過）・`app/public/og.png`（1200×630） | 済み |
+| ロゴ・画像 | ロゴ `pitch/assets/logo-1024.png`（1024×1024・透過）・英語のバナー `pitch/assets/og-en-1200x630.png`・表紙 `pitch/assets/cover-1920x1080.png` | 済み（サイトの `app/public/og.png` は日本語のまま） |
 | スライド（任意） | `pitch/sokketsu-deck.pdf`（10 ページ）・`pitch/slides.html` | 済み |
 | チームと経歴・所在地 | 下の「Team」「Team location」 | 済み（経歴を足すなら追記） |
 | 需要の検証 | 下の「Demand validation」 | 済み（検証の実績が出たら追記） |
@@ -92,5 +92,5 @@ Japan
 
 1. 動画を YouTube などに上げ直すなら、上の Links の URL を差し替える（今は公開リポジトリの URL）
 2. Team に経歴を足すなら追記する（今は GitHub のプロフィールとコミット履歴にある事実だけ）
-3. Colosseum のダッシュボードで締切（公式ページの表記は「Sep 14 — Oct 12」、時刻は未確認）と項目を確かめ、チームを登録して提出する
+3. 締切は **2026-10-12 23:59 PT = 2026-10-13（火）15:59 JST**（公式ルール「Crypto World's Fair Hackathon Rules」5. Timing）。個人登録・プロフィール入力も同じ締切（6. Registration）。主催者の時計が正式なので余裕を持って出す
 4. ナレーションを一度聞いて確かめる（「Sokketsu」「Ed25519」の読み方。未確認）

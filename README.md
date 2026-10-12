@@ -1,101 +1,130 @@
-# 即決エスクロー Sokketsu
+<div align="center">
 
-> **Stop agent payments with typed decisions, not generated text — and measure finality on Alpenglow devnet.**
-> A payer escrows SOL in a PDA vault. A judge (Jev, with a mock fallback) returns `release` / `hold` / `refund` with a probability. The decision is ed25519-signed by an oracle and **verified on-chain**; the program only moves funds when the signed decision meets the 70% threshold. The page measures milliseconds to `finalized` live.
+<a href="https://sokketsu.pages.dev"><img src="pitch/assets/cover-1920x1080.png" alt="Sokketsu — Stop agent payments with typed decisions, not generated text." width="100%" /></a>
 
-- Live: https://sokketsu.pages.dev
-- Program (devnet): `Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp`
-- 仕様（正本）: [`sokketsu-spec.md`](./sokketsu-spec.md)
-- 提出資料（スライド・技術デモ動画・提出フォームの文面）: [`pitch/`](./pitch/README.md)・発表動画: [`video/`](./video/README.md)
+**Typed-decision escrow on Solana.** An AI judge returns a choice and a probability, an oracle signs it,<br />
+and the program verifies the signature on-chain before a single lamport moves — finalized in under a second on Alpenglow.
 
-## 何ができるか
+[![Live demo](https://img.shields.io/badge/live_demo-sokketsu.pages.dev-14f195?style=for-the-badge&labelColor=07060d)](https://sokketsu.pages.dev)
+[![Solana devnet](https://img.shields.io/badge/Solana-devnet_·_Alpenglow-9945ff?style=for-the-badge&labelColor=07060d)](https://explorer.solana.com/address/Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp?cluster=devnet)
+[![Anchor](https://img.shields.io/badge/Anchor-0.31-00d1ff?style=for-the-badge&labelColor=07060d)](programs/sokketsu/src/lib.rs)
+[![Colosseum](https://img.shields.io/badge/Colosseum-Crypto_World's_Fair-ffb547?style=for-the-badge&labelColor=07060d)](https://colosseum.com/worldsfair)
+[![License: MIT](https://img.shields.io/badge/license-MIT-f2f0fa?style=for-the-badge&labelColor=07060d)](LICENSE)
+
+[**▶ Pitch video**](video/sokketsu-pitch.mp4) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
+
+</div>
+
+---
+
+<a href="video/sokketsu-pitch.mp4"><img src="pitch/assets/demo-release.gif" alt="A signed release reaching finalized in 858 ms on the live site" width="100%" /></a>
+
+<p align="center"><sub>Live site, devnet. Jev returns <code>release 97%</code>, the program verifies the oracle's signature and pays out — <b>finalized in 858 ms</b>. Click for the full pitch video.</sub></p>
+
+## The problem
+
+AI agents are starting to pay for work. But ask a language model whether to release an escrow and you get a paragraph — *"probably fine, but to be safe…"*. A program can't act on prose, nobody can check who decided or how sure they were, and waiting ~12.8 s for finality breaks the flow.
+
+## The solution
 
 | | |
 |---|---|
-| 操作は 2 つだけ | ウォレットを接続（または「お試し」）→「▶ デモを流す」。hold で止まる → release で即決、が自動で流れる |
-| 承認は 1 回 | ウォレットで承認するのは預け入れだけ。settle はページ内の操作鍵が出す。秘密鍵は貼らない（貼る入口は開発者向けに折りたたみ） |
-| お試し | ブラウザ内で捨て鍵を作り、自前の faucet（`/api/fund`）から devnet SOL を受け取る |
-| 型付き判断 | Jev（`typesafe-ai/jev`）が choice + 確率だけを返す。使えないときはサーバ側のモック |
-| オンチェーン署名検証 | オラクル（Pages Function）が判断と**出所（Jev / モック）**に署名し、`settle` が Ed25519 検証命令を照合。署名なし・書き換え・別 escrow への使い回し・出所の書き換えは `MissingOracleSignature` / `BadOracleSignature` で拒否 |
-| 誰が執行できるか | Jev の判断は誰が出しても執行される（発注者が止められない）。モックの判断は発注者か登録した操作鍵だけ（`UnauthorizedSubmitter`）。refund / close は誰でも出せ、戻り先は発注者に固定 |
-| 確定の実測 | WebSocket の `signatureSubscribe` で processed / finalized を受け、Tower BFT（約 12.8 秒）と比べる |
-| ゲームの手触り | レベル・スコア・コンボ・S〜C ランク・実績 7 種・紙吹雪・効果音（ミュート可） |
-| 見せ方 | 発注者 → 金庫 PDA → 受注者 をコインが流れる舞台、直近 5 件と中央値、日本語 / English |
-| 止まらない工夫 | 公開 RPC の 429 対策、障害時だけ使う予備 RPC、期限切れ escrow の回収 |
+| 🧩 **Typed** | [Jev](https://docs.typesafe.ai/api.md) (TypeSafe) returns only `release` / `hold` / `refund` and a probability — nothing to parse. |
+| ✍️ **Signed** | Our oracle signs the decision together with the escrow address and a hash of the request. |
+| 🔒 **Verified on-chain** | `settle` checks the Ed25519 instruction right before it. Missing, altered, re-used or re-sourced signatures are rejected. |
+| ⚡ **Settled fast** | Funds move only on a signed `release` ≥ 70%. `hold` stops the payment without moving a lamport. |
 
-## 仕組み
+## Measured on Alpenglow devnet
+
+<table>
+<tr>
+<td align="center" width="33%"><h1>858 ms</h1>send → finalized</td>
+<td align="center" width="33%"><h1>~15×</h1>faster than Tower BFT (~12.8 s)</td>
+<td align="center" width="33%"><h1>1</h1>wallet approval (the deposit)</td>
+</tr>
+</table>
+
+<sub>Captured 2026-10-11 on the live site with a Jev decision: sent 0 → processed 451 → finalized 858 ms, slot 509,864,530 — [release transaction](https://explorer.solana.com/tx/4ondkUqtcL9g6NZbtRPBYLZM1uwTSKXvScRPeGDuFbYUqcGn6zSv2d9Nf7JxeQydmujmjaRnkLbdXBG3TWbF4v8a?cluster=devnet). Finality is measured in the browser with WebSocket `signatureSubscribe`, so it includes the round trip to a public RPC.</sub>
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Payer as Payer (wallet)
+    participant App as Browser app
+    participant API as Pages Functions
+    participant Jev as Jev (typed judge)
+    participant Prog as sokketsu program
+    Payer->>Prog: deposit — SOL into the escrow PDA (the only wallet approval)
+    App->>API: /api/judge with the request
+    API->>Jev: judge the request
+    Jev-->>API: decision + probability
+    API-->>App: decision signed by the oracle (ed25519)
+    App->>Prog: Ed25519 verify instruction + settle (sent by an in-page operator key)
+    Prog->>Prog: check oracle key, escrow, request hash, decision, source
+    Prog-->>Payer: hold → nothing moves
+    Prog-->>App: release ≥ 70% → pay the payee, finalized in under 1 s
+```
+
+The oracle signs an 88-byte message: `"sokketsu-decision-v3" ‖ escrow ‖ sha256(request) ‖ decision ‖ probability_bps ‖ source`. Binding the escrow and the request hash means a signature can't be replayed on another escrow or request.
+
+| Who can settle | Rule | Error |
+|---|---|---|
+| A decision from Jev | Anyone may submit it — the payer can't block a valid release | — |
+| A mock decision (fallback) | Only the payer or its registered operator key | `UnauthorizedSubmitter` |
+| No, altered, re-used or re-sourced signature | Rejected before any lamport moves | `MissingOracleSignature` · `BadOracleSignature` |
+| Refund / close | Anyone may send; funds always return to the payer | `RefundNotAllowed` · `NotFinished` |
+
+## See it
+
+<table>
+<tr>
+<td width="50%"><img src="pitch/assets/demo-hold.jpg" alt="hold stops the payment" /><br /><sub><b>hold 99%</b> — the vault locks, the payee gets nothing.</sub></td>
+<td width="50%"><img src="pitch/assets/demo-released.jpg" alt="release finalized in 858 ms" /><br /><sub><b>release 97%</b> — signature verified, finalized in 858 ms.</sub></td>
+</tr>
+</table>
+
+No wallet? Press **Try it** on [sokketsu.pages.dev](https://sokketsu.pages.dev) — the page creates a throwaway devnet key and funds it from our faucet.
+
+## Built with
+
+- **Solana** devnet (Alpenglow) · **Anchor 0.31** · native Ed25519 program + instructions sysvar — program [`Fuceqdwk…HiUwp`](https://explorer.solana.com/address/Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp?cluster=devnet)
+- **React 19** + Vite · `@solana/web3.js` · Solana wallet adapter
+- **Cloudflare Pages Functions** — `/api/judge` (Jev) · `/api/decide` (mock) · `/api/fund` (faucet) · `/api/rpc` (fallback RPC)
+- **Tests** — 14 anchor tests (signatures, replay, source tampering, submitter rules, refund/close) · 554 vitest tests · Stryker mutation testing · GitHub Actions CI
+
+## Repository
 
 ```
-ブラウザ ──(依頼文)──▶ /api/judge（Jev）または /api/decide（モック）
-                         └ 判断を ed25519 で署名: "sokketsu-decision-v3" ‖ escrow ‖ sha256(依頼文) ‖ decision ‖ bps ‖ source
-ウォレット ──[deposit（+ 操作鍵へ手数料）]──▶ sokketsu プログラム   ← 承認はここだけ
-操作鍵 ──[Ed25519 検証命令, settle]──▶ sokketsu プログラム（devnet）
-                         └ 直前の命令の公開鍵 = ORACLE_PUBKEY、メッセージ = この escrow・state_hash・判断・出所 を照合
-                         └ release かつ 7000 bps 以上のときだけ受注者へ送金
+programs/sokketsu/src/lib.rs   Anchor program — deposit / settle / refund / close + oracle signature check
+tests/sokketsu.ts              anchor tests
+app/src                        React app (components, lib, i18n)
+app/functions/api              Pages Functions (judge / decide / fund / rpc)
+app/server                     shared server code (auth, oracle, ed25519, transfer)
+video/                         pitch video pipeline — capture the live site, render scenes, narrate (README inside)
+pitch/                         slides (HTML/PDF), technical demo, submission text (README inside)
 ```
 
-## リポジトリ構成
-
-```
-programs/sokketsu/src/lib.rs   Anchor プログラム（deposit / settle / refund / close + オラクル署名検証）
-tests/sokketsu.ts              anchor test（14 本）
-app/src                        React + Vite のフロント（App / components / lib / i18n）
-app/functions/api              Pages Functions（judge / decide / rpc / fund）
-app/server                     Function 共通（auth / oracle / judgeInput / ed25519 / transfer）
-```
-
-## 開発
-
-Xcode 本体は不要（Command Line Tools で足りる）。秘密鍵は `.keys/`（git 管理外）に置く。
+## Run it locally
 
 ```bash
-# プログラム: テスト（テスト用オラクル鍵でビルド）
-export DEVELOPER_DIR=/Library/Developer/CommandLineTools   # DEVELOPER_DIR が Xcode.app を指す環境のみ
+# program (test oracle key)
 npm install
 anchor build -- --features localnet-oracle && anchor test --skip-build
 
-# プログラム: devnet へ（本番のオラクル鍵でビルドし直す）
-touch programs/sokketsu/src/lib.rs && anchor build
-anchor deploy --provider.cluster devnet
-cp target/idl/sokketsu.json target/types/sokketsu.ts app/src/idl/
-
-# フロント
+# app
 cd app && npm install
-npm test               # vitest（判断・計算・API 層。カバレッジ閾値 80%）
-npm run dev            # Vite のみ（Function は無く、判断は署名なしになる）
-npm run dev:cf         # Pages Function 込み。app/.dev.vars に secret を書く
-CLOUDFLARE_ACCOUNT_ID=<your-account-id> npm run deploy
+npm test          # vitest
+npm run dev:cf    # Vite + Pages Functions (put secrets in app/.dev.vars)
 ```
 
-### Pages の secret
+Secrets, deployment and the full developer notes are in [README.ja.md](README.ja.md) (Japanese) and the spec in [sokketsu-spec.md](sokketsu-spec.md).
 
-| 名前 | 用途 | 必須 |
-|---|---|---|
-| `ORACLE_SECRET_KEY` | オラクルの ed25519 seed（32 バイト hex）。公開鍵は `lib.rs` の `ORACLE_PUBKEY` と対 | ○ |
-| `DEMO_TOKEN` | `/api/judge`・`/api/rpc` を使うためのトークン（画面の ⚙ に入れる） | ○ |
-| `AI_GATEWAY_API_KEY` | Vercel AI Gateway（`vck_…`）か TypeSafe のキー。Gateway → 拒否されたら TypeSafe 直、の順で試す | 任意 |
-| `HELIUS_RPC_URL` | 公開 RPC の障害時だけ使う予備の devnet RPC | 任意 |
-| `FAUCET_SECRET_KEY` | お試し用 faucet 鍵の ed25519 seed（32 バイト hex）。devnet SOL だけを入れる。1 回 0.12 SOL・残高のあるアドレスには送らない・IP ごとに 10 分 | 任意（無ければお試しは公開 faucet だけ） |
+## Status & limits
 
-```bash
-CLOUDFLARE_ACCOUNT_ID=<your-account-id> npx wrangler pages secret put <NAME> --project-name sokketsu
-```
+- **Devnet only.** It never connects to mainnet.
+- On-chain we verify **our oracle's** signature, not the model provider's own signature yet.
+- The program is still upgradeable during the hackathon. Next: verify the provider's signature on-chain, freeze the program, and get an audit before mainnet.
 
-`CLOUDFLARE_ACCOUNT_ID` をシェルで別アカウントに固定していると、Pages の操作が認証エラーになる。コマンドの前で上書きする。
-
-## デモ台本
-
-1. 証明書と、動き続ける slot を見せ、「この devnet は Alpenglow」と言う。
-2. ウォレットを接続（または「お試し」）して「▶ デモを流す」。hold で金庫に錠が掛かり、受注者の残高が動かないことを見せる。
-3. カウントダウンのあと release が走り、コインが受注者へ流れて、finalized ミリ秒・倍率・ランクが出る。
-4. 「Tower BFT なら約 12.8 秒。判断も確定もサブ秒。判断はオラクルが署名し、書き換えた取引はプログラムが拒否する」で終える。
-
-## 制約
-
-- devnet 専用。mainnet には接続しない。
-- オンチェーンで検証するのは自前のオラクルの署名まで。Jev（モデル提供者）自身の署名は検証しない。
-- プログラムは upgrade 可能なまま（ハッカソン中の改修のため）。凍結するなら `solana program set-upgrade-authority Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp --final`（元に戻せない）。
-- 貼る鍵は devnet 専用の捨て鍵にする。受注者の鍵は発注者の鍵（ウォレット・お試しでは公開鍵）から導けるので、受注者の口座はデモ用の受け皿として扱う。
-- 操作鍵はページのメモリにだけ置く。再読み込みすると、残った手数料（最大 0.002 SOL）はそのまま残る。
-- プログラムを upgrade すると口座のレイアウトが変わることがある。2026-10-07 の upgrade 前に旧い escrow は回収済み。
-- 画面の finalized ミリ秒は、ブラウザ → 公開 RPC の往復を含む値。
+<div align="center"><br /><a href="https://sokketsu.pages.dev"><img src="pitch/assets/logo-1024.png" alt="Sokketsu" width="96" /></a><br /><sub>Built by <a href="https://github.com/shoya-sue">@shoya-sue</a> for the Colosseum Crypto World's Fair · <a href="LICENSE">MIT License</a></sub></div>

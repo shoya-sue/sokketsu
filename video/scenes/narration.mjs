@@ -37,7 +37,7 @@ export function narrationFor(run) {
       {
         mark: "depositing",
         nth: 0,
-        text: `First request: hold. Jev says hold${atPct(hold)} The vault locks, and not a single lamport moves.`,
+        text: `First request: hold. Jev returns hold${atPct(hold)} The vault locks, and not a single lamport moves.`,
       },
       {
         mark: "countdown",

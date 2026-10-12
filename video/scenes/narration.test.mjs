@@ -17,7 +17,7 @@ test("ナレーションの数値は撮影の値（確定 ms・倍率・hold と
   assert.match(n.hook, /we measured 839 milliseconds/);
   assert.match(n.numbers, /^839 milliseconds from send to finalized\. About 15 times faster/);
   const text = n.demo.map((c) => c.text).join(" ");
-  assert.match(text, /Jev says hold, at 99 percent/);
+  assert.match(text, /Jev returns hold, at 99 percent/);
   assert.match(text, /Jev returns release, at 96 percent/);
   assert.match(text, /Finalized in 839 milliseconds/);
 });
@@ -40,7 +40,7 @@ test("全場面（実演以外）にナレーションがあり、実演は撮�
 test("確率が読めなければ、数を言わない文にする（作った数字を言わない）", () => {
   const n = narrationFor({ ...RUN, finality: {}, timeline: [] });
   const text = n.demo.map((c) => c.text).join(" ");
-  assert.match(text, /Jev says hold\./);
+  assert.match(text, /Jev returns hold\./);
   assert.match(text, /Jev returns release\./);
   assert.doesNotMatch(text, /percent/);
 });
