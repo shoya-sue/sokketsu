@@ -48,3 +48,10 @@ test("確率が読めなければ、数を言わない文にする（作った�
 test("締めは Thank you で終える", () => {
   assert.match(narrationFor(RUN).close, /Thank you\.$/);
 });
+
+test("自己紹介（短い版）は確認できた事実だけを話す（名前・所在地・1 人で・期間・作ったもの）", () => {
+  const { intro } = narrationFor(RUN);
+  assert.match(intro, /I'm SHO, a solo builder from Japan/);
+  assert.match(intro, /nine days/);
+  assert.match(intro, /Anchor program/);
+});

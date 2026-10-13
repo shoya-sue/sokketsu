@@ -325,6 +325,34 @@
         line-height: 1.8;
       }
 
+      /* 自己紹介（短い版） */
+      #intro-name {
+        left: 120px;
+        top: 250px;
+        font-size: 190px;
+        line-height: 1;
+      }
+      #intro-role {
+        left: 128px;
+        top: 470px;
+        font-size: 54px;
+      }
+      .fact {
+        left: 128px;
+        font-size: 40px;
+        color: #c9c5dc;
+      }
+      .fact b {
+        color: #14f195;
+        font-weight: 700;
+      }
+      #intro-links {
+        left: 128px;
+        top: 880px;
+        font-size: 32px;
+        color: #9a95b4;
+      }
+
       /* 6. なぜ Solana */
       .why {
         top: 270px;
@@ -413,6 +441,16 @@
           <h1 class="grad brandfont">Don't wait.</h1>
           <p>Stop agent payments with typed decisions, not generated text</p>
         </div>
+      </section>
+
+      <section class="scene" id="s-intro">
+        <div class="abs kicker">BUILDER</div>
+        <div class="abs brandfont grad" id="intro-name">SHO</div>
+        <div class="abs pop" id="intro-role">Solo builder · Japan</div>
+        <div class="abs fact" id="f0" style="top: 590px">Built Sokketsu in <b>9 days</b> during the hackathon</div>
+        <div class="abs fact" id="f1" style="top: 660px">Anchor program · oracle signer · Cloudflare backend</div>
+        <div class="abs fact" id="f2" style="top: 730px">Live app on <b>Solana devnet</b></div>
+        <div class="abs mono" id="intro-links">github.com/shoya-sue · x.com/be_into_net</div>
       </section>
 
       <section class="scene" id="s-problem">
@@ -508,9 +546,9 @@
       let run = null;
 
       // voice: 場面ごとのナレーションの秒（render.mjs が say で作って測る）。場面の長さがこれで決まる
-      window.setup = async (data, videoSrc, voice = {}) => {
+      window.setup = async (data, videoSrc, voice = {}, order) => {
         run = data;
-        tl = buildTimeline(run, voice);
+        tl = buildTimeline(run, voice, order ? { order } : {});
         const video = $("#demo-frame");
         video.src = videoSrc;
         await new Promise((r) => (video.readyState >= 1 ? r() : video.addEventListener("loadedmetadata", r, { once: true })));
@@ -532,7 +570,7 @@
 
       window.renderAt = async (t) => {
         const f = frameAt(tl, t);
-        for (const s of ["hook", "problem", "flow", "demo", "numbers", "solana", "close"]) {
+        for (const s of ["hook", "intro", "problem", "flow", "demo", "numbers", "solana", "close"]) {
           $(`#s-${s}`).style.display = f.scene === s ? "block" : "none";
         }
         const u = f.paced; // 場面の中の秒（ナレーションで伸ばした場面は、元の長さの台本に縮めた時間）
@@ -607,6 +645,13 @@
             `slot ${run.finality.slot ?? "—"} · tx ${sig.slice(0, 10)}…${sig.slice(-6)}`,
           ].join("<br>");
           fade($("#num-detail"), range(u, 2.2, 2.6));
+        }
+
+        if (f.scene === "intro") {
+          fade($("#intro-name"), range(u, 0.2, 0.8), 30 * (1 - range(u, 0.2, 0.8)));
+          fade($("#intro-role"), range(u, 0.8, 1.3));
+          for (let i = 0; i < 3; i++) fade($(`#f${i}`), range(u, 2 + i * 1.6, 2.5 + i * 1.6), 20 * (1 - range(u, 2 + i * 1.6, 2.5 + i * 1.6)));
+          fade($("#intro-links"), range(u, 7, 7.5));
         }
 
         if (f.scene === "solana") {

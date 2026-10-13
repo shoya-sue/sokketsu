@@ -11,7 +11,7 @@ and the program verifies the signature on-chain before a single lamport moves �
 [![Colosseum](https://img.shields.io/badge/Colosseum-Crypto_World's_Fair-ffb547?style=for-the-badge&labelColor=07060d)](https://colosseum.com/worldsfair)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f2f0fa?style=for-the-badge&labelColor=07060d)](LICENSE)
 
-[**▶ Pitch video**](https://youtu.be/odzsFW4E_NU) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
+[**▶ Pitch video**](https://youtu.be/odzsFW4E_NU) &nbsp;·&nbsp; [**🎬 Live demo**](pitch/sokketsu-demo.mp4) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
 
 </div>
 

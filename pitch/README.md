@@ -5,6 +5,9 @@ Colosseum のハッカソンに出す資料。提出フォームの文面と、�
 | ファイル | 中身 |
 |---|---|
 | `sokketsu-deck.pdf` | 発表用スライド（10 ページ・16:9）。`slides.html?deck=pitch&print` を PDF にしたもの |
+| `sokketsu-demo.mp4` | デモ動画（56 秒・実画面だけ：本番の画面 + Solana Explorer の実際の取引）。Colosseum のフォームの「demo video」欄用。`node pitch/build.mjs demo` |
+| `sokketsu-short.mp4`・`short.html` | YouTube ショート（縦 1080×1920・56 秒）。デモ動画を縦の枠に重ねる。`node pitch/build.mjs short` |
+| `SUBMIT-CHECKLIST.md` | 提出当日の手順（アップロード → フォーム → 提出） |
 | `sokketsu-tech-demo.mp4` | 技術デモ動画（154.6 秒・1920×1080・60fps・英語ナレーション）。技術スライド + ピッチ動画の実演の場面 |
 | `slides.html` | スライドの元。ブラウザで開くと 1 枚ずつ表示（← → / クリックで送る、`#3` で 3 枚目）。`?deck=tech` で技術デモ用の組 |
 | `assets/logo-1024.png` | 提出用のロゴ（1024×1024・透過） |

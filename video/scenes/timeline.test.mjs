@@ -13,6 +13,7 @@ import {
   HOLD_EPS_S,
   demoSegments,
   demoTimeAt,
+  SHORT_ORDER,
   demoUAt,
   frameAt,
 } from "./timeline.mjs";
@@ -50,7 +51,7 @@ test("台本は hook → problem → flow → demo → numbers → solana → cl
   assert.equal(tl.total, 79);
   assert.deepEqual(tl.demo, { from: 12 - DEMO_LEAD_S, speed: 1, holds: [] });
   assert.equal(tl.ms, 812);
-  assert.deepEqual(SCENE_S, { hook: 8, problem: 9, flow: 11, numbers: 9, solana: 12, close: 7 });
+  assert.deepEqual(SCENE_S, { hook: 8, intro: 9, problem: 9, flow: 11, numbers: 9, solana: 12, close: 7 });
 });
 
 test("ナレーションが場面より長ければ、場面をナレーション + 余白まで伸ばす（短ければ元の長さ）", () => {
@@ -230,4 +231,17 @@ test("再生する区間（効果音を並べ直すのに使う）は、止め�
 test("撮っていない印のナレーションは止める計算に入れない", () => {
   const tl = buildTimeline(RUN, { demo: [{ mark: "onboard", nth: 0, length: 30 }] });
   assert.deepEqual(tl.demo.holds, []);
+});
+
+test("短い版：実演の場面を外し、自己紹介を足せる（場面の並びを選べる）", () => {
+  const tl = buildTimeline(RUN, { intro: 9 }, { order: SHORT_ORDER });
+  assert.deepEqual(
+    tl.scenes.map((s) => s.name),
+    ["hook", "intro", "problem", "flow", "numbers", "solana", "close"],
+  );
+  assert.equal(tl.scenes[1].length, 9 + VOICE_PAD_S);
+  assert.equal(tl.total, 8 + 9 + VOICE_PAD_S + 9 + 11 + 9 + 12 + 7);
+  // 実演が無いので、実演のナレーションと効果音の区間は空
+  assert.deepEqual(demoCueTimes(tl, [{ mark: "ready", nth: 0, text: "a" }]), []);
+  assert.deepEqual(demoSegments(tl), []);
 });

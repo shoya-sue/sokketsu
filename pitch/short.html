@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sokketsu — YouTube Short frame</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=RocknRoll+One&family=Unbounded:wght@700;900&family=Chakra+Petch:wght@600&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* YouTube ショートの縦の枠（1080×1920）。中央（y 656〜1264）にデモ動画（1080×608）を重ねる。数値は run.json から */
+      html,
+      body {
+        margin: 0;
+        background: #07060d;
+      }
+      #frame {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        color: #f2f0fa;
+        background:
+          radial-gradient(1px 1px at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0) 0 0 / 28px 28px,
+          radial-gradient(circle at 80% 18%, rgba(20, 241, 149, 0.22) 0%, transparent 40%),
+          radial-gradient(circle at 15% 90%, rgba(153, 69, 255, 0.4) 0%, transparent 45%),
+          #07060d;
+      }
+      .abs {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+      }
+      .brand {
+        top: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 24px;
+      }
+      .brand img {
+        width: 110px;
+        height: 110px;
+        filter: drop-shadow(0 10px 30px rgba(153, 69, 255, 0.7));
+      }
+      .brand span {
+        font-family: "Dela Gothic One", sans-serif;
+        font-size: 84px;
+        background: linear-gradient(135deg, #9945ff, #00d1ff 55%, #14f195);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .hook {
+        top: 300px;
+        font-family: "RocknRoll One", sans-serif;
+        font-size: 66px;
+        line-height: 1.25;
+      }
+      .hook b {
+        font-family: "Unbounded", sans-serif;
+        font-weight: 900;
+        color: #14f195;
+      }
+      .screen {
+        top: 646px;
+        left: 0;
+        right: 0;
+        height: 628px;
+        background: #000;
+        box-shadow: 0 0 80px rgba(20, 241, 149, 0.25);
+        border-top: 3px solid rgba(20, 241, 149, 0.6);
+        border-bottom: 3px solid rgba(20, 241, 149, 0.6);
+      }
+      .steps {
+        top: 1340px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 40px;
+        letter-spacing: 0.08em;
+        color: #c9c5dc;
+        line-height: 1.7;
+      }
+      .steps i {
+        font-style: normal;
+        color: #ffb547;
+      }
+      .steps em {
+        font-style: normal;
+        color: #14f195;
+      }
+      .cta {
+        top: 1630px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 52px;
+        color: #14f195;
+      }
+      .tags {
+        top: 1730px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: 0.15em;
+        color: #9a95b4;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="frame">
+      <div class="abs brand"><img src="../app/public/logo-mark.svg" alt="" /><span>Sokketsu</span></div>
+      <div class="abs hook">An AI decides.<br />Solana settles in <b><span data-v="ms"></span> ms</b>.</div>
+      <div class="abs screen"></div>
+      <div class="abs steps"><i>hold</i> → nothing moves<br /><em>release</em> → signed, verified on-chain, paid</div>
+      <div class="abs cta">sokketsu.pages.dev</div>
+      <div class="abs tags">SOLANA DEVNET · ALPENGLOW · OPEN SOURCE</div>
+    </div>
+    <script type="module">
+      const run = await fetch("../video/capture/out/run.json").then((r) => r.json());
+      for (const el of document.querySelectorAll('[data-v="ms"]')) el.textContent = String(Math.round(run.result.finalizedMs));
+      await document.fonts.ready;
+      await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => (i.onload = i.onerror = r)))));
+      document.body.dataset.ready = "1";
+    </script>
+  </body>
+</html>
