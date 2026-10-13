@@ -11,15 +11,15 @@ and the program verifies the signature on-chain before a single lamport moves �
 [![Colosseum](https://img.shields.io/badge/Colosseum-Crypto_World's_Fair-ffb547?style=for-the-badge&labelColor=07060d)](https://colosseum.com/worldsfair)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f2f0fa?style=for-the-badge&labelColor=07060d)](LICENSE)
 
-[**▶ Pitch video**](https://youtu.be/odzsFW4E_NU) &nbsp;·&nbsp; [**🎬 Live demo**](pitch/sokketsu-demo.mp4) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
+[**▶ Pitch video**](https://youtu.be/QC_3TBrA9Zw) &nbsp;·&nbsp; [**🎬 Live demo**](https://youtu.be/o4CSw7txkWo) &nbsp;·&nbsp; [**🛠 Technical demo**](pitch/sokketsu-tech-demo.mp4) &nbsp;·&nbsp; [**📑 Slides (PDF)**](pitch/sokketsu-deck.pdf) &nbsp;·&nbsp; [**⚡ Try it live**](https://sokketsu.pages.dev) &nbsp;·&nbsp; [日本語](README.ja.md)
 
 </div>
 
 ---
 
-<a href="https://youtu.be/odzsFW4E_NU"><img src="pitch/assets/demo-release.gif" alt="A signed release reaching finalized in 858 ms on the live site" width="100%" /></a>
+<a href="https://youtu.be/o4CSw7txkWo"><img src="pitch/assets/demo-release.gif" alt="A signed release reaching finalized in 858 ms on the live site" width="100%" /></a>
 
-<p align="center"><sub>Live site, devnet. Jev returns <code>release 97%</code>, the program verifies the oracle's signature and pays out — <b>finalized in 858 ms</b>. Click for the full pitch video.</sub></p>
+<p align="center"><sub>Live site, devnet. Jev returns <code>release 97%</code>, the program verifies the oracle's signature and pays out — <b>finalized in 858 ms</b>. Click for the live demo video.</sub></p>
 
 ## The problem
 
