@@ -1,5 +1,31 @@
-import confetti from "canvas-confetti";
+import type { Options } from "canvas-confetti";
 import type { Grade } from "./game";
+
+// canvas-confetti は確定の瞬間まで要らないので、初回表示のあとに読み込む（#77）。
+type Confetti = (options: Options) => unknown;
+let loaded: Confetti | null = null;
+let loading: Promise<Confetti> | null = null;
+
+/** 先に読み込んでおく。読み込み済みなら紙吹雪はすぐ出る。 */
+export function preloadFx(): Promise<Confetti> {
+  loading ??= import("canvas-confetti").then(
+    (m) => (loaded = m.default),
+    (e: unknown) => {
+      loading = null; // 失敗したら次に出すときに読み直す
+      throw e;
+    },
+  );
+  return loading;
+}
+
+/** 読み込み済みならすぐ出す。まだなら読み込んでから出す（失敗したら出さない。演出だけなので止めない）。 */
+function confetti(options: Options): void {
+  if (loaded) {
+    loaded(options);
+    return;
+  }
+  preloadFx().then((c) => c(options), () => {});
+}
 
 const COLORS = ["#9945ff", "#14f195", "#00d1ff", "#ffd166", "#ff5ea8"];
 // 動きを減らす設定の人には出さない。
@@ -18,21 +44,21 @@ const PARTICLES: Record<Grade, number> = { S: 220, A: 140, B: 90, C: 60 };
 /** 確定の瞬間、届いた先のノードから噴き出させる。ランクが高いほど派手にする。 */
 export function burstAt(selector: string, grade: Grade): void {
   const origin = originOf(selector);
-  void confetti({ ...BASE, origin, particleCount: PARTICLES[grade], spread: 80, startVelocity: 42 });
+  confetti({ ...BASE, origin, particleCount: PARTICLES[grade], spread: 80, startVelocity: 42 });
   if (grade === "S") {
-    void confetti({ ...BASE, origin, particleCount: 60, spread: 360, startVelocity: 26, shapes: ["star"], scalar: 1.3 });
+    confetti({ ...BASE, origin, particleCount: 60, spread: 360, startVelocity: 26, shapes: ["star"], scalar: 1.3 });
   }
 }
 
 /** コンボ中は左右から打ち上げる。 */
 export function sideCannons(): void {
-  void confetti({ ...BASE, particleCount: 70, angle: 60, spread: 55, origin: { x: 0, y: 0.75 } });
-  void confetti({ ...BASE, particleCount: 70, angle: 120, spread: 55, origin: { x: 1, y: 0.75 } });
+  confetti({ ...BASE, particleCount: 70, angle: 60, spread: 55, origin: { x: 0, y: 0.75 } });
+  confetti({ ...BASE, particleCount: 70, angle: 120, spread: 55, origin: { x: 1, y: 0.75 } });
 }
 
 /** レベルアップは星を降らせる。 */
 export function starShower(): void {
-  void confetti({
+  confetti({
     ...BASE,
     particleCount: 120,
     spread: 160,

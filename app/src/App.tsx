@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Keypair, PublicKey } from "@solana/web3.js";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import {
   DEPOSIT_LAMPORTS,
   RELEASE_THRESHOLD_BPS,
@@ -67,6 +65,7 @@ import { useBgm } from "./hooks/useBgm";
 import { countdownNotes } from "./lib/sfxPlan";
 import { CountdownHit } from "./components/CountdownHit";
 import { useShake } from "./hooks/useShake";
+import { setWalletSlot, useWalletState } from "./lib/walletStore";
 
 const GAME_KEY = "sokketsu.game.v1";
 const TOAST_MS = 3800;
@@ -164,7 +163,7 @@ export default function App() {
   const [alpenglow, setAlpenglow] = useState<AlpenglowStatus | null>(null);
   const [currentSlot, setCurrentSlot] = useState<number | null>(null);
   const [session, setSession] = useState<PayerSession | null>(null);
-  const wallet = useWallet();
+  const wallet = useWalletState();
   const [payee, setPayee] = useState<PublicKey | null>(null);
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState<Msg | null>(null);
@@ -788,7 +787,8 @@ export default function App() {
           <div className="setup">
             <p className="setup-title">{t("setup.title")}</p>
             <div className="setup-actions">
-              <WalletMultiButton />
+              {/* 接続ボタンは遅延読み込みの WalletRoot が、この差し込み口に描く（#77） */}
+              <span className="wallet-slot" ref={setWalletSlot} />
               <button className="trial-btn" onClick={startTrial} disabled={preparing}>
                 {preparing ? t("setup.trialing") : t("setup.trial")}
               </button>

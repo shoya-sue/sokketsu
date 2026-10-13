@@ -1,27 +1,28 @@
-import { StrictMode } from "react";
+import "./polyfill";
+import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import "@solana/wallet-adapter-react-ui/styles.css";
 import "./index.css";
 import "./cockpit.css";
 import "./hudkit.css";
 import App from "./App.tsx";
 import { LangProvider } from "./lang.tsx";
-import { RPC_URL } from "./chain";
+import { loadProgram } from "./chain";
+import { preloadFx } from "./lib/fx";
+import { WalletRoot } from "./lazyWallet";
 
-// ウォレットは Wallet Standard 対応のもの（Phantom・Solflare・Backpack など）を自動で検出する。
-// 送信はアプリ側の Connection で行うので、ここでは接続と署名だけを使う。
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ConnectionProvider endpoint={RPC_URL}>
-      <WalletProvider wallets={[]} autoConnect>
-        <WalletModalProvider>
-          <LangProvider>
-            <App />
-          </LangProvider>
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <LangProvider>
+      <App />
+    </LangProvider>
+    <Suspense fallback={null}>
+      <WalletRoot />
+    </Suspense>
   </StrictMode>,
 );
+
+// anchor と紙吹雪は初回表示のあとに先読みしておく（デモを押したときに待たせない）。失敗しても使うときに読み直す。
+setTimeout(() => {
+  void loadProgram().catch(() => {});
+  void preloadFx().catch(() => {});
+}, 0);

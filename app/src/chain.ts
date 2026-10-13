@@ -1,4 +1,4 @@
-import { AnchorProvider, BN, Program, type Wallet } from "@coral-xyz/anchor";
+import type { BN, Program, Wallet } from "@coral-xyz/anchor";
 import {
   Connection,
   Ed25519Program,
@@ -174,10 +174,23 @@ function walletFor(signer?: Keypair): Wallet {
   } as Wallet;
 }
 
-const readonlyProgram = new Program<Sokketsu>(
-  idl as Sokketsu,
-  new AnchorProvider(connection, walletFor(), { commitment: "finalized" }),
-);
+// anchor（pako・borsh を含む）は初回表示に要らないので、初めて使うときに読み込む（#77）。
+// main.tsx が初回表示のあとに先読みするので、デモの操作で待つことはほぼ無い。
+type Anchor = { program: Program<Sokketsu>; BN: typeof BN };
+let anchorLoad: Promise<Anchor> | null = null;
+export function loadProgram(): Promise<Anchor> {
+  anchorLoad ??= import("@coral-xyz/anchor").then(
+    ({ AnchorProvider, BN, Program }) => ({
+      program: new Program<Sokketsu>(idl as Sokketsu, new AnchorProvider(connection, walletFor(), { commitment: "finalized" })),
+      BN,
+    }),
+    (e: unknown) => {
+      anchorLoad = null; // 読み込みに失敗したら次の呼び出しでやり直す
+      throw e;
+    },
+  );
+  return anchorLoad;
+}
 
 export async function stateHashOf(task: string): Promise<number[]> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(task));
@@ -201,7 +214,8 @@ export type EscrowView = {
 };
 
 export async function fetchEscrow(address: PublicKey): Promise<EscrowView | null> {
-  const e = await readonlyProgram.account.escrow.fetchNullable(address);
+  const { program } = await loadProgram();
+  const e = await program.account.escrow.fetchNullable(address);
   if (!e) return null;
   return {
     payee: e.payee.toBase58(),
@@ -223,7 +237,8 @@ export async function depositIx(
   stateHash: number[],
   operator: PublicKey,
 ): Promise<TransactionInstruction> {
-  return readonlyProgram.methods
+  const { program, BN } = await loadProgram();
+  return program.methods
     .deposit(new BN(DEPOSIT_LAMPORTS), stateHash, new BN(DEADLINE_SLOTS), operator)
     .accountsPartial({
       payer,
@@ -281,7 +296,8 @@ export async function settleIxs(
     message: decisionMessage(escrow, stateHash, judgement.decision, proof.bps, judgement.source),
     signature: hexToBytes(proof.signature, 64),
   });
-  const settle = await readonlyProgram.methods
+  const { program } = await loadProgram();
+  const settle = await program.methods
     .settle(DECISION_CODE[judgement.decision], proof.bps, SOURCE_CODE[judgement.source])
     .accountsPartial({ submitter, payer, payee, escrow, instructions: SYSVAR_INSTRUCTIONS_PUBKEY })
     .instruction();
@@ -290,11 +306,13 @@ export async function settleIxs(
 
 /** refund / close は誰が出してもよい（戻り先は escrow の payer に固定）。payer は戻り先の指定で、署名は要らない。 */
 export async function refundIx(payer: PublicKey, escrow: PublicKey): Promise<TransactionInstruction> {
-  return readonlyProgram.methods.refund().accountsPartial({ payer, escrow }).instruction();
+  const { program } = await loadProgram();
+  return program.methods.refund().accountsPartial({ payer, escrow }).instruction();
 }
 
 export async function closeIx(payer: PublicKey, escrow: PublicKey): Promise<TransactionInstruction> {
-  return readonlyProgram.methods.close().accountsPartial({ payer, escrow }).instruction();
+  const { program } = await loadProgram();
+  return program.methods.close().accountsPartial({ payer, escrow }).instruction();
 }
 
 export type SweepResult = { refunded: number; closed: number; waiting: number; failed: number };
@@ -307,11 +325,12 @@ export type SweepResult = { refunded: number; closed: number; waiting: number; f
  */
 export async function sweepEscrows(submitter: TxSigner, payer: PublicKey): Promise<SweepResult> {
   const PAYER_OFFSET = 8; // discriminator の直後が payer
+  const { program } = await loadProgram();
   const [accounts, slot] = await Promise.all([
-    readonlyProgram.account.escrow.all([
+    program.account.escrow.all([
       { memcmp: { offset: PAYER_OFFSET, bytes: payer.toBase58() } },
       // 旧レイアウト（operator / source が無い）の口座は読めないので、今の大きさのものだけを対象にする。
-      { dataSize: readonlyProgram.account.escrow.size },
+      { dataSize: program.account.escrow.size },
     ]),
     connection.getSlot(),
   ]);
