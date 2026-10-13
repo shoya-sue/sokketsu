@@ -118,6 +118,16 @@ describe("/api/fund", () => {
     expect(await res.json()).toEqual({ error: "too many requests", retryAfter: 500 });
   });
 
+  it("予約から 10 分を過ぎた記録がキャッシュに残っていても、制限に数えない", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => rpc({ value: FUND_SKIP_LAMPORTS })));
+    expect((await call(ENV)).status).toBe(409);
+    now.mockReturnValue(1_000_000 + 599_000);
+    expect((await call(ENV)).status).toBe(429);
+    now.mockReturnValue(1_000_000 + 600_000);
+    expect((await call(ENV)).status).toBe(409);
+  });
+
   it("予約の時刻が読めない古い記録でも 429（待ち秒数は最大で返す）", async () => {
     store.set(`https://sokketsu-fund.internal/address/${TARGET}`, new Response(null));
     const res = await call(ENV);

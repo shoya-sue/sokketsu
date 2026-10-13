@@ -36,11 +36,15 @@ async function rpcCall<T>(url: string, method: string, params: unknown[]): Promi
 
 const RESERVED_AT = "X-Reserved-At";
 
-/** 予約からの経過で、制限が解けるまでの秒数（切り上げ・最低 1 秒）。予約の時刻が読めなければ最大で返す。 */
-const retryAfterSeconds = (hit: Response, now: number): number => {
+/**
+ * 予約からの経過で、制限が解けるまでの秒数（切り上げ）。0 以下なら制限は解けている。
+ * キャッシュの記録は max-age を過ぎても残ることがある（2026-10-13 本番で 16 分後も 429）ので、時刻で決める。
+ * 予約の時刻が読めない古い記録は最大で返す。
+ */
+const secondsLeft = (hit: Response, now: number): number => {
   const at = Number(hit.headers.get(RESERVED_AT));
   if (!(at > 0)) return RATE_LIMIT_SECONDS;
-  return Math.min(RATE_LIMIT_SECONDS, Math.max(1, Math.ceil(RATE_LIMIT_SECONDS - (now - at) / 1000)));
+  return Math.min(RATE_LIMIT_SECONDS, Math.ceil(RATE_LIMIT_SECONDS - (now - at) / 1000));
 };
 
 const rateKey = (kind: "ip" | "address", value: string) =>
@@ -61,8 +65,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const keys = [rateKey("ip", ip), rateKey("address", String(address))];
   const now = Date.now();
   const hits = (await Promise.all(keys.map((k) => caches.default.match(k)))).filter((h) => h !== undefined);
-  if (hits.length > 0) {
-    const retryAfter = Math.max(...hits.map((h) => retryAfterSeconds(h, now)));
+  const waits = hits.map((h) => secondsLeft(h, now)).filter((s) => s > 0);
+  if (waits.length > 0) {
+    const retryAfter = Math.max(...waits);
     return json({ error: "too many requests", retryAfter }, 429, { "Retry-After": String(retryAfter) });
   }
   // RPC を待つ前に予約する。並列に届いたリクエストが残高の反映前にすり抜けないように。
