@@ -146,6 +146,29 @@ if (want.has("demo")) {
   if (total > 180) throw new Error("demo video is over 3 minutes");
 }
 
+if (want.has("short")) {
+  // YouTube ショート（縦 1080×1920・60 秒以内）：short.html の枠の中央にデモ動画（sokketsu-demo.mp4）を重ねる
+  const demo = path.join(here, "sokketsu-demo.mp4");
+  if (!existsSync(demo)) throw new Error("先に node pitch/build.mjs demo");
+  const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
+  await page.goto(`${base}/pitch/short.html`);
+  await page.waitForFunction(() => document.body.dataset.ready === "1");
+  const work = mkdtempSync(path.join(os.tmpdir(), "sokketsu-short-"));
+  const frame = path.join(work, "frame.png");
+  await page.locator("#frame").screenshot({ path: frame });
+  await page.close();
+  const out = path.join(here, "sokketsu-short.mp4");
+  const r = spawnSync("ffmpeg", ["-v", "error", "-y", "-loop", "1", "-framerate", "60", "-i", frame, "-i", demo,
+    "-filter_complex", "[1:v]scale=1080:608:flags=lanczos[v];[0:v][v]overlay=0:656:shortest=1,format=yuv420p[out]",
+    "-map", "[out]", "-map", "1:a", "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-r", "60",
+    "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", "-shortest", out], { stdio: "inherit" });
+  if (r.status !== 0) throw new Error(`ffmpeg ${r.status}`);
+  rmSync(work, { recursive: true, force: true });
+  const total = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", out]).toString());
+  console.log(`wrote ${out} (${total.toFixed(1)} s, 1080x1920)`);
+  if (total > 60) throw new Error("short is over 60 s");
+}
+
 if (want.has("tech")) {
   const run = JSON.parse(readFileSync(path.join(root, "video", "capture", "out", "run.json"), "utf8"));
   const timeline = JSON.parse(readFileSync(path.join(root, "video", "sokketsu-pitch.timeline.json"), "utf8"));

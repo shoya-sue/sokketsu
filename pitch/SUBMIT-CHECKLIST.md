@@ -15,7 +15,7 @@ cd ~/Public/shoya-sue/solana-hackathon-sokketsu && git switch main && git pull
 | # | ファイル | タイトル・説明文 | サムネイル |
 |---|---|---|---|
 | A | `pitch/sokketsu-demo.mp4`（0:56） | `pitch/YOUTUBE.md` の「A. デモ動画」 | `pitch/assets/youtube-thumb-pitch.jpg` |
-| B | `video/sokketsu-pitch-short.mp4`（約 1:44） | `pitch/YOUTUBE.md` の「B. ピッチ動画・短い版」 | `pitch/assets/youtube-thumb-pitch.jpg` |
+| B | `video/sokketsu-pitch-short.mp4`（1:44・103.7 秒） | `pitch/YOUTUBE.md` の「B. ピッチ動画・短い版」 | `pitch/assets/youtube-thumb-pitch.jpg` |
 
 - 説明文に `<` `>` を入れない（YouTube が受け付けない）
 - B の説明文の `DEMO_VIDEO_URL` は、A を上げた後に A の URL へ置き換える
@@ -47,4 +47,4 @@ A・B の URL を Claude に送れば、`pitch/SUBMISSION.md` と README の動�
 | ファイル | 長さ | 中身 |
 |---|---|---|
 | `pitch/sokketsu-demo.mp4` | 56.2 秒・1920×1080・60fps | 本番の画面（案内 → お試し → hold 99% → release 97%・finalized 858 ms）+ Solana Explorer の同じ取引（Success・Finalized・受注者 +0.05 SOL・Ed25519 の検証命令）。文字起こしで不適切な語 0 |
-| `video/sokketsu-pitch-short.mp4` | 約 1:44・1920×1080・60fps | 掴み → 自己紹介（SHO・日本・1 人で・9 日間）→ 課題 → 仕組み → 計測 → Why Solana → 締め |
+| `video/sokketsu-pitch-short.mp4` | 1:44・103.7 秒・1920×1080・60fps | 掴み → 自己紹介（SHO・日本・1 人で・9 日間）→ 課題 → 仕組み → 計測 → Why Solana → 締め |

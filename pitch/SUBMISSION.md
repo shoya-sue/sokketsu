@@ -5,7 +5,7 @@
 | 項目 | 中身 | 状態 |
 |---|---|---|
 | **デモ動画**（フォームの「demo video」欄：3 分以内・実際のプロダクトだけ） | `pitch/sokketsu-demo.mp4`（56 秒：本番の画面 → Solana Explorer の実際の取引） | 明日 YouTube に上げる（`pitch/SUBMIT-CHECKLIST.md`） |
-| **ピッチ動画**（フォームの「Pitch video」欄：2 分以内・デモ動画とは別・自己紹介） | `video/sokketsu-pitch-short.mp4`（約 1:44・自己紹介つき） | 明日 YouTube に上げる |
+| **ピッチ動画**（フォームの「Pitch video」欄：2 分以内・デモ動画とは別・自己紹介） | `video/sokketsu-pitch-short.mp4`（1:44・103.7 秒・自己紹介つき） | 明日 YouTube に上げる |
 | 補足：長いピッチ動画 | `video/sokketsu-pitch.mp4`（2:07・実演入り） | YouTube（公開）https://youtu.be/odzsFW4E_NU 。2 分を超えるのでフォームのピッチ欄には使わない |
 | 補足：技術デモ動画 | `pitch/sokketsu-tech-demo.mp4`（2:34・スライドとコード中心） | フォームのデモ欄の要件（スライド・コードの説明は不可）に合わないので使わない。リポジトリから見られる |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |

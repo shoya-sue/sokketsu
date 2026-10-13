@@ -7,7 +7,7 @@
 | フォームの欄 | 要件 | 入れる動画 |
 |---|---|---|
 | Please submit a demo video of your product | 3 分以内。実際のプロダクトを見せる（スライド・コードの説明は不可） | **A. デモ動画** `pitch/sokketsu-demo.mp4`（56 秒） |
-| Pitch video | 2 分以内。デモ動画とは別。自己紹介・何を作っているか・なぜ自分たちか | **B. ピッチ動画（短い版）** `video/sokketsu-pitch-short.mp4`（約 1:44） |
+| Pitch video | 2 分以内。デモ動画とは別。自己紹介・何を作っているか・なぜ自分たちか | **B. ピッチ動画（短い版）** `video/sokketsu-pitch-short.mp4`（1:44・103.7 秒） |
 
 下の 1・2（2:07 のピッチ動画・技術デモ動画）は欄の要件に合わないので、提出フォームには使わない（補足として説明文やリポジトリから見られればよい）。
 
@@ -40,7 +40,7 @@ Live product demo of Sokketsu on Solana devnet, recorded on the real site with n
 #Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Web3
 ```
 
-## B. ピッチ動画・短い版（`video/sokketsu-pitch-short.mp4`・約 1:44）
+## B. ピッチ動画・短い版（`video/sokketsu-pitch-short.mp4`・1:44・103.7 秒）
 
 **Thumbnail**：`pitch/assets/youtube-thumb-pitch.jpg`
 
@@ -68,6 +68,27 @@ I'm SHO, a solo builder from Japan. During the Colosseum Crypto World's Fair I b
 1:32 Try it
 
 #Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Hackathon #Web3
+```
+
+## C. ショート（`pitch/sokketsu-short.mp4`・0:56・縦 1080×1920）
+
+提出フォームには使わない（任意）。YouTube は縦長・60 秒以内の動画を自動でショートとして扱う。
+
+**Title**
+
+```
+An AI decides, Solana settles in 858 ms — Sokketsu live demo #shorts
+```
+
+**Description**
+
+```
+A typed AI decision stops or releases an escrow on Solana devnet. The oracle-signed decision is verified on-chain before any lamport moves, and the release reaches finalized in 858 ms.
+
+▶ Try it: https://sokketsu.pages.dev
+💻 Code (MIT): https://github.com/shoya-sue/sokketsu
+
+#shorts #Solana #AIagents #Colosseum #Web3
 ```
 
 ## 1. ピッチ動画（`video/sokketsu-pitch.mp4`・2:07）— 公開済み https://youtu.be/odzsFW4E_NU
