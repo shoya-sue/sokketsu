@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DICTIONARY, KEYS, KeyedError, describeError, msg, parseLang, translate } from "./i18n";
+import { DICTIONARY, KEYS, KeyedError, describeError, errorMsg, msg, parseLang, translate } from "./i18n";
 
 describe("辞書", () => {
   it("日本語と英語でキーがそろっている", () => {
@@ -52,4 +52,23 @@ describe("msg / parseLang", () => {
     expect(parseLang(null)).toBe("en");
     expect(parseLang("fr")).toBe("en");
   });
+});
+
+describe("errorMsg（差し込んだエラーを言語の切り替えで訳し直す）", () => {
+  const limited = new KeyedError("err.fundRateLimited", { wait: "8:20" });
+
+  it("文言に差し込んだエラーも、描画するときの言語で訳す", () => {
+    const m = msg("setup.fundFailed", { error: errorMsg(limited) });
+    expect(translate("ja", m.k, m.p)).toBe("受け取りに失敗（faucet は 10 分に 1 回まで。あと 8:20 で受け取れる）");
+    expect(translate("en", m.k, m.p)).toBe("Couldn't receive SOL (The faucet sends once per 10 minutes. Try again in 8:20)");
+  });
+
+  it("キーを持つ Error も訳す。キーでない文はそのまま", () => {
+    expect(translate("en", "setup.fundFailed", { error: errorMsg(new Error("err.keyLength")) })).toBe(
+      "Couldn't receive SOL (The secret key must be 64 bytes)",
+    );
+    expect(translate("ja", "setup.fundFailed", { error: errorMsg(new Error("boom")) })).toBe("受け取りに失敗（boom）");
+  });
+
+  it("Error でなければ文字列にする", () => expect(errorMsg(42)).toBe("42"));
 });
