@@ -11,7 +11,7 @@
 
 下の 1・2（2:07 のピッチ動画・技術デモ動画）は欄の要件に合わないので、提出フォームには使わない（補足として説明文やリポジトリから見られればよい）。
 
-## A. デモ動画（`pitch/sokketsu-demo.mp4`・0:56）
+## A. デモ動画（`pitch/sokketsu-demo.mp4`・0:56）— 公開済み https://youtu.be/o4CSw7txkWo
 
 **Thumbnail**：`pitch/assets/youtube-thumb-pitch.jpg`
 
@@ -40,7 +40,7 @@ Live product demo of Sokketsu on Solana devnet, recorded on the real site with n
 #Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Web3
 ```
 
-## B. ピッチ動画・短い版（`video/sokketsu-pitch-short.mp4`・1:44・103.7 秒）
+## B. ピッチ動画・短い版（`video/sokketsu-pitch-short.mp4`・1:44・103.7 秒）— 公開済み https://youtu.be/QC_3TBrA9Zw
 
 **Thumbnail**：`pitch/assets/youtube-thumb-pitch.jpg`
 
@@ -57,7 +57,7 @@ I'm SHO, a solo builder from Japan. During the Colosseum Crypto World's Fair I b
 
 ▶ Try it live: https://sokketsu.pages.dev
 💻 Code (MIT): https://github.com/shoya-sue/sokketsu
-🎬 Live demo: DEMO_VIDEO_URL
+🎬 Live demo: https://youtu.be/o4CSw7txkWo
 
 0:00 12.8 s vs 858 ms
 0:15 Who is building this
@@ -70,7 +70,7 @@ I'm SHO, a solo builder from Japan. During the Colosseum Crypto World's Fair I b
 #Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Hackathon #Web3
 ```
 
-## C. ショート（`pitch/sokketsu-short.mp4`・0:56・縦 1080×1920）
+## C. ショート（`pitch/sokketsu-short.mp4`・0:56・縦 1080×1920）— 公開済み https://youtube.com/shorts/ABic4f27Ac4（2026-10-13 時点のタイトルは B のもの。C のタイトルに変えると紛らわしくない）
 
 提出フォームには使わない（任意）。YouTube は縦長・60 秒以内の動画を自動でショートとして扱う。
 
