@@ -14,14 +14,16 @@ const headersFor = (path: string): Record<string, string> => {
   }
   return out;
 };
-const csp = (): Map<string, string[]> =>
-  new Map(
-    headersFor("/*")
-      ["content-security-policy"].split(";")
+const csp = (): Map<string, string[]> => {
+  const policy = headersFor("/*")["content-security-policy"];
+  return new Map(
+    policy
+      .split(";")
       .map((d) => d.trim().split(/\s+/))
       .filter((d) => d[0])
       .map(([name, ...values]) => [name, values]),
   );
+};
 
 describe("_headers（全ページ）", () => {
   it("他サイトの iframe に埋め込ませない", () => {
