@@ -21,4 +21,6 @@ wallet = ".keys/deployer.json"
 rpc_port = 18899
 
 [scripts]
-test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+# ts-mocha は mocha@12 を peer に持たないので、mocha に ts-node を直接読ませる。
+# ts-mocha の既定と同じく型検査なし（transpile-only）で、./tsconfig.json を使う。
+test = "TS_NODE_PROJECT=./tsconfig.json npx mocha -r ts-node/register/transpile-only -t 1000000 'tests/**/*.ts'"
