@@ -153,8 +153,8 @@ CI の anchor ジョブ（`npm test`）での結果は PR に記録する。
 
 | パッケージ | 勧告 | 経路 | 判断 |
 |---|---|---|---|
-| sharp 0.35.4（と miniflare・wrangler） | GHSA-wq5f-xc86-pv6w（high・librsvg） | wrangler → miniflare → sharp | **影響なし**。wrangler が手元で Workers を動かすための miniflare（ローカルの実行環境）の依存。本番は Cloudflare 側の実行環境で動き、sharp は配信物にも Functions の束にも入らない。`npm audit fix`（wrangler 4.149.0 への semver 内の更新）で消えるが、この PR では mocha 以外の依存を動かさない。次の定期的な依存更新で上げる（**保留**） |
-| qs 6.15.1（と typed-rest-client） | GHSA-q8mj-m7cp-5q26 ほか 2 件（moderate） | @stryker-mutator/core → typed-rest-client | **影響なし**。mutation テスト（手動実行）の中だけで使う。`npm audit fix` で消える。上と同じく**保留** |
+| sharp 0.35.4（と miniflare・wrangler） | GHSA-wq5f-xc86-pv6w（high・librsvg） | wrangler → miniflare → sharp | **影響なし**。wrangler が手元で Workers を動かすための miniflare（ローカルの実行環境）の依存。本番は Cloudflare 側の実行環境で動き、sharp は配信物にも Functions の束にも入らない。~~保留~~ → **解消**（#86・2026-10-13）：`npm audit fix`（semver 内）で wrangler 4.149.0・sharp 0.35.5 に上げた |
+| qs 6.15.1（と typed-rest-client） | GHSA-q8mj-m7cp-5q26 ほか 2 件（moderate） | @stryker-mutator/core → typed-rest-client | **影響なし**。mutation テスト（手動実行）の中だけで使う。~~保留~~ → **解消**（#86・2026-10-13）：`npm audit fix` で qs 6.16.0 に上げた |
 | elliptic 6.6.1（と browserify-sign・create-ecdh・crypto-browserify・node-stdlib-browser・vite-plugin-node-polyfills） | GHSA-848j-6mx2-7j84（low） | vite-plugin-node-polyfills → node-stdlib-browser → crypto-browserify | **影響なし**。polyfill として配信物に入りうる経路だが、アプリのコード（`src`）は `crypto` を import しておらず、dist に `secp256k1`・`elliptic`・`createECDH` は 0 件。npm の提案する修正は vite-plugin-node-polyfills 0.2.0 への大きな巻き戻しなので取らない |
 
 ## cargo audit（2026-10-13）
@@ -175,4 +175,4 @@ warning: 3 allowed warnings found
 
 ## 別 issue にするもの
 
-- wrangler・stryker の semver 内の更新（上の「保留」2 件）は、次の依存更新でまとめて行う。issue はまだ作っていない
+- wrangler・stryker の semver 内の更新（上の「保留」2 件）は #86 で行った（`cd app && npm audit` に sharp・qs が出ないことを確認）
