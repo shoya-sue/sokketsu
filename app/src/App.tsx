@@ -53,7 +53,7 @@ import { pushSlotTime } from "./lib/slotPulse";
 import { parseHistory, pushSample, type Sample } from "./lib/stats";
 import { derivePayee, derivePayeeAddress } from "./lib/payee";
 import { operatorTopUp, type PayerSession } from "./lib/session";
-import { KeyedError, describeError, msg, type Msg } from "./i18n";
+import { KeyedError, describeError, errorMsg, msg, type Msg } from "./i18n";
 import { useLang } from "./lang";
 import { Hud } from "./components/Hud";
 import { Toasts, type Toast } from "./components/Toasts";
@@ -406,7 +406,7 @@ export default function App() {
         await derivePayeeAddress(kp.publicKey),
       );
     } catch (e) {
-      setKeyError(msg("setup.trialFailed", { error: describeError(lang, e) }));
+      setKeyError(msg("setup.trialFailed", { error: errorMsg(e) }));
     } finally {
       setPreparing(false);
     }
@@ -421,7 +421,7 @@ export default function App() {
       await receiveSol(session.signer.publicKey);
       await refreshBalances(session.signer.publicKey, payee);
     } catch (e) {
-      setKeyError(msg("setup.fundFailed", { error: describeError(lang, e) }));
+      setKeyError(msg("setup.fundFailed", { error: errorMsg(e) }));
     } finally {
       setFunding(false);
     }

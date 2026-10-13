@@ -1,5 +1,6 @@
 export type Lang = "ja" | "en";
-export type Params = Record<string, string | number>;
+/** 差し込む値。Msg を入れると、描画するときの言語で訳す（言語を切り替えたら訳し直す）。 */
+export type Params = { [name: string]: string | number | Msg };
 /** 表示文言のキーと差し込む値。言語を切り替えたときに描画し直せるよう、文字列ではなくこれで持つ。 */
 export type Msg = { k: string; p?: Params };
 
@@ -437,6 +438,7 @@ export function translate(lang: Lang, k: string, p?: Params): string {
   return template.replace(/\{(\w+)\}/g, (_, name: string) => {
     if (!p || !(name in p)) return `{${name}}`;
     const value = p[name];
+    if (typeof value === "object") return translate(lang, value.k, value.p);
     return typeof value === "string" && value.startsWith("@") ? translate(lang, value.slice(1)) : String(value);
   });
 }
@@ -445,6 +447,16 @@ export function translate(lang: Lang, k: string, p?: Params): string {
 export function describeError(lang: Lang, e: unknown): string {
   if (e instanceof KeyedError) return translate(lang, e.msg.k, e.msg.p);
   if (e instanceof Error) return translate(lang, e.message);
+  return String(e);
+}
+
+/**
+ * Error / KeyedError / 文字列を、文言に差し込む値にする。describeError と違い、その場では訳さない
+ * （捕まえた時点の言語で文字列にすると、言語を切り替えても括弧の中が前の言語のまま残る。#90）。
+ */
+export function errorMsg(e: unknown): Msg | string {
+  if (e instanceof KeyedError) return e.msg;
+  if (e instanceof Error) return { k: e.message };
   return String(e);
 }
 
