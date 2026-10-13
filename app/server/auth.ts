@@ -1,9 +1,9 @@
 /// <reference types="@cloudflare/workers-types" />
 
-export const json = (body: unknown, status: number): Response =>
+export const json = (body: unknown, status: number, headers: Record<string, string> = {}): Response =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...headers },
   });
 
 function tokenMatches(given: string, expected: string): boolean {

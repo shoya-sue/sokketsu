@@ -92,6 +92,49 @@ describe("/api/fund", () => {
     expect((await call(ENV, { address: FAUCET.publicKey.toBase58() }, "203.0.113.2")).status).toBe(409);
   });
 
+  it("429 では、制限が解けるまでの秒数を本文の retryAfter と Retry-After で返す", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
+    expect((await call(ENV)).status).toBe(409);
+    now.mockReturnValue(1_000_000 + 100_000);
+    const res = await call(ENV);
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: "too many requests", retryAfter: 500 });
+    expect(res.headers.get("Retry-After")).toBe("500");
+    // 端数は切り上げ、最低 1 秒
+    now.mockReturnValue(1_000_000 + 599_500);
+    expect(((await (await call(ENV)).json()) as { retryAfter: number }).retryAfter).toBe(1);
+  });
+
+  it("IP とアドレスの両方が制限中なら、遅く解けるほうの秒数を返す", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    const other = FAUCET.publicKey.toBase58();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(rpc({ value: FUND_SKIP_LAMPORTS })));
+    await call(ENV, { address: TARGET }, "203.0.113.20"); // IP A を t0 に予約
+    now.mockReturnValue(1_000_000 + 100_000);
+    await call(ENV, { address: other }, "203.0.113.21"); // アドレス other を t0+100 秒に予約
+    now.mockReturnValue(1_000_000 + 200_000);
+    const res = await call(ENV, { address: other }, "203.0.113.20"); // IP A は残り 400 秒・other は残り 500 秒
+    expect(await res.json()).toEqual({ error: "too many requests", retryAfter: 500 });
+  });
+
+  it("予約から 10 分を過ぎた記録がキャッシュに残っていても、制限に数えない", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_000_000);
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => rpc({ value: FUND_SKIP_LAMPORTS })));
+    expect((await call(ENV)).status).toBe(409);
+    now.mockReturnValue(1_000_000 + 599_000);
+    expect((await call(ENV)).status).toBe(429);
+    now.mockReturnValue(1_000_000 + 600_000);
+    expect((await call(ENV)).status).toBe(409);
+  });
+
+  it("予約の時刻が読めない古い記録でも 429（待ち秒数は最大で返す）", async () => {
+    store.set(`https://sokketsu-fund.internal/address/${TARGET}`, new Response(null));
+    const res = await call(ENV);
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: "too many requests", retryAfter: 600 });
+  });
+
   it("1 件目の送金が終わる前に届いた同じ IP の 2 件目も 429（送金の前に予約する）", async () => {
     let release!: (r: Response) => void;
     const pending = new Promise<Response>((r) => (release = r));
@@ -142,11 +185,11 @@ describe("/api/fund", () => {
     expect(await body(await call(ENV, { address: "nope" }))).toEqual({ status: 400, body: { error: "bad request" } });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(rpc({ value: FUND_SKIP_LAMPORTS })));
     expect(await body(await call(ENV))).toEqual({ status: 409, body: { error: "already funded" } });
-    expect(await body(await call(ENV))).toEqual({ status: 429, body: { error: "too many requests" } });
+    expect(await body(await call(ENV))).toEqual({ status: 429, body: { error: "too many requests", retryAfter: 600 } });
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("down")));
     expect(await body(await call(ENV, { address: TARGET }, "203.0.113.9"))).toEqual({
       status: 429,
-      body: { error: "too many requests" },
+      body: { error: "too many requests", retryAfter: 600 },
     });
   });
 

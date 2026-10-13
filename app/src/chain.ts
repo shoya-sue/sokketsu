@@ -15,6 +15,7 @@ import bs58 from "bs58";
 import idl from "./idl/sokketsu.json";
 import type { Sokketsu } from "./idl/sokketsu";
 import { SOURCE_CODE, type DecisionName, type JudgeOutput, type SourceName } from "./judge";
+import { rateLimitedError } from "./lib/faucet";
 import { createFallbackFetch, type RpcRoute } from "./lib/rpcFallback";
 import { KeyedError, msg, type Msg } from "./i18n";
 
@@ -148,6 +149,7 @@ export async function fundAddress(pubkey: PublicKey): Promise<void> {
     body: JSON.stringify({ address: pubkey.toBase58() }),
   });
   if (res.status === 409) return;
+  if (res.status === 429) throw rateLimitedError(await res.json().catch(() => null));
   if (!res.ok) throw new KeyedError("err.fundFailed", { status: res.status });
   const { signature } = (await res.json()) as { signature: string };
   const result = await waitForSignature(signature, 30000, 500);

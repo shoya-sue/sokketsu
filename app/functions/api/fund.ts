@@ -34,6 +34,19 @@ async function rpcCall<T>(url: string, method: string, params: unknown[]): Promi
   return body.result;
 }
 
+const RESERVED_AT = "X-Reserved-At";
+
+/**
+ * 予約からの経過で、制限が解けるまでの秒数（切り上げ）。0 以下なら制限は解けている。
+ * キャッシュの記録は max-age を過ぎても残ることがある（2026-10-13 本番で 16 分後も 429）ので、時刻で決める。
+ * 予約の時刻が読めない古い記録は最大で返す。
+ */
+const secondsLeft = (hit: Response, now: number): number => {
+  const at = Number(hit.headers.get(RESERVED_AT));
+  if (!(at > 0)) return RATE_LIMIT_SECONDS;
+  return Math.min(RATE_LIMIT_SECONDS, Math.ceil(RATE_LIMIT_SECONDS - (now - at) / 1000));
+};
+
 const rateKey = (kind: "ip" | "address", value: string) =>
   new Request(`https://sokketsu-fund.internal/${kind}/${encodeURIComponent(value)}`);
 
@@ -50,13 +63,23 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
   const keys = [rateKey("ip", ip), rateKey("address", String(address))];
-  const hits = await Promise.all(keys.map((k) => caches.default.match(k)));
-  if (hits.some(Boolean)) return json({ error: "too many requests" }, 429);
+  const now = Date.now();
+  const hits = (await Promise.all(keys.map((k) => caches.default.match(k)))).filter((h) => h !== undefined);
+  const waits = hits.map((h) => secondsLeft(h, now)).filter((s) => s > 0);
+  if (waits.length > 0) {
+    const retryAfter = Math.max(...waits);
+    return json({ error: "too many requests", retryAfter }, 429, { "Retry-After": String(retryAfter) });
+  }
   // RPC を待つ前に予約する。並列に届いたリクエストが残高の反映前にすり抜けないように。
   // （Cache API は原子的ではないので窓はゼロにならない。devnet SOL なのでここまでに留める）
   await Promise.all(
     keys.map((k) =>
-      caches.default.put(k, new Response(null, { headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}` } })),
+      caches.default.put(
+        k,
+        new Response(null, {
+          headers: { "Cache-Control": `max-age=${RATE_LIMIT_SECONDS}`, [RESERVED_AT]: String(now) },
+        }),
+      ),
     ),
   );
 
