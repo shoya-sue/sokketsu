@@ -7,7 +7,7 @@
 | **デモ動画**（フォームの「demo video」欄：3 分以内・実際のプロダクトだけ） | `pitch/sokketsu-demo.mp4`（56 秒：本番の画面 → Solana Explorer の実際の取引） | YouTube（公開）https://youtu.be/o4CSw7txkWo（2026-10-13 にログインなしで再生・56.2 秒・横長を確認） |
 | **ピッチ動画**（フォームの「Pitch video」欄：2 分以内・デモ動画とは別・自己紹介） | `video/sokketsu-pitch-short.mp4`（1:44・103.7 秒・自己紹介つき） | YouTube（公開）https://youtu.be/QC_3TBrA9Zw（2026-10-13 にログインなしで再生・103.7 秒・横長を確認） |
 | 補足：長いピッチ動画 | `video/sokketsu-pitch.mp4`（2:07・実演入り） | YouTube（公開）https://youtu.be/odzsFW4E_NU 。2 分を超えるのでフォームのピッチ欄には使わない |
-| 補足：技術デモ動画 | `pitch/sokketsu-tech-demo.mp4`（2:34・スライドとコード中心） | フォームのデモ欄の要件（スライド・コードの説明は不可）に合わないので使わない。リポジトリから見られる |
+| 補足：技術デモ動画 | `pitch/sokketsu-tech-demo.mp4`（2:34・スライドとコード中心） | YouTube（公開）https://youtu.be/nxYCGoRqyPk（154.9 秒を確認）。フォームのデモ欄の要件（スライド・コードの説明は不可）に合わないので、フォームには使わない |
 | GitHub | https://github.com/shoya-sue/sokketsu （public） | 済み |
 | ロゴ・画像 | ロゴ `pitch/assets/logo-1024.png`（1024×1024・透過）・英語のバナー `pitch/assets/og-en-1200x630.png`・表紙 `pitch/assets/cover-1920x1080.png` | 済み（サイトの `app/public/og.png` は日本語のまま） |
 | スライド（任意） | `pitch/sokketsu-deck.pdf`（10 ページ）・`pitch/slides.html` | 済み |
@@ -55,7 +55,7 @@ Users approve once: the wallet signs only the deposit, and an in-page operator k
 - Demo video: https://youtu.be/o4CSw7txkWo
 - Pitch video (2 min): https://youtu.be/QC_3TBrA9Zw
 - Full pitch with live demo (2:07): https://youtu.be/odzsFW4E_NU
-- Technical walkthrough: https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-tech-demo.mp4
+- Technical walkthrough: https://youtu.be/nxYCGoRqyPk
 - YouTube Short: https://youtube.com/shorts/ABic4f27Ac4
 - Slides (PDF): https://github.com/shoya-sue/sokketsu/blob/main/pitch/sokketsu-deck.pdf
 

@@ -125,7 +125,7 @@ Built for the Colosseum Crypto World's Fair hackathon.
 #Solana #AIagents #Colosseum #Alpenglow #Anchor #Escrow #Hackathon #Web3
 ```
 
-## 2. 技術デモ動画（`pitch/sokketsu-tech-demo.mp4`・2:34）
+## 2. 技術デモ動画（`pitch/sokketsu-tech-demo.mp4`・2:34）— 公開済み https://youtu.be/nxYCGoRqyPk
 
 **Thumbnail**：`pitch/assets/youtube-thumb-tech.jpg`（1280×720）
 
