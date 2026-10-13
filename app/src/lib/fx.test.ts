@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const confetti = vi.hoisted(() => vi.fn());
 vi.mock("canvas-confetti", () => ({ default: confetti }));
 
-import { burstAt, sideCannons, starShower } from "./fx";
+import { burstAt, preloadFx, sideCannons, starShower } from "./fx";
 
-beforeEach(() => {
+beforeEach(async () => {
+  await preloadFx();
   confetti.mockClear();
   vi.unstubAllGlobals();
 });
