@@ -66,6 +66,7 @@ import { countdownNotes } from "./lib/sfxPlan";
 import { CountdownHit } from "./components/CountdownHit";
 import { useShake } from "./hooks/useShake";
 import { setWalletSlot, useWalletState } from "./lib/walletStore";
+import { slotsUntil } from "./lib/deadline";
 
 const GAME_KEY = "sokketsu.game.v1";
 const TOAST_MS = 3800;
@@ -186,7 +187,8 @@ export default function App() {
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [measuringSince, setMeasuringSince] = useState<number | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
-  const [slotsLeft, setSlotsLeft] = useState<number | null>(null);
+  // hold した escrow の期限の slot。残りは表示のたびにいまの slot から計算する（#101）。
+  const [holdDeadline, setHoldDeadline] = useState<number | null>(null);
   const [running, setRunning] = useState<string | null>(null);
   const [runKey, setRunKey] = useState(0);
   const [failCount, setFailCount] = useState(0);
@@ -475,6 +477,11 @@ export default function App() {
       // refund / close は誰が出してもよいので、承認の要らない操作鍵が出す（資金とレントは発注者へ戻る）。
       const result = await sweepEscrows(keypairSigner(session.operator), session.signer.publicKey);
       setSweepNote({ kind: "done", result });
+      // 返金できたなら、止めた escrow はもう片付いている。hold の案内（期限まで…）を残さない。
+      if (result.refunded > 0) {
+        setHoldDeadline(null);
+        setOutcome((o) => (o?.kind === "stopped" ? null : o));
+      }
       if (payee) await refreshBalances(session.signer.publicKey, payee);
     } catch (error) {
       setSweepNote({ kind: "error", error });
@@ -503,7 +510,7 @@ export default function App() {
     setGrade(null);
     setJudgement(null);
     setOutcome(null);
-    setSlotsLeft(null);
+    setHoldDeadline(null);
     setFallbackReason(null);
     const task = withRunId(preset.task);
     setCurrentTask(task);
@@ -635,8 +642,8 @@ export default function App() {
           signature: m.signature,
           tone: "warn",
         });
-        const [view, slot] = await Promise.all([fetchEscrow(escrow), getSlot()]);
-        if (view) setSlotsLeft(Math.max(0, view.deadlineSlot - slot));
+        const view = await fetchEscrow(escrow);
+        if (view) setHoldDeadline(view.deadlineSlot);
       }
       await refreshBalances(p.publicKey, q);
       return true;
@@ -757,7 +764,7 @@ export default function App() {
         <Hud game={game} gain={gain} />
         <div className="gauge gauge-result">
           <span className="gauge-tag">{t("card.result")}</span>
-          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsLeft} grade={grade} />
+          <ResultPanel outcome={outcome} measuringSince={measuringSince} slotsLeft={slotsUntil(holdDeadline, currentSlot)} grade={grade} />
           <History history={history} />
         </div>
       </aside>
