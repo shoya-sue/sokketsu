@@ -32,7 +32,7 @@
 | サイト | https://sokketsu.pages.dev — Pages `6c3a63fe`（Production・`73a2844`）。2026-10-13 19 時台に HTTP 200 を確認。応答に CSP・Permissions-Policy・X-Frame-Options（#79） |
 | devnet プログラム | `Fuceqdwk2uxT2nNREHC5QJiwKU9uwcnRqdnXD7bHiUwp`。Authority はデプロイ用の鍵 `CcVM…3UPk`、最後の upgrade は slot 508309128（2026-10-07）のまま（10-13 に `solana program show` で確認） |
 | escrow | 135 口座（発注者 17）。open 66 件・計 3.396 SOL はすべて期限切れの hold（お試しの使い捨て鍵が戻り先なので、refund しても faucet には戻らない）（10-13 実測） |
-| faucet | `53jRBxa8R67DExTqUiykwzgJtVKNnyevNxYuTYEEJm7j`、残高 1.07992 SOL（2026-10-13 19 時台の実測・お試し約 9 回分。1 回 0.12 SOL で戻らない）。足りなくなったらこのアドレスへ devnet SOL を送る（持ち主が送る） |
+| faucet | `53jRBxa8R67DExTqUiykwzgJtVKNnyevNxYuTYEEJm7j`、残高 31.07992 SOL（2026-10-14 に持ち主が 30 SOL 補充・お試し約 258 回分。1 回 0.12 SOL で戻らない）。足りなくなったらこのアドレスへ devnet SOL を送る（持ち主が送る） |
 | Cloudflare | Kojin アカウント（`CLOUDFLARE_ACCOUNT_ID` の既定は別アカウントなので、wrangler では指定が要る） |
 
 ## 2026-10-13 提出後の対応（実測から起票）
@@ -49,6 +49,8 @@
 | #90 | 言語を切り替えるとエラーの括弧の中が前の言語のまま | 描画時の言語で訳し直す |
 
 ## 持ち主の操作・判断を待つもの
+
+これからの作業の一覧は [`docs/ROADMAP.md`](docs/ROADMAP.md)（審査中と結果発表後・担当と Issue つき）。
 
 - #80：本物のウォレット（持ち主の Chrome には Solflare）で、預け入れ → hold → release を流す。テスト用ウォレットでは本番で確認済み
 - #81：upgrade authority を放棄するか（元に戻せない。審査後。#82 で鍵を変えないので、放棄の前の upgrade は要らない）
