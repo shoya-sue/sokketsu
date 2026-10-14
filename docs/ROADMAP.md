@@ -1,43 +1,42 @@
 # 対応ロードマップ（2026-10-14 時点）
 
-提出（2026-10-12 18:44 PDT）から結果発表、その後までにやることの一覧。状態の正本は [`STATUS.md`](../STATUS.md)、作業の単位は GitHub の Issue。
+**ゴール：機能として完成した状態を保つ。** 審査向けの作業（#94 Builder updates・#95 面接の準備）は持ち主の判断で行わない（not planned）。状態の正本は [`STATUS.md`](../STATUS.md)、作業の単位は GitHub の Issue。
 
-## 前提（一次情報）
+## 機能の確認（2026-10-14・本番 https://sokketsu.pages.dev ・Pages `88c89073`）
 
-| 項目 | 内容 | 出典 |
+画面にある操作を 1 つずつ本番で流した（Playwright・devnet）。壊れていたのは 1 か所で、#101 で直して本番に出した。
+
+| 操作 | 結果 | 確かめ方 |
 |---|---|---|
-| 結果発表 | 提出締切のおよそ 1 か月後（**2026-11 中旬の見込み**）。日付は未発表で、ダッシュボードに出る | https://colosseum.com/hackathon 「announced roughly one month after the submission deadline」・https://colosseum.com/arena/hackathon「Results have not been published yet」 |
-| 審査の流れ | 複数回の選考 → 審査員 → さらに絞って **15 分の Zoom 面接** → 入賞の決定 | https://colosseum.com/hackathon |
-| 評価の観点 | Founder + Market Fit・Insight・Product + Execution（改善を出す速さを含む）・Potential Market Size・Founder Communication・Viability・Traction | 同上 |
-| 提出後に書ける欄 | Builder updates（提出物は変わらない）・Live product link など一部 | ダッシュボード（2026-10-14 確認） |
-| 本番 | https://sokketsu.pages.dev — Pages `6c3a63fe`（main と同じツリー） | `STATUS.md` |
-| faucet | 31.08 SOL（お試し約 258 回分。2026-10-14 に持ち主が 30 SOL 補充） | `solana balance -u devnet 53jRBxa8R67DExTqUiykwzgJtVKNnyevNxYuTYEEJm7j` |
+| 初回の案内（表示・閉じる・「?」で開き直す） | OK | Playwright |
+| 言語の切り替え（英 ⇄ 日） | OK。エラーの括弧の中も切り替わる（#90） | Playwright |
+| 効果音の切り替え（🔊 ⇄ 🔇） | OK | Playwright |
+| お試し（使い捨ての鍵 + faucet 0.12 SOL） | OK | Playwright |
+| faucet の連打制限 | OK。「10 分に 1 回まで・あと M:SS」（#74） | Playwright（10-13） |
+| 1 件ずつ流す：refund | OK。refund 88% → escrow は refunded、発注者へ返金 | Playwright + オンチェーン |
+| 1 件ずつ流す：release | OK。release 86% → settled、受注者へ 0.05 SOL | Playwright + オンチェーン |
+| 1 件ずつ流す：hold | OK。hold 91% → open（送金なし） | Playwright + オンチェーン |
+| hold の期限の表示 | **直した**（#101）。残り slot が減り、期限後は「回収できる」、回収後は消える | 本番で 391 → 139 slot（60 秒）・回収後 0 件 |
+| ⚙ 回収（期限切れ・完了済みの escrow） | OK。`1 refunded · 3 closed`、発注者の残高が戻る | Playwright |
+| ⚙ 発注者の切り替え | OK。始める前の画面に戻る | Playwright |
+| 鍵を貼って始める | OK（入力欄が開く） | Playwright（中身はローカルのテスト鍵で確認） |
+| デモの通し（hold → release） | OK | お試し（10-13）・ウォレット（下） |
+| ウォレット接続（本物） | OK。Backpack のアプリ、承認は預け入れの 2 回だけ、確定 1064 / 829 / 986 ms（#80） | 持ち主 + オンチェーン |
+| セキュリティヘッダ | OK。CSP・Permissions-Policy・X-Frame-Options、CSP 違反 0（#79） | curl・Playwright |
 
-## 1. 審査中（〜結果発表）
+確かめていないもの：デモトークンを入れた Jev の判断（トークンは非公開で、公開の利用者は mock の判断になる。Jev の経路は 10-12 の動画の撮影で確認したのが最後）。
 
-**本番・faucet・devnet プログラムは止めない。** 本番を変えるときは、持ち主の承認 → 本番で確かめる → merge の順（承認は 1 回ごと）。
+## 残り
 
-| # | やること | 担当 | Issue | いつ | 終わりの確かめ方 |
-|---|---|---|---|---|---|
-| 1-1 | ~~本物のウォレットで、預け入れ → hold → release を通す~~ **済み（10-14・Backpack・確定 1064 / 829 / 986 ms）** | 持ち主 | #80 | — | #80 に取引 4 件と確定ミリ秒を記録して閉じた |
-| 1-2 | Builder updates を週 1 回出す。下書きは Claude、投稿は持ち主 | Claude → 持ち主 | #94 | 10-14・10-21・10-28・11-04・11-11 ごろ | `pitch/BUILDER-UPDATES.md` に文面、#94 に投稿日 |
-| 1-3 | 15 分の Zoom 面接の準備（7 観点の想定質問と答え・デモの手順・弱い点への答え） | Claude → 持ち主が通し練習 | #95 | 10 月中 | `pitch/INTERVIEW.md` があり、#95 に練習した日 |
-| 1-4 | 本番が動いているかを週 1 回見る（HTTP 200・お試しが通る・faucet の残高） | Claude | — | Builder updates と同じ日 | `curl` と `solana balance` の結果を #94 のコメントに添える |
-| 1-5 | （任意）お試しで使った SOL を faucet に戻す | Claude（出すなら持ち主の承認） | #96 | faucet が 5 SOL を切ったら検討 | #96 の提案を実装するかを決める |
+| やること | 担当 | Issue | いつ |
+|---|---|---|---|
+| （任意）お試しで使った SOL を faucet に戻す | Claude（出すなら持ち主の承認） | #96 | faucet が 5 SOL を切ったら検討（10-14 時点 30.84 SOL） |
+| upgrade authority を放棄するか決める（元に戻せない） | 持ち主 | #81 | 結果発表のあと（2026-11 中旬の見込み） |
 
-## 2. 結果発表のあと
+## 守ること
 
-| # | やること | 担当 | Issue | 終わりの確かめ方 |
-|---|---|---|---|---|
-| 2-1 | upgrade authority を放棄するか決める（元に戻せない） | 持ち主 | #81 | `solana program show` の Authority の行と判断を #81 に |
-| 2-2 | 結果を `STATUS.md` と Obsidian に記録する | Claude | 発表後に起票 | 結果の画面の URL と順位が `STATUS.md` にある |
-| 2-3 | 続けるか決める（入賞・Accelerator なら mainnet に向けた計画、そうでなければ公開を続けるか止めるか） | 持ち主 | 発表後に起票 | 決めた方針が `STATUS.md` にある |
-| 2-4 | 止めるなら片付ける（本番・faucet の残高・プログラムの扱い） | Claude（持ち主の承認） | 2-3 で決める | — |
-
-## 決めたこと（やらないこと）
-
-- 作業中に会話ログへ表示された鍵は交換しない。devnet の範囲は許容（#82・not planned）。値は手元の会話ログから消した
-- #80 は持ち主の Backpack のアプリで行った（Phantom は持ち主の環境に無い）
+- 本番を変えるときは、持ち主の承認 → 本番で確かめる → merge の順（承認は 1 回ごと）
+- 作業中に会話ログへ表示された鍵は交換しない。devnet の範囲は許容（#82・not planned）
 
 ## 手元の片付け（Issue にしない）
 
