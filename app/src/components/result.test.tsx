@@ -42,6 +42,15 @@ describe("ResultPanel", () => {
     expect(container.querySelector(".result-stopped .hint")?.textContent).toContain("1,234");
   });
 
+  it("期限を過ぎたら、残り slot ではなく回収できることを出す", () => {
+    const { container } = render(
+      <ResultPanel outcome={{ kind: "stopped", judge: { decision: "hold", probability: 0.991, source: "jev" } }} measuringSince={null} slotsLeft={0} grade={null} />,
+    );
+    const hint = container.querySelector(".result-stopped .hint")?.textContent ?? "";
+    expect(hint).not.toContain("期限まであと");
+    expect(hint).toContain("期限を過ぎた。いま ⚙ → 回収 で戻せる");
+  });
+
   it("送金の失敗と、確定を観測できなかった送金", () => {
     const failed = render(<ResultPanel outcome={sent({ error: "boom" })} measuringSince={null} slotsLeft={null} grade={null} />);
     expect(failed.container.querySelector(".result-error code")?.textContent).toBe("boom");

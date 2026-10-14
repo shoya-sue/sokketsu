@@ -100,7 +100,8 @@ export function ResultPanel({ outcome, measuringSince, slotsLeft, grade }: Props
         </p>
         <p className="hint">
           {t("result.stoppedHint")}
-          {slotsLeft !== null && t("result.slotsLeft", { slots: slotsLeft.toLocaleString() })}
+          {slotsLeft !== null &&
+            (slotsLeft > 0 ? t("result.slotsLeft", { slots: slotsLeft.toLocaleString() }) : t("result.deadlinePassed"))}
         </p>
       </div>
     );
